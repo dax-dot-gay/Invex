@@ -4,3 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+rocket = { version = "0.5.1", features = ["serde_json", "uuid", "json"] }
+rocket_db_pools = { version = "0.2.0", features = ["mongodb"] }
