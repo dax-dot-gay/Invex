@@ -1,10 +1,17 @@
 version: '3.8'
 
+volumes:
+  postgres-data:
+
 services:
   app:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+        # Ensure that the variables in .env match the same variables in devcontainer.json
+        - .env
+
     volumes:
       - ../..:/workspaces:cached
 
@@ -18,20 +25,13 @@ services:
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
   db:
-    image: mongo:latest
+    image: postgres:14.1
     restart: unless-stopped
     volumes:
-      - mongodb-data:/data/db
+      - postgres-data:/var/lib/postgresql/data
+    env_file:
+        # Ensure that the variables in .env match the same variables in devcontainer.json
+        - .env
 
-    # Uncomment to change startup options
-    # environment:
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=invex
-      - MONGO_INITDB_ROOT_PASSWORD=invex
-      - MONGO_INITDB_DATABASE=invex
-
-    # Add "forwardPorts": ["27017"] to **devcontainer.json** to forward MongoDB locally.
+    # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
-
-volumes:
-  mongodb-data:

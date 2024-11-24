@@ -1,32 +1,26 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node-mongo
+// README at: https://github.com/devcontainers/templates/tree/main/src/rust-postgres
 {
-  "name": "Node.js & Mongo DB",
-  "dockerComposeFile": "docker-compose.yml",
-  "service": "app",
-  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "name": "Rust and PostgreSQL",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {}
+    },
 
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  // "features": {},
+    // Features to add to the dev container. More info: https://containers.dev/features.
+    // "features": {},
 
-  // Configure tool-specific properties.
-  "customizations": {
-    // Configure properties specific to VS Code.
-    "vscode": {
-      // Add the IDs of extensions you want installed when the container is created.
-      "extensions": ["mongodb.mongodb-vscode"]
-    }
-  },
-  "features": {
-    "ghcr.io/devcontainers/features/rust:1": {}
-  },
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    "forwardPorts": [5432, 8080, 8081],
 
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [8080, 8081, 27017],
+    // Use 'postCreateCommand' to run commands after the container is created.
+    "postCreateCommand": "sh -c /workspaces/Invex/install.sh"
 
-  // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "sh -c /workspaces/Invex/install.sh"
+    // Configure tool-specific properties.
+    // "customizations": {},
 
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
+    // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+    // "remoteUser": "root"
 }
