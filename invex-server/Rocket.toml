@@ -2,5 +2,9 @@
 address = "0.0.0.0"
 port = 8081
 
-[debug.databases.invex]
+[default.databases.invex]
 url = "mongodb://invex:invex@localhost:27017/invex"
+
+[default.tls]
+certs = "certs/cert.pem"
+key = "certs/key.pem"
