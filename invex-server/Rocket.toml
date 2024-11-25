@@ -9,5 +9,6 @@ key = "certs/key.pem"
 
 [default.app]
 [default.app.database]
-uri = "postgresql://invex:invex@localhost:5432"
-database = "invex"
+host = "http://localhost:5984"
+username = "invex"
+password = "invex"

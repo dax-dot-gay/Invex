@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/rust-postgres
 {
-    "name": "Rust and PostgreSQL",
+    "name": "Invex",
     "dockerComposeFile": "docker-compose.yml",
     "service": "app",
     "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
@@ -13,7 +13,7 @@
     // "features": {},
 
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
-    "forwardPorts": [5432, 8080, 8081],
+    "forwardPorts": [8080, 8081, 5984],
 
     // Use 'postCreateCommand' to run commands after the container is created.
     "postCreateCommand": "sh -c /workspaces/Invex/install.sh"
