@@ -9,6 +9,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 pub mod server;
 pub mod error;
+pub mod auth;
 
 pub struct Docs<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument> {
     inner: Database<T>

@@ -9,6 +9,7 @@ use config::Config;
 
 mod controllers;
 mod models;
+mod util;
 
 #[get("/")]
 fn index(info: ServerInfo) -> Json<ServerInfo> {
