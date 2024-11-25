@@ -1,15 +1,15 @@
 use duration_string::DurationString;
 use mongodb::{options::ClientOptions, Client, Database};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 #[serde(untagged)]
 pub enum DatabaseConnection {
     URL(String),
     Options(ClientOptions)
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct DatabaseConfig {
     pub connection: DatabaseConnection,
     pub database: String
@@ -25,7 +25,7 @@ impl DatabaseConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Config {
     pub database: DatabaseConfig,
     pub session_duration: DurationString

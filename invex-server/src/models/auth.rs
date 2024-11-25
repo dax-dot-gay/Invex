@@ -1,45 +1,34 @@
 use bevy_reflect::Reflect;
 use chrono::{DateTime, TimeDelta, Utc};
-use couch_rs::{document::TypedCouchDocument, types::document::DocumentId, Client, CouchDocument};
+use invex_macros::Document;
+use mongodb::Database;
 use rocket::{fairing::{Fairing, Info, Kind}, http::{Cookie, Header}, time::OffsetDateTime, Data, Request};
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use bson::doc;
+use crate::{config::Config, util::database::{Docs, Document, Id}};
 
-use crate::config::Config;
-
-use super::Docs;
-
-#[derive(Serialize, Deserialize, Clone, Debug, Reflect, CouchDocument)]
+#[derive(Serialize, Deserialize, Clone, Debug, Reflect, Document)]
 pub struct AuthSession {
-    #[serde(default = "crate::util::new_id")]
-    pub _id: DocumentId,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub _rev: String,
-    #[serde(default = "Utc::now")]
-    #[reflect(ignore)]
-    pub created: DateTime<Utc>,
-    pub user_id: Option<Uuid>
+    #[serde(default, rename = "_id")]
+    pub id: Id,
+    pub created: String,
+
+    #[serde(default)]
+    pub user_id: Option<Id>
 }
 
 impl AuthSession {
     pub fn generate() -> Self {
-        AuthSession { _id: crate::util::new_id(), _rev: String::new(), created: Utc::now(), user_id: None }
+        AuthSession::create(doc! {"created": Utc::now().to_rfc3339()}).expect("Invalid preset format")
+    }
+
+    pub fn created(&self) -> DateTime<Utc> {
+        DateTime::parse_from_rfc3339(&self.created).expect("Invalid DT string").to_utc()
     }
 
     pub fn get_expiry(&self, config: Config) -> DateTime<Utc> {
-        self.created + TimeDelta::from_std(config.session_duration.into()).expect("Invalid session length (out of range)")
+        self.created() + TimeDelta::from_std(config.session_duration.into()).expect("Invalid session length (out of range)")
     }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, Reflect, CouchDocument)]
-pub struct AuthUser {
-    #[serde(default = "crate::util::new_id")]
-    pub _id: DocumentId,
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub _rev: String,
-    pub username: String,
-    pub email: String,
-    pub password: String
 }
 
 pub struct SessionFairing;
@@ -55,24 +44,26 @@ impl Fairing for SessionFairing {
 
     async fn on_request(&self, request: &mut Request<'_>, _: &mut Data<'_>) {
         if let Some(config) = request.rocket().state::<Config>() {
-            if let Some(client) = request.rocket().state::<Client>() {
-                if let Ok(sessions) = Docs::<AuthSession>::new(client.clone()).await {
-                    if let Some(cookie) = request.cookies().get_private("invex:token") {
-                        if let Ok(existing) = sessions.get(cookie.value()).await {
-                            if existing.get_expiry(config.clone()) > Utc::now() {
-                                request.add_header(Header::new("TOKEN", existing._id));
-                                return;
-                            }
-                            sessions.remove(&existing).await;
+            if let Some(db) = request.rocket().state::<Database>() {
+                let sessions = Docs::<AuthSession>::new(db.clone());
+                if let Some(cookie) = request.cookies().get_private("invex:token") {
+                    if let Some(existing) = sessions.get(cookie.value()).await {
+                        if existing.get_expiry(config.clone()) > Utc::now() {
+                            request.add_header(Header::new("TOKEN", existing.id()));
+                            return;
                         }
-                        request.cookies().remove_private(cookie);
+                        let _ = sessions.delete_one(doc! {"_id": existing.id()}).await;
                     }
-
-                    let mut new_id = AuthSession::generate();
-                    let _ = sessions.save(&mut new_id).await;
-                    request.cookies().add_private(Cookie::build(("invex:token", new_id._id.clone())).expires(OffsetDateTime::from_unix_timestamp(new_id.get_expiry(config.clone()).timestamp()).expect("Expiration out of range")));
+                    request.cookies().remove_private(cookie);
                 }
+
+                let new_id = AuthSession::generate();
+                let _ = sessions.save(new_id.clone()).await;
+                request.cookies().add_private(Cookie::build(("invex:token", new_id.clone().id())).expires(OffsetDateTime::from_unix_timestamp(new_id.get_expiry(config.clone()).timestamp()).expect("Expiration out of range")));
+                request.add_header(Header::new("TOKEN", new_id.clone().id()));
+                return;
             }
         }
+        panic!("FAIL");
     }
 }
