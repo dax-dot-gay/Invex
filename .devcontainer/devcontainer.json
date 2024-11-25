@@ -13,13 +13,17 @@
     // "features": {},
 
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
-    "forwardPorts": [8080, 8081, 5984],
+    "forwardPorts": [8080, 8081, 27017],
 
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "sh -c /workspaces/Invex/install.sh"
+    "postCreateCommand": "sh -c /workspaces/Invex/install.sh",
 
     // Configure tool-specific properties.
-    // "customizations": {},
+    "customizations": {
+        "vscode": {
+            "extensions": ["mongodb.mongodb-vscode"]
+        }
+    }
 
     // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
     // "remoteUser": "root"

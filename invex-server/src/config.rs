@@ -1,21 +1,31 @@
-use couch_rs::{error::CouchError, Client};
 use duration_string::DurationString;
-use serde::{Deserialize, Serialize};
+use mongodb::{options::ClientOptions, Client, Database};
+use serde::Deserialize;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
+#[serde(untagged)]
+pub enum DatabaseConnection {
+    URL(String),
+    Options(ClientOptions)
+}
+
+#[derive(Deserialize, Clone, Debug)]
 pub struct DatabaseConfig {
-    pub host: String,
-    pub username: String,
-    pub password: String
+    pub connection: DatabaseConnection,
+    pub database: String
 }
 
 impl DatabaseConfig {
-    pub fn connect(&self) -> Result<Client, CouchError> {
-        Client::new(&self.host, &self.username, &self.password)
+    pub async fn connect(&self) -> Result<Database, mongodb::error::Error> {
+        let client = match &self.connection {
+            DatabaseConnection::URL(url) => Client::with_uri_str(url.clone()).await?,
+            DatabaseConnection::Options(opts) => Client::with_options(opts.clone())?
+        };
+        Ok(client.database(&self.database))
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub struct Config {
     pub database: DatabaseConfig,
     pub session_duration: DurationString
