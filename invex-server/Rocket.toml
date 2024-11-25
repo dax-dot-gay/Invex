@@ -8,6 +8,8 @@ certs = "certs/cert.pem"
 key = "certs/key.pem"
 
 [default.app]
+session_duration = "96h"
+
 [default.app.database]
 host = "http://localhost:5984"
 username = "invex"

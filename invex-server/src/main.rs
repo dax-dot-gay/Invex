@@ -1,5 +1,5 @@
 use couch_rs::Client;
-use models::server::ServerInfo;
+use models::{auth::SessionFairing, server::ServerInfo};
 use rocket::serde::json::Json;
 mod config;
 
@@ -20,5 +20,5 @@ fn index(info: ServerInfo) -> Json<ServerInfo> {
 async fn rocket() -> _ {
     let rocket = rocket::build().mount("/", routes![index]);
     let conf: Config = rocket.figment().extract_inner("app").expect("App config");
-    rocket.manage::<Config>(conf.clone()).manage::<Client>(conf.clone().database.connect().expect("Failed to connect to database"))
+    rocket.manage::<Config>(conf.clone()).manage::<Client>(conf.clone().database.connect().expect("Failed to connect to database")).attach(SessionFairing)
 }

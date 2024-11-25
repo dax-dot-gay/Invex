@@ -1,6 +1,6 @@
-use std::{any::TypeId, ops::{Deref, DerefMut}};
+use std::ops::{Deref, DerefMut};
 
-use bevy_reflect::Reflect;
+use bevy_reflect::{Reflect, TypeRegistration, Typed};
 use convert_case::{Case, Casing};
 use couch_rs::{document::TypedCouchDocument, typed::Database, Client};
 use error::ApiError;
@@ -11,13 +11,13 @@ pub mod server;
 pub mod error;
 pub mod auth;
 
-pub struct Docs<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument> {
+pub struct Docs<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument + Typed> {
     inner: Database<T>
 }
 
-impl<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument> Docs<T> {
+impl<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument + Typed> Docs<T> {
     pub async fn new(client: Client) -> Result<Self, ApiError> {
-        let name = TypeId::of::<T>().as_reflect().reflect_short_type_path().from_case(Case::Camel).to_case(Case::Snake);
+        let name = TypeRegistration::of::<T>().type_info().type_path_table().short_path().from_case(Case::UpperCamel).to_case(Case::Snake);
         match client.db(name.as_str()).await {
             Ok(_) => Ok(Docs {inner: Database::<T>::new(name, client.clone())}),
             Err(e) => Err(ApiError::Internal(format!("Failed to retrieve database `{name}`: {e:?}")))
@@ -26,7 +26,7 @@ impl<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument> Docs<T> {
 }
 
 #[rocket::async_trait]
-impl<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument, 'r> FromRequest<'r> for Docs<T> {
+impl<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument + Typed, 'r> FromRequest<'r> for Docs<T> {
     type Error = ApiError;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
@@ -41,7 +41,7 @@ impl<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument, 'r> FromReq
     }
 }
 
-impl<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument> Deref for Docs<T> {
+impl<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument + Typed> Deref for Docs<T> {
     type Target = Database<T>;
 
     fn deref(&self) -> &Self::Target {
@@ -49,7 +49,7 @@ impl<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument> Deref for D
     }
 }
 
-impl<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument> DerefMut for Docs<T> {
+impl<T: Serialize + DeserializeOwned + Reflect + TypedCouchDocument + Typed> DerefMut for Docs<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
     }

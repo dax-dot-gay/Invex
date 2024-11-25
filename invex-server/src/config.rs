@@ -1,4 +1,5 @@
 use couch_rs::{error::CouchError, Client};
+use duration_string::DurationString;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -16,5 +17,6 @@ impl DatabaseConfig {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
-    pub database: DatabaseConfig
+    pub database: DatabaseConfig,
+    pub session_duration: DurationString
 }
