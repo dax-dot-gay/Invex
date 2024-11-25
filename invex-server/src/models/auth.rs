@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use bevy_reflect::Reflect;
 use chrono::{DateTime, TimeDelta, Utc};
 use invex_macros::Document;
@@ -5,7 +7,7 @@ use mongodb::Database;
 use rocket::{fairing::{Fairing, Info, Kind}, http::{Cookie, Header}, time::OffsetDateTime, Data, Request};
 use serde::{Deserialize, Serialize};
 use bson::doc;
-use crate::{config::Config, util::database::{Docs, Document, Id}};
+use crate::{config::Config, util::{crypto::{CipherData, HashedPassword, SecretKey}, database::{Docs, Document, Id}}};
 
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect, Document)]
 pub struct AuthSession {
@@ -14,7 +16,10 @@ pub struct AuthSession {
     pub created: String,
 
     #[serde(default)]
-    pub user_id: Option<Id>
+    pub user_id: Option<Id>,
+
+    #[serde(default)]
+    pub session_key: Option<CipherData>
 }
 
 impl AuthSession {
@@ -28,6 +33,25 @@ impl AuthSession {
 
     pub fn get_expiry(&self, config: Config) -> DateTime<Utc> {
         self.created() + TimeDelta::from_std(config.session_duration.into()).expect("Invalid session length (out of range)")
+    }
+
+    pub fn activate_key(&mut self, key: SecretKey) -> Result<SecretKey, Box<dyn Error>> {
+        let new_key = SecretKey::default();
+        self.session_key = Some(new_key.encrypt(key)?);
+        Ok(new_key)
+    }
+
+    pub fn clear_key(&mut self) {
+        self.session_key = None;
+    }
+
+    pub fn reveal_key(&self, client_key: SecretKey) -> Option<SecretKey> {
+        if let Some(enc) = &self.session_key {
+            if let Ok(decoded) = client_key.decrypt::<SecretKey>(enc.clone()) {
+                return Some(decoded);
+            }
+        }
+        None
     }
 }
 
@@ -65,5 +89,25 @@ impl Fairing for SessionFairing {
             }
         }
         panic!("FAIL");
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Reflect, Document)]
+pub struct AuthUser {
+    #[serde(default, rename = "_id")]
+    pub id: Id,
+    pub username: String,
+    pub password: HashedPassword,
+    pub secret_key: CipherData
+}
+
+impl AuthUser {
+    pub fn new(username: String, password: String) -> Result<Self, Box<dyn Error>> {
+        let hashed_pass = HashedPassword::new(password.clone())?;
+        let encryption_key = SecretKey::default();
+        let password_key = SecretKey::derive(password.clone())?;
+        let encrypted_key = password_key.encrypt(encryption_key)?;
+
+        Ok(AuthUser { id: Id::default(), username, password: hashed_pass, secret_key: encrypted_key })
     }
 }

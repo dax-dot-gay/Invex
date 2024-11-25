@@ -26,7 +26,14 @@ impl DatabaseConfig {
 }
 
 #[derive(Deserialize, Clone, Debug)]
+pub struct AdminConfig {
+    pub username: String,
+    pub password: String
+}
+
+#[derive(Deserialize, Clone, Debug)]
 pub struct Config {
     pub database: DatabaseConfig,
+    pub admin: AdminConfig,
     pub session_duration: DurationString
 }

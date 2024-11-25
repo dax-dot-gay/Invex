@@ -10,6 +10,10 @@ key = "certs/key.pem"
 [default.app]
 session_duration = "96h"
 
+[default.app.admin]
+username = "admin"
+password = "admin"
+
 [default.app.database]
 database = "invex"
 connection = "mongodb://invex:invex@localhost:27017/"
