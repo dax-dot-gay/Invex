@@ -6,5 +6,7 @@
         "**/*.sass",
         "**/*.less",
         "invex-client/node_modules/@mantine/core/styles.css"
-    ]
+    ],
+    "i18n-ally.enabledFrameworks": ["react-i18next"],
+    "i18n-ally.localesPaths": ["invex-client/src/lang"]
 }
