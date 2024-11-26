@@ -5,6 +5,6 @@
         "**/*.scss",
         "**/*.sass",
         "**/*.less",
-        "node_modules/@mantine/core/styles.css"
+        "invex-client/node_modules/@mantine/core/styles.css"
     ]
 }
