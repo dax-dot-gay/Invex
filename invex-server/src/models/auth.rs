@@ -105,24 +105,48 @@ impl Fairing for SessionFairing {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Reflect, Document)]
-pub struct AuthUser {
-    #[serde(default, rename = "_id")]
-    pub id: Id,
-    pub username: String,
-    pub password: HashedPassword,
-    pub secret_key: CipherData,
-    pub is_admin: bool
+#[derive(Serialize, Deserialize, Clone, Debug, Reflect)]
+#[serde(tag = "type")]
+pub enum AuthUser {
+    User {
+        #[serde(default, rename = "_id")]
+        id: Id,
+        username: String,
+        password: HashedPassword,
+        secret_key: CipherData
+    },
+    Admin {
+        #[serde(default, rename = "_id")]
+        id: Id,
+        username: String,
+        password: HashedPassword,
+        secret_key: CipherData
+    },
+    Ephemeral {
+        #[serde(default, rename = "_id")]
+        id: Id,
+        invite: Id
+    }
+}
+
+impl Document for AuthUser {
+    fn id(&self) -> String {
+        match self {
+            AuthUser::Admin { id, ..} => id.to_string(),
+            AuthUser::User {id, ..} => id.to_string(),
+            AuthUser::Ephemeral {id, ..} => id.to_string()
+        }
+    }
 }
 
 impl AuthUser {
-    pub fn new(username: String, password: String) -> Result<Self, Box<dyn Error>> {
+    pub fn new_user(username: String, password: String) -> Result<Self, Box<dyn Error>> {
         let hashed_pass = HashedPassword::new(password.clone())?;
         let encryption_key = SecretKey::default();
         let password_key = SecretKey::derive(password.clone())?;
         let encrypted_key = password_key.encrypt(encryption_key)?;
 
-        Ok(AuthUser { id: Id::default(), username, password: hashed_pass, secret_key: encrypted_key, is_admin: false })
+        Ok(AuthUser::User { id: Id::default(), username, password: hashed_pass, secret_key: encrypted_key })
     }
 
     pub fn new_admin(username: String, password: String) -> Result<Self, Box<dyn Error>> {
@@ -131,11 +155,39 @@ impl AuthUser {
         let password_key = SecretKey::derive(password.clone())?;
         let encrypted_key = password_key.encrypt(encryption_key)?;
 
-        Ok(AuthUser { id: Id::default(), username, password: hashed_pass, secret_key: encrypted_key, is_admin: true })
+        Ok(AuthUser::Admin { id: Id::default(), username, password: hashed_pass, secret_key: encrypted_key })
     }
 
-    pub fn verify_password(&self, password: String) -> bool {
-        self.password.verify(password)
+    pub fn verify_password(&self, test: String) -> bool {
+        match self {
+            AuthUser::Ephemeral{..} => false,
+            AuthUser::Admin{password, ..} => password.verify(test),
+            AuthUser::User{password, ..} => password.verify(test)
+        }
+    }
+
+    pub fn is_admin(&self) -> bool {
+        if let AuthUser::Admin{..} = self {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn is_user(&self) -> bool {
+        if let AuthUser::User{..} = self {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn is_ephemeral(&self) -> bool {
+        if let AuthUser::Ephemeral{..} = self {
+            true
+        } else {
+            false
+        }
     }
 }
 

@@ -5,7 +5,7 @@ use rocket::{fairing::AdHoc, serde::json::Json};
 mod config;
 
 use config::Config;
-use util::database::Docs;
+use util::database::{Docs, Document};
 
 #[macro_use]
 extern crate rocket;
@@ -36,14 +36,16 @@ async fn rocket() -> _ {
         .attach(AdHoc::on_liftoff("Create Admin User",|rocket| Box::pin(async move {
             let users = Docs::<AuthUser>::new(rocket.state::<Database>().expect("Database not initialized").clone());
             let config = rocket.state::<Config>().expect("Config not initialized");
-            if let Ok(Some(mut user)) = users.find_one(doc! {"username": config.admin.username.clone()}).await {
-                if !user.is_admin {
-                    user.is_admin = true;
-                    users.save(user.clone()).await.expect("Unable to update existing user to admin.");
+            if let Ok(Some(user)) = users.find_one(doc! {"username": config.admin.username.clone()}).await {
+                if !user.is_admin() {
+                    users.delete_one(doc! {"_id": user.id()}).await.expect("Failed to remove existing non-admin user");
+
+                } else {
+                    return;
                 }
-            } else {
-                let new_user = AuthUser::new_admin(config.admin.username.clone(), config.admin.password.clone()).expect("Invalid admin parameters.");
-                users.save(new_user).await.expect("Unable to insert admin user");
             }
+
+            let new_user = AuthUser::new_admin(config.admin.username.clone(), config.admin.password.clone()).expect("Invalid admin parameters.");
+            users.save(new_user).await.expect("Unable to insert admin user");
         })))
 }
