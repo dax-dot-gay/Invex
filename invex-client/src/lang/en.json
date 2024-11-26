@@ -1,1 +1,10 @@
-{}
+{
+  "common": {
+    "appName": "Invex"
+  },
+  "views": {
+    "layout": {
+      "desc": "Invitation Index"
+    }
+  }
+}

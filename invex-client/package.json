@@ -19,6 +19,7 @@
     "@mantine/notifications": "^7.14.2",
     "@tabler/icons-react": "^3.22.0",
     "axios": "^1.7.7",
+    "base64-js": "^1.5.1",
     "dayjs": "^1.11.13",
     "i18next": "^24.0.2",
     "lodash": "^4.17.21",

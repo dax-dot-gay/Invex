@@ -1,0 +1,7 @@
+.app-layout {
+    .app-layout-component {
+        &.header {
+            background-color: var(--mantine-color-default);
+        }
+    }
+}
