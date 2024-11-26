@@ -63,13 +63,13 @@ impl SecretKey {
     }
 
     pub fn encrypt<T: Serialize + DeserializeOwned>(&self, data: T) -> Result<CipherData, Box<dyn Error>> {
-        let serialized = bson::to_vec(&data)?;
+        let serialized = serde_json::to_vec(&data)?;
         Ok(CipherData::seal(self.key()?, serialized)?)
     }
 
     pub fn decrypt<T: Serialize + DeserializeOwned>(&self, cipher: CipherData) -> Result<T, Box<dyn Error>> {
         let decrypted = cipher.open(self.key()?)?;
-        Ok(bson::from_slice::<T>(decrypted.as_slice())?)
+        Ok(serde_json::from_slice(decrypted.as_slice())?)
     }
 }
 

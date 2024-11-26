@@ -111,7 +111,8 @@ pub struct AuthUser {
     pub id: Id,
     pub username: String,
     pub password: HashedPassword,
-    pub secret_key: CipherData
+    pub secret_key: CipherData,
+    pub is_admin: bool
 }
 
 impl AuthUser {
@@ -121,7 +122,16 @@ impl AuthUser {
         let password_key = SecretKey::derive(password.clone())?;
         let encrypted_key = password_key.encrypt(encryption_key)?;
 
-        Ok(AuthUser { id: Id::default(), username, password: hashed_pass, secret_key: encrypted_key })
+        Ok(AuthUser { id: Id::default(), username, password: hashed_pass, secret_key: encrypted_key, is_admin: false })
+    }
+
+    pub fn new_admin(username: String, password: String) -> Result<Self, Box<dyn Error>> {
+        let hashed_pass = HashedPassword::new(password.clone())?;
+        let encryption_key = SecretKey::default();
+        let password_key = SecretKey::derive(password.clone())?;
+        let encrypted_key = password_key.encrypt(encryption_key)?;
+
+        Ok(AuthUser { id: Id::default(), username, password: hashed_pass, secret_key: encrypted_key, is_admin: true })
     }
 
     pub fn verify_password(&self, password: String) -> bool {
