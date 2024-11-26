@@ -1,7 +1,7 @@
-import { fromByteArray } from "base64-js";
+import { Base64 } from "js-base64";
 
 export function randomBytes(size: number): string {
     const buffer = new Uint8Array(size);
     window.crypto.getRandomValues(buffer);
-    return fromByteArray(buffer);
+    return Base64.fromUint8Array(buffer, true);
 }
