@@ -4,10 +4,12 @@ use bevy_reflect::Reflect;
 use chrono::{DateTime, TimeDelta, Utc};
 use invex_macros::Document;
 use mongodb::Database;
-use rocket::{fairing::{Fairing, Info, Kind}, http::{Cookie, Header}, time::OffsetDateTime, Data, Request};
+use rocket::{fairing::{Fairing, Info, Kind}, http::{Cookie, Header, Status}, request::{FromRequest, Outcome}, time::OffsetDateTime, Data, Request};
 use serde::{Deserialize, Serialize};
 use bson::doc;
 use crate::{config::Config, util::{crypto::{CipherData, HashedPassword, SecretKey}, database::{Docs, Document, Id}}};
+
+use super::error::ApiError;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect, Document)]
 pub struct AuthSession {
@@ -55,6 +57,21 @@ impl AuthSession {
     }
 }
 
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for AuthSession {
+    type Error = ApiError;
+
+    async fn from_request(req:&'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let sessions = Docs::<AuthSession>::new(req.rocket().state::<Database>().expect("Database not initialized").clone());
+        let token = req.headers().get("TOKEN").last().expect("Session header not set (fairing inactive?)").to_string();
+        if let Some(session) = sessions.get(token).await {
+            Outcome::Success(session)
+        } else {
+            Outcome::Error((Status::BadRequest, ApiError::Internal("Invalid session token".to_string())))
+        }
+    }
+}
+
 pub struct SessionFairing;
 
 #[rocket::async_trait]
@@ -67,28 +84,24 @@ impl Fairing for SessionFairing {
     }
 
     async fn on_request(&self, request: &mut Request<'_>, _: &mut Data<'_>) {
-        if let Some(config) = request.rocket().state::<Config>() {
-            if let Some(db) = request.rocket().state::<Database>() {
-                let sessions = Docs::<AuthSession>::new(db.clone());
-                if let Some(cookie) = request.cookies().get_private("invex:token") {
-                    if let Some(existing) = sessions.get(cookie.value()).await {
-                        if existing.get_expiry(config.clone()) > Utc::now() {
-                            request.add_header(Header::new("TOKEN", existing.id()));
-                            return;
-                        }
-                        let _ = sessions.delete_one(doc! {"_id": existing.id()}).await;
-                    }
-                    request.cookies().remove_private(cookie);
+        let config = request.rocket().state::<Config>().expect("Config not present in state");
+        let database = request.rocket().state::<Database>().expect("Database not present in state");
+        let sessions = Docs::<AuthSession>::new(database.clone());
+        if let Some(cookie) = request.cookies().get_private("invex:token") {
+            if let Some(existing) = sessions.get(cookie.value()).await {
+                if existing.get_expiry(config.clone()) > Utc::now() {
+                    request.add_header(Header::new("TOKEN", existing.id()));
+                    return;
                 }
-
-                let new_id = AuthSession::generate();
-                let _ = sessions.save(new_id.clone()).await;
-                request.cookies().add_private(Cookie::build(("invex:token", new_id.clone().id())).expires(OffsetDateTime::from_unix_timestamp(new_id.get_expiry(config.clone()).timestamp()).expect("Expiration out of range")));
-                request.add_header(Header::new("TOKEN", new_id.clone().id()));
-                return;
+                let _ = sessions.delete_one(doc! {"_id": existing.id()}).await;
             }
+            request.cookies().remove_private(cookie);
         }
-        panic!("FAIL");
+
+        let new_id = AuthSession::generate();
+        let _ = sessions.save(new_id.clone()).await;
+        request.cookies().add_private(Cookie::build(("invex:token", new_id.clone().id())).expires(OffsetDateTime::from_unix_timestamp(new_id.get_expiry(config.clone()).timestamp()).expect("Expiration out of range")));
+        request.add_header(Header::new("TOKEN", new_id.clone().id()));
     }
 }
 
@@ -109,5 +122,35 @@ impl AuthUser {
         let encrypted_key = password_key.encrypt(encryption_key)?;
 
         Ok(AuthUser { id: Id::default(), username, password: hashed_pass, secret_key: encrypted_key })
+    }
+
+    pub fn verify_password(&self, password: String) -> bool {
+        self.password.verify(password)
+    }
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for AuthUser {
+    type Error = ApiError;
+
+    async fn from_request(req:&'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let users = Docs::<AuthUser>::new(req.rocket().state::<Database>().expect("Database not initialized").clone());
+        let sessions = Docs::<AuthSession>::new(req.rocket().state::<Database>().expect("Database not initialized").clone());
+        if let Outcome::Success(mut session) = req.guard::<AuthSession>().await {
+            if session.user_id.is_none() {
+                return Outcome::Error((Status::Unauthorized, ApiError::AuthenticationRequired));
+            }
+
+            if let Some(user) = users.get(session.clone().user_id.unwrap().to_string()).await {
+                Outcome::Success(user)
+            } else {
+                session.clear_key();
+                session.user_id = None;
+                let _ = sessions.save(session.clone()).await;
+                return Outcome::Error((Status::Unauthorized, ApiError::AuthenticationRequired));
+            }
+        } else {
+            Outcome::Error((Status::BadRequest, ApiError::Internal("Invalid session token".to_string())))
+        }
     }
 }
