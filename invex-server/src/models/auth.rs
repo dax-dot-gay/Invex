@@ -216,3 +216,20 @@ impl<'r> FromRequest<'r> for AuthUser {
         }
     }
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum ClientUser {
+    User {
+        id: Id,
+        username: String
+    },
+    Admin {
+        id: Id,
+        username: String
+    },
+    Ephemeral {
+        id: Id,
+        invite: Id
+    }
+}

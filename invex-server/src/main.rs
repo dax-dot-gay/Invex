@@ -1,7 +1,7 @@
 use bson::doc;
 use models::{auth::{AuthUser, SessionFairing}, server::ServerInfo};
 use mongodb::Database;
-use rocket::{fairing::AdHoc, serde::json::Json};
+use rocket::fairing::AdHoc;
 mod config;
 
 use config::Config;
@@ -14,14 +14,9 @@ mod controllers;
 mod models;
 mod util;
 
-#[get("/")]
-fn index(info: ServerInfo) -> Json<ServerInfo> {
-    Json(info)
-}
-
 #[launch]
 async fn rocket() -> _ {
-    let rocket = rocket::build().mount("/", routes![index]);
+    let rocket = rocket::build();
     let conf: Config = rocket.figment().extract_inner("app").expect("App config");
     rocket
         .manage::<Config>(conf.clone())

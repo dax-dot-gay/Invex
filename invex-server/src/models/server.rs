@@ -5,24 +5,12 @@ use rocket::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::error::ApiError;
+use super::{auth::ClientUser, error::ApiError};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ServerInfo {
     pub profile: String,
     pub request_time: DateTime<Utc>,
     pub session: String,
-}
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for ServerInfo {
-    type Error = ApiError;
-    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        Outcome::Success(ServerInfo {
-            profile: req.rocket().config().profile.to_string(),
-            request_time: Utc::now(),
-            session: req.headers().get("TOKEN").last().unwrap()
-                .to_string(),
-        })
-    }
+    pub user: Option<ClientUser>
 }
