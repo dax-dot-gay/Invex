@@ -121,11 +121,6 @@ pub enum AuthUser {
         username: String,
         password: HashedPassword,
         secret_key: CipherData
-    },
-    Ephemeral {
-        #[serde(default, rename = "_id")]
-        id: Id,
-        invite: Id
     }
 }
 
@@ -134,7 +129,6 @@ impl Document for AuthUser {
         match self {
             AuthUser::Admin { id, ..} => id.to_string(),
             AuthUser::User {id, ..} => id.to_string(),
-            AuthUser::Ephemeral {id, ..} => id.to_string()
         }
     }
 }
@@ -160,7 +154,6 @@ impl AuthUser {
 
     pub fn verify_password(&self, test: String) -> bool {
         match self {
-            AuthUser::Ephemeral{..} => false,
             AuthUser::Admin{password, ..} => password.verify(test),
             AuthUser::User{password, ..} => password.verify(test)
         }
@@ -181,14 +174,6 @@ impl AuthUser {
             false
         }
     }
-
-    pub fn is_ephemeral(&self) -> bool {
-        if let AuthUser::Ephemeral{..} = self {
-            true
-        } else {
-            false
-        }
-    }
 }
 
 impl Into<ClientUser> for AuthUser {
@@ -196,7 +181,6 @@ impl Into<ClientUser> for AuthUser {
         match self {
             AuthUser::Admin { id, username, .. } => ClientUser::Admin { id, username },
             AuthUser::User { id, username, .. } => ClientUser::User {id, username},
-            AuthUser::Ephemeral { id, invite } => ClientUser::Ephemeral { id, invite }
         }
     }
 }
@@ -237,9 +221,5 @@ pub enum ClientUser {
     Admin {
         id: Id,
         username: String
-    },
-    Ephemeral {
-        id: Id,
-        invite: Id
     }
 }

@@ -50,12 +50,6 @@ function UserActionButton() {
                         </ActionIcon>
                     </Group>
                 );
-            case "Ephemeral":
-                return (
-                    <Button leftSection={<IconLogin2 size={20} />}>
-                        {t("views.layout.action.login")}
-                    </Button>
-                );
         }
     } else {
         return (
