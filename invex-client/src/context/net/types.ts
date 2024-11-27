@@ -18,7 +18,6 @@ export type NetContextType = { refresh: () => Promise<void> } & (
           axios: Axios;
           state: NetStateReady | NetStateAuthed;
           setSecretKey: (key: string) => void;
-          setUser: (user: User | null) => void;
       }
     | {
           state: NetStateNew | NetStateError;

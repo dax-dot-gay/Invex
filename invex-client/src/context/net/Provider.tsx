@@ -1,7 +1,8 @@
 import { useLocalStorage } from "@mantine/hooks";
 import { ReactNode, useCallback, useMemo, useState } from "react";
-import { User } from "../../types/auth";
-import { Axios } from "axios";
+import { ConnectionInfo, User } from "../../types/auth";
+import { Axios, AxiosError } from "axios";
+import { NetContext } from "./types";
 
 export function NetProvider({
     children,
@@ -14,6 +15,9 @@ export function NetProvider({
     });
     const [token, setToken] = useState<string | null>(null);
     const [user, setUser] = useState<User | null>(null);
+    const [error, setError] = useState<{ code: number; reason?: any } | null>(
+        null
+    );
 
     const client = useMemo(() => {
         return new Axios({
@@ -26,11 +30,50 @@ export function NetProvider({
         });
     }, [secretKey]);
 
-    const refresh = useCallback(async () => {}, [
-        secretKey,
-        token,
-        user?.id,
-        setToken,
-        setUser,
-    ]);
+    const refresh = useCallback(async () => {
+        try {
+            const response = await client.get<ConnectionInfo>("/");
+            setError(null);
+            setToken(response.data.session);
+            setUser(response.data.user);
+        } catch (e) {
+            const error = e as AxiosError;
+            setError({ code: error.status ?? 0, reason: error.message });
+            setUser(null);
+            setToken(null);
+        }
+    }, [secretKey, token, user?.id, setToken, setUser, setError]);
+
+    return (
+        <NetContext.Provider
+            value={
+                token
+                    ? user
+                        ? {
+                              state: { state: "authed", token, user },
+                              axios: client,
+                              setSecretKey,
+                              refresh,
+                          }
+                        : {
+                              state: { state: "ready", token },
+                              axios: client,
+                              setSecretKey,
+                              refresh,
+                          }
+                    : error
+                    ? {
+                          state: {
+                              state: "error",
+                              code: error.code,
+                              reason: error.reason,
+                          },
+                          refresh,
+                      }
+                    : { state: { state: "new" }, refresh }
+            }
+        >
+            {children}
+        </NetContext.Provider>
+    );
 }

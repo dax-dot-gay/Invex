@@ -9,3 +9,10 @@ export type User =
           id: string;
           invite: string;
       };
+
+export type ConnectionInfo = {
+    profile: string;
+    request_time: string;
+    session: string;
+    user: User | null;
+};
