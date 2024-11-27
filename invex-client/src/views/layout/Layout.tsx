@@ -1,23 +1,76 @@
-import { AppShell, Group, Stack, Text, Title } from "@mantine/core";
-import { IconArchiveFilled } from "@tabler/icons-react";
+import {
+    ActionIcon,
+    AppShell,
+    Button,
+    Group,
+    Stack,
+    Text,
+    Title,
+} from "@mantine/core";
+import {
+    IconArchiveFilled,
+    IconLogin2,
+    IconLogout,
+    IconMailCog,
+    IconShieldCog,
+} from "@tabler/icons-react";
 import { useMobile } from "../../util/hooks";
 import { useTranslation } from "react-i18next";
 import { useHover } from "@mantine/hooks";
 import { randomBytes } from "../../util/funcs";
-import { useEffect, useMemo } from "react";
-import { useApi } from "../../context/net";
-import { AuthMixin } from "../../context/net/methods/auth";
+import { useMemo } from "react";
+import { Outlet } from "react-router-dom";
+import { useUser } from "../../context/net";
+
+function UserActionButton() {
+    const user = useUser();
+    const { t } = useTranslation();
+
+    if (user) {
+        switch (user.type) {
+            case "Admin":
+                return (
+                    <Group gap="xs">
+                        <Button leftSection={<IconShieldCog size={20} />}>
+                            {t("views.layout.action.admin")}
+                        </Button>
+                        <ActionIcon size={36} variant="light">
+                            <IconLogout size={20} />
+                        </ActionIcon>
+                    </Group>
+                );
+            case "User":
+                return (
+                    <Group gap="xs">
+                        <Button leftSection={<IconMailCog size={20} />}>
+                            {t("views.layout.action.user")}
+                        </Button>
+                        <ActionIcon size={36} variant="light">
+                            <IconLogout size={20} />
+                        </ActionIcon>
+                    </Group>
+                );
+            case "Ephemeral":
+                return (
+                    <Button leftSection={<IconLogin2 size={20} />}>
+                        {t("views.layout.action.login")}
+                    </Button>
+                );
+        }
+    } else {
+        return (
+            <Button leftSection={<IconLogin2 size={20} />}>
+                {t("views.layout.action.login")}
+            </Button>
+        );
+    }
+}
 
 export function Layout() {
     const mobile = useMobile();
     const { hovered, ref } = useHover();
     const rng = useMemo(() => "invex/" + randomBytes(4), [hovered]);
     const { t } = useTranslation();
-    const api = useApi(AuthMixin);
-
-    useEffect(() => {
-        api.getSessionInfo().then(console.log);
-    });
 
     return (
         <AppShell
@@ -50,8 +103,12 @@ export function Layout() {
                             )}
                         </Stack>
                     </Group>
+                    <UserActionButton />
                 </Group>
             </AppShell.Header>
+            <AppShell.Main className="app-layout-component content">
+                <Outlet />
+            </AppShell.Main>
         </AppShell>
     );
 }

@@ -1,11 +1,5 @@
-import { Axios, AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-import {
-    isReady,
-    NetContextType,
-    NetStateAuthed,
-    NetStateReady,
-    Response,
-} from "../types";
+import { AxiosError, AxiosRequestConfig } from "axios";
+import { isReady, NetContextType, Response } from "../types";
 import { randomId } from "@mantine/hooks";
 import { User } from "../../../types/auth";
 import { UnionToIntersection, ValuesType } from "utility-types";

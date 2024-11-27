@@ -4,7 +4,12 @@
   },
   "views": {
     "layout": {
-      "desc": "Invitation Index"
+      "desc": "Invitation Index",
+      "action": {
+        "login": "Log In",
+        "admin": "Administration",
+        "user": "Invites"
+      }
     }
   }
 }

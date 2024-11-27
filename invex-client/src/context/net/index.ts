@@ -13,6 +13,7 @@ import {
 } from "./types";
 import { ApiBase, ApiMixin, generateMethods } from "./methods/base";
 import { UnionToIntersection, ValuesType } from "utility-types";
+import { User } from "../../types/auth";
 
 export { NetProvider, NetContext, isReady };
 export type {
@@ -46,6 +47,14 @@ export function useNetAccessible(): boolean {
     return state.state === "authed" || state.state === "ready";
 }
 
+export function useUser(): User | null {
+    const state = useNetworkState();
+    if (state.state === "authed") {
+        return state.user;
+    }
+    return null;
+}
+
 export function useApi<TMixins extends ApiMixin<any, any>[]>(
     ...mixins: TMixins
 ): UnionToIntersection<ReturnType<ValuesType<TMixins>>["prototype"]> & ApiBase {
@@ -73,7 +82,6 @@ export function useApi<TMixins extends ApiMixin<any, any>[]>(
     const methods = useMemo(() => {
         return generateMethods(context, ...mixins);
     }, [context.state.state, user?.id, token, names]);
-    console.log(context.state.state, user?.id, token, names);
 
     return methods;
 }

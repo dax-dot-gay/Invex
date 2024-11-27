@@ -1,4 +1,4 @@
-import { Axios, AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import { Axios, AxiosError, AxiosResponse } from "axios";
 import { User } from "../../types/auth";
 import { createContext } from "react";
 
