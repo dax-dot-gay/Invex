@@ -13,18 +13,25 @@ export type NetState =
     | NetStateReady
     | NetStateAuthed;
 
-export type NetContextType = { refresh: () => Promise<void> } & (
+export type ReadyNetContext = {
+    refresh: () => Promise<void>;
+    axios: Axios;
+    state: NetStateReady | NetStateAuthed;
+    setSecretKey: (key: string) => void;
+};
+
+export type NetContextType =
+    | ReadyNetContext
     | {
-          axios: Axios;
-          state: NetStateReady | NetStateAuthed;
-          setSecretKey: (key: string) => void;
-      }
-    | {
+          refresh: () => Promise<void>;
           state: NetStateNew | NetStateError;
-      }
-);
+      };
 
 export const NetContext = createContext<NetContextType>({
     refresh: async () => {},
     state: { state: "error", code: 0, reason: "Provider not initialized" },
 });
+
+export function isReady(obj: NetContextType): obj is ReadyNetContext {
+    return ["authed", "ready"].includes(obj.state.state);
+}
