@@ -1,6 +1,6 @@
 use duration_string::DurationString;
 use mongodb::{options::ClientOptions, Client, Database};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Clone, Debug)]
 #[serde(untagged)]
@@ -25,6 +25,24 @@ impl DatabaseConfig {
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CustomizationConfig {
+    #[serde(default)]
+    pub server_name: Option<String>,
+
+    #[serde(default)]
+    pub server_welcome: Option<String>
+}
+
+impl Default for CustomizationConfig {
+    fn default() -> Self {
+        CustomizationConfig {
+            server_name: None,
+            server_welcome: None
+        }
+    }
+}
+
 #[derive(Deserialize, Clone, Debug)]
 pub struct AdminConfig {
     pub username: String,
@@ -35,5 +53,8 @@ pub struct AdminConfig {
 pub struct Config {
     pub database: DatabaseConfig,
     pub admin: AdminConfig,
-    pub session_duration: DurationString
+    pub session_duration: DurationString,
+
+    #[serde(default)]
+    pub customization: CustomizationConfig
 }

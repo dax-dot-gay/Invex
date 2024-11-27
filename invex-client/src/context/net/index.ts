@@ -13,7 +13,7 @@ import {
 } from "./types";
 import { ApiBase, ApiMixin, generateMethods } from "./methods/base";
 import { UnionToIntersection, ValuesType } from "utility-types";
-import { User } from "../../types/auth";
+import { ServerCustomization, User } from "../../types/auth";
 
 export { NetProvider, NetContext, isReady };
 export type {
@@ -84,4 +84,8 @@ export function useApi<TMixins extends ApiMixin<any, any>[]>(
     }, [context.state.state, user?.id, token, names]);
 
     return methods;
+}
+
+export function useCustomization(): ServerCustomization | null {
+    return useNet().customization;
 }

@@ -1,6 +1,6 @@
 import { useLocalStorage } from "@mantine/hooks";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { ConnectionInfo, User } from "../../types/auth";
+import { ConnectionInfo, ServerCustomization, User } from "../../types/auth";
 import axios, { AxiosError } from "axios";
 import { NetContext } from "./types";
 
@@ -18,6 +18,11 @@ export function NetProvider({
     const [error, setError] = useState<{ code: number; reason?: any } | null>(
         null
     );
+    const [serverCustomization, setServerCustomization] =
+        useLocalStorage<ServerCustomization | null>({
+            key: "server-customization",
+            defaultValue: null,
+        });
 
     const client = useMemo(() => {
         return axios.create({
@@ -38,6 +43,7 @@ export function NetProvider({
             setError(null);
             setToken(response.data.session);
             setUser(response.data.user);
+            setServerCustomization(response.data.customization);
         } catch (e) {
             const error = e as AxiosError;
             setError({ code: error.status ?? 0, reason: error.message });
@@ -56,16 +62,25 @@ export function NetProvider({
                 token
                     ? user
                         ? {
-                              state: { state: "authed", token, user },
+                              state: {
+                                  state: "authed",
+                                  token,
+                                  user,
+                              },
                               axios: client,
                               setSecretKey,
                               refresh,
+                              customization: serverCustomization,
                           }
                         : {
-                              state: { state: "ready", token },
+                              state: {
+                                  state: "ready",
+                                  token,
+                              },
                               axios: client,
                               setSecretKey,
                               refresh,
+                              customization: serverCustomization,
                           }
                     : error
                     ? {
@@ -75,8 +90,13 @@ export function NetProvider({
                               reason: error.reason,
                           },
                           refresh,
+                          customization: serverCustomization,
                       }
-                    : { state: { state: "new" }, refresh }
+                    : {
+                          state: { state: "new" },
+                          refresh,
+                          customization: serverCustomization,
+                      }
             }
         >
             {children}

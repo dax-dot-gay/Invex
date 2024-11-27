@@ -1,6 +1,7 @@
 import {
     ActionIcon,
     AppShell,
+    Box,
     Button,
     Group,
     Stack,
@@ -101,7 +102,9 @@ export function Layout() {
                 </Group>
             </AppShell.Header>
             <AppShell.Main className="app-layout-component content">
-                <Outlet />
+                <Box className="app-container">
+                    <Outlet />
+                </Box>
             </AppShell.Main>
         </AppShell>
     );

@@ -2,6 +2,24 @@
     .app-layout-component {
         &.header {
             background-color: var(--mantine-color-default);
+            box-shadow: var(--mantine-shadow-sm);
+        }
+
+        &.content {
+            position: relative;
+            overflow: hidden;
+            .app-container {
+                position: relative;
+                display: inline-block;
+                width: 100%;
+                @media screen and (min-width: 768px) {
+                    height: calc(100vh - 60px - (var(--mantine-spacing-sm) * 2));
+                }
+
+                @media screen and (max-width: 768px) {
+                    height: calc(100vh - 48px - (var(--mantine-spacing-sm) * 2));
+                }
+            }
         }
     }
 }

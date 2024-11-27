@@ -26,4 +26,11 @@ export default defineConfig({
                 "@tabler/icons-react/dist/esm/icons/index.mjs",
         },
     },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                api: "modern-compiler",
+            },
+        },
+    },
 });

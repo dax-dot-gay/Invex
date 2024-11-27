@@ -17,3 +17,7 @@ password = "admin"
 [default.app.database]
 database = "invex"
 connection = "mongodb://invex:invex@localhost:27017/"
+
+[default.app.customization]
+server_name = "Test Server"
+server_welcome = "I'm gonna getcha"

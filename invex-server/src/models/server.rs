@@ -1,16 +1,15 @@
 use chrono::{DateTime, Utc};
-use rocket::{
-    request::{FromRequest, Outcome},
-    Request,
-};
 use serde::{Deserialize, Serialize};
 
-use super::{auth::ClientUser, error::ApiError};
+use crate::config::CustomizationConfig;
+
+use super::auth::ClientUser;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ServerInfo {
     pub profile: String,
     pub request_time: DateTime<Utc>,
     pub session: String,
-    pub user: Option<ClientUser>
+    pub user: Option<ClientUser>,
+    pub customization: CustomizationConfig
 }

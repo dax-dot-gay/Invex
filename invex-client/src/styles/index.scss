@@ -1,7 +1,21 @@
 @use "views/index.views.scss";
 
+* {
+    --input-bg: var(--mantine-color-default) !important;
+}
+
 /* For dark mode */
 :root[data-mantine-color-scheme="dark"] {
+    --mantine-color-default-border: #2f1f2f !important;
+    --mantine-color-default-hover: #2b1b2b !important;
     --mantine-color-default: #1d131d !important;
     --mantine-color-body: #120d12 !important;
+}
+
+body {
+    overflow: hidden;
+}
+
+.paper-light {
+    background-color: var(--mantine-color-default-hover) !important;
 }
