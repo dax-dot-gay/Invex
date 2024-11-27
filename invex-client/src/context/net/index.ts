@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { NetProvider } from "./Provider";
 import {
     NetContext,
@@ -9,7 +9,10 @@ import {
     NetStateNew,
     NetStateReady,
     isReady,
+    Response,
 } from "./types";
+import { ApiBase, ApiMixin, generateMethods } from "./methods/base";
+import { UnionToIntersection, ValuesType } from "utility-types";
 
 export { NetProvider, NetContext, isReady };
 export type {
@@ -19,6 +22,7 @@ export type {
     NetStateError,
     NetStateNew,
     NetStateReady,
+    Response,
 };
 
 export function useNet(): NetContextType {
@@ -40,4 +44,36 @@ export function useNetError(): NetStateError | null {
 export function useNetAccessible(): boolean {
     const state = useNetworkState();
     return state.state === "authed" || state.state === "ready";
+}
+
+export function useApi<TMixins extends ApiMixin<any, any>[]>(
+    ...mixins: TMixins
+): UnionToIntersection<ReturnType<ValuesType<TMixins>>["prototype"]> & ApiBase {
+    const context = useNet();
+    const names = useMemo(() => mixins.map((v) => v.name).join(":"), [mixins]);
+    const user = useMemo(() => {
+        if (context.state.state === "authed") {
+            return context.state.user;
+        } else {
+            return null;
+        }
+    }, [context.state]);
+
+    const token = useMemo(() => {
+        if (
+            context.state.state === "authed" ||
+            context.state.state === "ready"
+        ) {
+            return context.state.token;
+        } else {
+            return null;
+        }
+    }, [context.state]);
+
+    const methods = useMemo(() => {
+        return generateMethods(context, ...mixins);
+    }, [context.state.state, user?.id, token, names]);
+    console.log(context.state.state, user?.id, token, names);
+
+    return methods;
 }

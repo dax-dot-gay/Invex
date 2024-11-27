@@ -4,13 +4,21 @@ import { useMobile } from "../../util/hooks";
 import { useTranslation } from "react-i18next";
 import { useHover } from "@mantine/hooks";
 import { randomBytes } from "../../util/funcs";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useApi } from "../../context/net";
+import { AuthMixin } from "../../context/net/methods/auth";
 
 export function Layout() {
     const mobile = useMobile();
     const { hovered, ref } = useHover();
     const rng = useMemo(() => "invex/" + randomBytes(4), [hovered]);
     const { t } = useTranslation();
+    const api = useApi(AuthMixin);
+
+    useEffect(() => {
+        api.getSessionInfo().then(console.log);
+    });
+
     return (
         <AppShell
             header={{ height: mobile ? 48 : 60 }}

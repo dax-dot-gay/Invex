@@ -20,15 +20,11 @@ export default defineConfig({
             },
         },
     },
-    css: {
-        preprocessorOptions: {
-            scss: {
-                api: "modern-compiler",
-                additionalData: `@use "${path.join(
-                    process.cwd(),
-                    "src/_mantine"
-                )}" as mantine;`,
-            },
+    resolve: {
+        alias: {
+            // /esm/icons/index.mjs only exports the icons statically, so no separate chunks are created
+            "@tabler/icons-react":
+                "@tabler/icons-react/dist/esm/icons/index.mjs",
         },
     },
 });

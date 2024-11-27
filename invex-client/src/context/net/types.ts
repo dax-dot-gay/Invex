@@ -1,4 +1,4 @@
-import { Axios, AxiosError, AxiosRequestConfig } from "axios";
+import { Axios, AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import { User } from "../../types/auth";
 import { createContext } from "react";
 
@@ -35,3 +35,7 @@ export const NetContext = createContext<NetContextType>({
 export function isReady(obj: NetContextType): obj is ReadyNetContext {
     return ["authed", "ready"].includes(obj.state.state);
 }
+
+export type Response<T> =
+    | (AxiosResponse<T> & { success: true })
+    | (AxiosError & { success: false });

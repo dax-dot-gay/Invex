@@ -1,7 +1,7 @@
 import { useLocalStorage } from "@mantine/hooks";
-import { ReactNode, useCallback, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { ConnectionInfo, User } from "../../types/auth";
-import { Axios, AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import { NetContext } from "./types";
 
 export function NetProvider({
@@ -20,7 +20,7 @@ export function NetProvider({
     );
 
     const client = useMemo(() => {
-        return new Axios({
+        return axios.create({
             baseURL: `${window.location.origin}/api/`,
             timeout: 5000,
             headers:
@@ -32,7 +32,9 @@ export function NetProvider({
 
     const refresh = useCallback(async () => {
         try {
-            const response = await client.get<ConnectionInfo>("/");
+            const response = await client.get<ConnectionInfo>("/", {
+                responseType: "json",
+            });
             setError(null);
             setToken(response.data.session);
             setUser(response.data.user);
@@ -43,6 +45,10 @@ export function NetProvider({
             setToken(null);
         }
     }, [secretKey, token, user?.id, setToken, setUser, setError]);
+
+    useEffect(() => {
+        refresh();
+    }, []);
 
     return (
         <NetContext.Provider
