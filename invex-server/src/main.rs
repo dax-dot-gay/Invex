@@ -1,4 +1,5 @@
 use bson::doc;
+use controllers::apply_routes;
 use models::{auth::{AuthUser, SessionFairing}, server::ServerInfo};
 use mongodb::Database;
 use rocket::fairing::AdHoc;
@@ -16,7 +17,7 @@ mod util;
 
 #[launch]
 async fn rocket() -> _ {
-    let rocket = rocket::build();
+    let rocket = apply_routes(rocket::build());
     let conf: Config = rocket.figment().extract_inner("app").expect("App config");
     rocket
         .manage::<Config>(conf.clone())

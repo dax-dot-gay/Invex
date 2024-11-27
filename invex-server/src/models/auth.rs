@@ -191,6 +191,16 @@ impl AuthUser {
     }
 }
 
+impl Into<ClientUser> for AuthUser {
+    fn into(self) -> ClientUser {
+        match self {
+            AuthUser::Admin { id, username, .. } => ClientUser::Admin { id, username },
+            AuthUser::User { id, username, .. } => ClientUser::User {id, username},
+            AuthUser::Ephemeral { id, invite } => ClientUser::Ephemeral { id, invite }
+        }
+    }
+}
+
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for AuthUser {
     type Error = ApiError;
@@ -200,7 +210,7 @@ impl<'r> FromRequest<'r> for AuthUser {
         let sessions = Docs::<AuthSession>::new(req.rocket().state::<Database>().expect("Database not initialized").clone());
         if let Outcome::Success(mut session) = req.guard::<AuthSession>().await {
             if session.user_id.is_none() {
-                return Outcome::Error((Status::Unauthorized, ApiError::AuthenticationRequired));
+                return Outcome::Forward(Status::Unauthorized);
             }
 
             if let Some(user) = users.get(session.clone().user_id.unwrap().to_string()).await {
@@ -209,7 +219,7 @@ impl<'r> FromRequest<'r> for AuthUser {
                 session.clear_key();
                 session.user_id = None;
                 let _ = sessions.save(session.clone()).await;
-                return Outcome::Error((Status::Unauthorized, ApiError::AuthenticationRequired));
+                return Outcome::Forward(Status::Unauthorized);
             }
         } else {
             Outcome::Error((Status::BadRequest, ApiError::Internal("Invalid session token".to_string())))
