@@ -55,13 +55,13 @@ impl SecretKey {
     pub fn derive<T: AsRef<str>>(password: T) -> Result<(Self, StoredSalt), UnknownCryptoError> {
         let salt = StoredSalt::default();
         let pass = Password::from_slice(password.as_ref().as_bytes())?;
-        let key = orion::kdf::derive_key(&pass, &salt.clone().into(), 3, 1 << 16, 32)?;
+        let key = orion::kdf::derive_key(&pass, &salt.clone().into(), 3, 1<<8, 32)?;
         Ok((SecretKey(URL_SAFE.encode(key.unprotected_as_bytes())), salt.clone()))
     }
 
     pub fn derive_with_salt<T: AsRef<str>>(password: T, salt: StoredSalt) -> Result<Self, UnknownCryptoError> {
         let pass = Password::from_slice(password.as_ref().as_bytes())?;
-        let key = orion::kdf::derive_key(&pass, &salt.clone().into(), 3, 1 << 16, 32)?;
+        let key = orion::kdf::derive_key(&pass, &salt.clone().into(), 3, 1<<8, 32)?;
         Ok(SecretKey(URL_SAFE.encode(key.unprotected_as_bytes())))
     }
 
