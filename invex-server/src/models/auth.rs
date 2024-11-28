@@ -7,7 +7,7 @@ use mongodb::Database;
 use rocket::{fairing::{Fairing, Info, Kind}, http::{Cookie, Header, Status}, request::{FromRequest, Outcome}, time::OffsetDateTime, Data, Request};
 use serde::{Deserialize, Serialize};
 use bson::doc;
-use crate::{config::Config, util::{crypto::{CipherData, HashedPassword, SecretKey}, database::{Docs, Document, Id}}};
+use crate::{config::Config, util::{crypto::{CipherData, HashedPassword, SecretKey, StoredSalt}, database::{Docs, Document, Id}}};
 
 use super::error::ApiError;
 
@@ -37,7 +37,7 @@ impl AuthSession {
         self.created() + TimeDelta::from_std(config.session_duration.into()).expect("Invalid session length (out of range)")
     }
 
-    pub fn activate_key(&mut self, key: SecretKey) -> Result<SecretKey, Box<dyn Error>> {
+    pub fn activate_key(&mut self, key: SecretKey) -> Result<SecretKey, Box<dyn Error + Send + Sync>> {
         let new_key = SecretKey::default();
         self.session_key = Some(new_key.encrypt(key)?);
         Ok(new_key)
@@ -106,88 +106,62 @@ impl Fairing for SessionFairing {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect)]
-#[serde(tag = "type")]
-pub enum AuthUser {
-    User {
-        #[serde(default, rename = "_id")]
-        id: Id,
-        username: String,
-
-        #[serde(default)]
-        email: Option<String>,
-        password: HashedPassword,
-        secret_key: CipherData
-    },
-    Admin {
-        #[serde(default, rename = "_id")]
-        id: Id,
-        username: String,
-
-        #[serde(default)]
-        email: Option<String>,
-        password: HashedPassword,
-        secret_key: CipherData
-    }
+#[serde(rename_all = "snake_case")]
+pub enum UserType {
+    User,
+    Admin
 }
 
-impl Document for AuthUser {
-    fn id(&self) -> String {
-        match self {
-            AuthUser::Admin { id, ..} => id.to_string(),
-            AuthUser::User {id, ..} => id.to_string(),
-        }
-    }
+#[derive(Serialize, Deserialize, Clone, Debug, Reflect, Document)]
+pub struct AuthUser {
+    #[serde(default, rename = "_id")]
+    pub id: Id,
+    pub kind: UserType,
+    pub username: String,
+
+    #[serde(default)]
+    pub email: Option<String>,
+    password: HashedPassword,
+    secret_key: CipherData,
+    key_salt: StoredSalt
 }
 
 impl AuthUser {
-    pub fn new_user(username: String, email: Option<String>, password: String) -> Result<Self, Box<dyn Error>> {
+    pub fn new_user(username: String, email: Option<String>, password: String) -> Result<Self, Box<dyn Error + Send + Sync>> {
         let hashed_pass = HashedPassword::new(password.clone())?;
         let encryption_key = SecretKey::default();
-        let password_key = SecretKey::derive(password.clone())?;
+        let (password_key, key_salt) = SecretKey::derive(password.clone())?;
         let encrypted_key = password_key.encrypt(encryption_key)?;
 
-        Ok(AuthUser::User { id: Id::default(), username, email, password: hashed_pass, secret_key: encrypted_key })
+        Ok(AuthUser { kind: UserType::User, id: Id::default(), username, email, password: hashed_pass, secret_key: encrypted_key, key_salt })
     }
 
-    pub fn new_admin(username: String, email: Option<String>, password: String) -> Result<Self, Box<dyn Error>> {
+    pub fn new_admin(username: String, email: Option<String>, password: String) -> Result<Self, Box<dyn Error + Send + Sync>> {
         let hashed_pass = HashedPassword::new(password.clone())?;
         let encryption_key = SecretKey::default();
-        let password_key = SecretKey::derive(password.clone())?;
+        let (password_key, key_salt) = SecretKey::derive(password.clone())?;
         let encrypted_key = password_key.encrypt(encryption_key)?;
 
-        Ok(AuthUser::Admin { id: Id::default(), username, email, password: hashed_pass, secret_key: encrypted_key })
+        Ok(AuthUser { kind: UserType::Admin, id: Id::default(), username, email, password: hashed_pass, secret_key: encrypted_key, key_salt })
     }
 
     pub fn verify_password(&self, test: String) -> bool {
-        match self {
-            AuthUser::Admin{password, ..} => password.verify(test),
-            AuthUser::User{password, ..} => password.verify(test)
-        }
+        self.password.verify(test)
     }
 
-    pub fn is_admin(&self) -> bool {
-        if let AuthUser::Admin{..} = self {
-            true
-        } else {
-            false
+    pub fn verify_and_decrypt(&self, password: String) -> Option<SecretKey> {
+        if let Ok(password_key) = SecretKey::derive_with_salt(password, self.key_salt.clone()) {
+            if let Ok(decrypt) = password_key.decrypt::<SecretKey>(self.secret_key.clone()) {
+                return Some(decrypt);
+            }
         }
-    }
-
-    pub fn is_user(&self) -> bool {
-        if let AuthUser::User{..} = self {
-            true
-        } else {
-            false
-        }
+        return None;
     }
 }
 
 impl Into<ClientUser> for AuthUser {
     fn into(self) -> ClientUser {
-        match self {
-            AuthUser::Admin { id, email, username, .. } => ClientUser::Admin { id, email, username },
-            AuthUser::User { id, email, username, .. } => ClientUser::User {id, email, username},
-        }
+        ClientUser {kind: self.kind.clone(), id: self.id.clone(), email: self.email.clone(), username: self.username.clone()}
     }
 }
 
@@ -218,16 +192,9 @@ impl<'r> FromRequest<'r> for AuthUser {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(tag = "type")]
-pub enum ClientUser {
-    User {
-        id: Id,
-        email: Option<String>,
-        username: String
-    },
-    Admin {
-        id: Id,
-        email: Option<String>,
-        username: String
-    }
+pub struct ClientUser {
+    pub kind: UserType,
+    pub id: Id,
+    pub email: Option<String>,
+    pub username: String
 }

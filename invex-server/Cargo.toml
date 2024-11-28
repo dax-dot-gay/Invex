@@ -17,5 +17,5 @@ invex-macros = {path = "invex-macros"}
 mongodb = "3.1.0"
 derive_builder = "0.20.2"
 bson = { version = "2.13.0", features = ["chrono-0_4"] }
-orion = "0.17.7"
+orion = { version = "0.17.7", features = ["serde"] }
 base64 = "0.22.1"

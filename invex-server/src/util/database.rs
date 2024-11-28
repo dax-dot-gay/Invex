@@ -18,6 +18,7 @@ pub trait Document: Serialize + DeserializeOwned + Reflect + Typed {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct Docs<T: Document> {
     inner: Collection<T>
 }
@@ -29,10 +30,7 @@ impl<T: Document> Docs<T> {
     }
 
     pub async fn save(&self, document: T) -> Result<Option<Bson>, mongodb::error::Error> {
-        match self.inner.replace_one(doc! {"_id": document.id()}, document).upsert(true).await {
-            Ok(update) => Ok(update.upserted_id),
-            Err(e) => Err(e)
-        }
+        Ok(self.inner.replace_one(doc! {"_id": document.id()}, document).upsert(true).await?.upserted_id)
     }
 
     pub async fn get<S: Into<String>>(&self, id: S) -> Option<T> {

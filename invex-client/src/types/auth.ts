@@ -1,5 +1,5 @@
 export type User = {
-    type: "User" | "Admin";
+    kind: "user" | "admin";
     id: string;
     username: string;
     email: string | null;
@@ -16,4 +16,9 @@ export type ConnectionInfo = {
     session: string;
     user: User | null;
     customization: ServerCustomization;
+};
+
+export type LoginResponse = {
+    user: User;
+    client_key: string;
 };

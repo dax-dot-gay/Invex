@@ -21,33 +21,43 @@ import { useHover } from "@mantine/hooks";
 import { randomBytes } from "../../util/funcs";
 import { useMemo } from "react";
 import { Outlet } from "react-router-dom";
-import { useUser } from "../../context/net";
+import { useApi, useUser } from "../../context/net";
 import { openContextModal } from "@mantine/modals";
+import { AuthMixin } from "../../context/net/methods/auth";
 
 function UserActionButton() {
     const user = useUser();
     const { t } = useTranslation();
+    const api = useApi(AuthMixin);
 
     if (user) {
-        switch (user.type) {
-            case "Admin":
+        switch (user.kind) {
+            case "admin":
                 return (
                     <Group gap="xs">
                         <Button leftSection={<IconShieldCog size={20} />}>
                             {t("views.layout.action.admin")}
                         </Button>
-                        <ActionIcon size={36} variant="light">
+                        <ActionIcon
+                            size={36}
+                            variant="light"
+                            onClick={() => api.logout()}
+                        >
                             <IconLogout size={20} />
                         </ActionIcon>
                     </Group>
                 );
-            case "User":
+            case "user":
                 return (
                     <Group gap="xs">
                         <Button leftSection={<IconMailCog size={20} />}>
                             {t("views.layout.action.user")}
                         </Button>
-                        <ActionIcon size={36} variant="light">
+                        <ActionIcon
+                            size={36}
+                            variant="light"
+                            onClick={() => api.logout()}
+                        >
                             <IconLogout size={20} />
                         </ActionIcon>
                     </Group>

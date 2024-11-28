@@ -19,9 +19,15 @@ import { useForm } from "@mantine/form";
 import { useTranslation } from "react-i18next";
 import { PasswordField } from "../components/fields";
 import { useInputState } from "@mantine/hooks";
+import { useApi } from "../context/net";
+import { AuthMixin } from "../context/net/methods/auth";
+import { useNotifications } from "../util/notifications";
+import { useState } from "react";
 
 export function LoginModal({ context, id }: ContextModalProps<{}>) {
     const { t } = useTranslation();
+    const api = useApi(AuthMixin);
+    const { success, error } = useNotifications();
     const form = useForm({
         initialValues: {
             email: "",
@@ -45,10 +51,26 @@ export function LoginModal({ context, id }: ContextModalProps<{}>) {
         },
     });
     const [invite, setInvite] = useInputState("");
+    const [loading, setLoading] = useState(false);
 
     return (
         <Stack gap="sm">
-            <form onSubmit={form.onSubmit((values) => console.log(values))}>
+            <form
+                onSubmit={form.onSubmit((values) => {
+                    setLoading(true);
+                    api.login(values.email, values.password).then((v) => {
+                        setLoading(false);
+                        if (v) {
+                            success(
+                                t("modals.login.success", { user: v.username })
+                            );
+                            context.closeContextModal(id);
+                        } else {
+                            error(t("modals.login.error"));
+                        }
+                    });
+                })}
+            >
                 <Stack gap="sm">
                     <TextInput
                         leftSection={<IconAt size={20} />}
@@ -77,6 +99,7 @@ export function LoginModal({ context, id }: ContextModalProps<{}>) {
                             leftSection={<IconLogin2 size={20} />}
                             justify="space-between"
                             type="submit"
+                            loading={loading}
                         >
                             {t("modals.login.login")}
                         </Button>

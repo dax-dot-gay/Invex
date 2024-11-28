@@ -1,6 +1,6 @@
 use bson::doc;
 use controllers::apply_routes;
-use models::auth::{AuthUser, SessionFairing};
+use models::auth::{AuthUser, SessionFairing, UserType};
 use mongodb::Database;
 use rocket::fairing::AdHoc;
 mod config;
@@ -33,7 +33,7 @@ async fn rocket() -> _ {
             let users = Docs::<AuthUser>::new(rocket.state::<Database>().expect("Database not initialized").clone());
             let config = rocket.state::<Config>().expect("Config not initialized");
             if let Ok(Some(user)) = users.find_one(doc! {"email": config.admin.email.clone()}).await {
-                if !user.is_admin() {
+                if !matches!(user.kind, UserType::Admin) {
                     users.delete_one(doc! {"_id": user.id()}).await.expect("Failed to remove existing non-admin user");
 
                 } else {

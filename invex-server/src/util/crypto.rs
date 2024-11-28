@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use base64::{engine::general_purpose::URL_SAFE, Engine};
 use bevy_reflect::Reflect;
 use orion::{
@@ -8,6 +6,8 @@ use orion::{
     pwhash::{hash_password, hash_password_verify, Password, PasswordHash},
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
+use super::InResult;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect)]
 pub struct HashedPassword(String);
@@ -52,22 +52,29 @@ impl CipherData {
 pub struct SecretKey(String);
 
 impl SecretKey {
-    pub fn derive<T: AsRef<str>>(password: T) -> Result<Self, UnknownCryptoError> {
+    pub fn derive<T: AsRef<str>>(password: T) -> Result<(Self, StoredSalt), UnknownCryptoError> {
+        let salt = StoredSalt::default();
         let pass = Password::from_slice(password.as_ref().as_bytes())?;
-        let key = orion::kdf::derive_key(&pass, &Salt::default(), 3, 1 << 16, 32)?;
+        let key = orion::kdf::derive_key(&pass, &salt.clone().into(), 3, 1 << 16, 32)?;
+        Ok((SecretKey(URL_SAFE.encode(key.unprotected_as_bytes())), salt.clone()))
+    }
+
+    pub fn derive_with_salt<T: AsRef<str>>(password: T, salt: StoredSalt) -> Result<Self, UnknownCryptoError> {
+        let pass = Password::from_slice(password.as_ref().as_bytes())?;
+        let key = orion::kdf::derive_key(&pass, &salt.clone().into(), 3, 1 << 16, 32)?;
         Ok(SecretKey(URL_SAFE.encode(key.unprotected_as_bytes())))
     }
 
-    fn key(&self) -> Result<orion::aead::SecretKey, Box<dyn Error>> {
+    fn key(&self) -> InResult<orion::aead::SecretKey> {
         Ok(orion::aead::SecretKey::from_slice(URL_SAFE.decode(self.0.clone())?.as_slice())?)
     }
 
-    pub fn encrypt<T: Serialize + DeserializeOwned>(&self, data: T) -> Result<CipherData, Box<dyn Error>> {
+    pub fn encrypt<T: Serialize + DeserializeOwned>(&self, data: T) -> InResult<CipherData> {
         let serialized = serde_json::to_vec(&data)?;
         Ok(CipherData::seal(self.key()?, serialized)?)
     }
 
-    pub fn decrypt<T: Serialize + DeserializeOwned>(&self, cipher: CipherData) -> Result<T, Box<dyn Error>> {
+    pub fn decrypt<T: Serialize + DeserializeOwned>(&self, cipher: CipherData) -> InResult<T> {
         let decrypted = cipher.open(self.key()?)?;
         Ok(serde_json::from_slice(decrypted.as_slice())?)
     }
@@ -82,5 +89,23 @@ impl Default for SecretKey {
                     .unprotected_as_bytes(),
             ),
         )
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Reflect)]
+pub struct StoredSalt(String);
+
+impl Default for StoredSalt {
+    fn default() -> Self {
+        let generated = Salt::default();
+        let serialized = serde_json::to_vec(&generated).expect("Failed to serialize, unexpected.");
+        StoredSalt(URL_SAFE.encode(serialized))
+    }
+}
+
+impl Into<Salt> for StoredSalt {
+    fn into(self) -> Salt {
+        let data = URL_SAFE.decode(self.0).expect("Malformed contents");
+        serde_json::from_slice::<Salt>(data.as_slice()).expect("Failed to deserialize salt")
     }
 }
