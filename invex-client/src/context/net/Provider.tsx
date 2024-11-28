@@ -54,7 +54,7 @@ export function NetProvider({
 
     useEffect(() => {
         refresh();
-    }, []);
+    }, [secretKey]);
 
     return (
         <NetContext.Provider
