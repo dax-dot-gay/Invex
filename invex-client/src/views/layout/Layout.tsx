@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next";
 import { useHover } from "@mantine/hooks";
 import { randomBytes } from "../../util/funcs";
 import { useMemo } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useApi, useUser } from "../../context/net";
 import { openContextModal } from "@mantine/modals";
 import { AuthMixin } from "../../context/net/methods/auth";
@@ -29,13 +29,17 @@ function UserActionButton() {
     const user = useUser();
     const { t } = useTranslation();
     const api = useApi(AuthMixin);
+    const nav = useNavigate();
 
     if (user) {
         switch (user.kind) {
             case "admin":
                 return (
                     <Group gap="xs">
-                        <Button leftSection={<IconShieldCog size={20} />}>
+                        <Button
+                            leftSection={<IconShieldCog size={20} />}
+                            onClick={() => nav("/admin")}
+                        >
                             {t("views.layout.action.admin")}
                         </Button>
                         <ActionIcon
@@ -102,7 +106,7 @@ export function Layout() {
         <AppShell
             header={{ height: mobile ? 48 : 60 }}
             className="app-layout"
-            padding="sm"
+            padding={0}
         >
             <AppShell.Header
                 ref={ref}

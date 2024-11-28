@@ -21,6 +21,17 @@
     "home": {
       "defaultTitle": "Invex",
       "input": "Enter Invite"
+    },
+    "admin": {
+      "users": {
+        "title": "Users"
+      },
+      "invites": {
+        "title": "Invites"
+      },
+      "services": {
+        "title": "Services"
+      }
     }
   },
   "modals": {
