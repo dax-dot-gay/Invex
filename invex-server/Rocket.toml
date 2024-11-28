@@ -12,6 +12,7 @@ session_duration = "96h"
 
 [default.app.admin]
 username = "admin"
+email = "admin@example.com"
 password = "admin"
 
 [default.app.database]

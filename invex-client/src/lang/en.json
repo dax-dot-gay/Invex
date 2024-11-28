@@ -1,6 +1,9 @@
 {
   "common": {
-    "appName": "Invex"
+    "appName": "Invex",
+    "words": {
+      "or": "or"
+    }
   },
   "views": {
     "layout": {
@@ -14,6 +17,24 @@
     "home": {
       "defaultTitle": "Invex",
       "input": "Enter Invite"
+    }
+  },
+  "modals": {
+    "login": {
+      "title": "Log In",
+      "email": "Email or Username",
+      "password": "Password",
+      "login": "Log In",
+      "invite": "Enter Invite"
+    }
+  },
+  "actions": {
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "form": {
+      "empty": "Field must not be empty",
+      "invalidEmail": "Invalid email"
     }
   }
 }

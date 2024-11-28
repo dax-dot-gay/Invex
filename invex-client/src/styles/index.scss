@@ -1,4 +1,5 @@
-@use "views/index.views.scss";
+@use "views/views.index.scss";
+@use "components/components.index.scss";
 
 * {
     --input-bg: var(--mantine-color-default) !important;

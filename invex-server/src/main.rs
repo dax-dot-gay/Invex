@@ -1,6 +1,6 @@
 use bson::doc;
 use controllers::apply_routes;
-use models::{auth::{AuthUser, SessionFairing}, server::ServerInfo};
+use models::auth::{AuthUser, SessionFairing};
 use mongodb::Database;
 use rocket::fairing::AdHoc;
 mod config;
@@ -32,7 +32,7 @@ async fn rocket() -> _ {
         .attach(AdHoc::on_liftoff("Create Admin User",|rocket| Box::pin(async move {
             let users = Docs::<AuthUser>::new(rocket.state::<Database>().expect("Database not initialized").clone());
             let config = rocket.state::<Config>().expect("Config not initialized");
-            if let Ok(Some(user)) = users.find_one(doc! {"username": config.admin.username.clone()}).await {
+            if let Ok(Some(user)) = users.find_one(doc! {"email": config.admin.email.clone()}).await {
                 if !user.is_admin() {
                     users.delete_one(doc! {"_id": user.id()}).await.expect("Failed to remove existing non-admin user");
 
@@ -41,7 +41,7 @@ async fn rocket() -> _ {
                 }
             }
 
-            let new_user = AuthUser::new_admin(config.admin.username.clone(), config.admin.password.clone()).expect("Invalid admin parameters.");
+            let new_user = AuthUser::new_admin(config.admin.username.clone(), config.admin.email.clone(), config.admin.password.clone()).expect("Invalid admin parameters.");
             users.save(new_user).await.expect("Unable to insert admin user");
         })))
 }

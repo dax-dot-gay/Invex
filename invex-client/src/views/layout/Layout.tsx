@@ -22,6 +22,7 @@ import { randomBytes } from "../../util/funcs";
 import { useMemo } from "react";
 import { Outlet } from "react-router-dom";
 import { useUser } from "../../context/net";
+import { openContextModal } from "@mantine/modals";
 
 function UserActionButton() {
     const user = useUser();
@@ -54,7 +55,27 @@ function UserActionButton() {
         }
     } else {
         return (
-            <Button leftSection={<IconLogin2 size={20} />}>
+            <Button
+                leftSection={<IconLogin2 size={20} />}
+                onClick={() =>
+                    openContextModal({
+                        modal: "login",
+                        title: (
+                            <Group
+                                gap="sm"
+                                align="start"
+                                className="modal-title-wrapper"
+                            >
+                                <IconLogin2 className="modal-title-icon" />
+                                <Title order={4} className="modal-title-text">
+                                    {t("modals.login.title")}
+                                </Title>
+                            </Group>
+                        ),
+                        innerProps: {},
+                    })
+                }
+            >
                 {t("views.layout.action.login")}
             </Button>
         );

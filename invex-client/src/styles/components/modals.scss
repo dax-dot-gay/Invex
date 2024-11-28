@@ -1,0 +1,11 @@
+.mantine-Modal-title {
+    flex-grow: 2;
+    .modal-title-wrapper {
+        flex-grow: 1;
+
+        .modal-title-text { 
+            transform: translate(0, -3px);
+            font-weight: 600;
+        }
+    }
+}

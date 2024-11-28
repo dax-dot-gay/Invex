@@ -2,6 +2,7 @@ export type User = {
     type: "User" | "Admin";
     id: string;
     username: string;
+    email: string | null;
 };
 
 export type ServerCustomization = {

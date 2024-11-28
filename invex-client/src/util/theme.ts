@@ -1,4 +1,4 @@
-import { createTheme } from "@mantine/core";
+import { createTheme, Input } from "@mantine/core";
 
 export const theme = createTheme({
     colors: {
@@ -16,4 +16,11 @@ export const theme = createTheme({
         ],
     },
     primaryColor: "primary",
+    components: {
+        Input: Input.extend({
+            defaultProps: {
+                variant: "filled",
+            },
+        }),
+    },
 });

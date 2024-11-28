@@ -112,6 +112,9 @@ pub enum AuthUser {
         #[serde(default, rename = "_id")]
         id: Id,
         username: String,
+
+        #[serde(default)]
+        email: Option<String>,
         password: HashedPassword,
         secret_key: CipherData
     },
@@ -119,6 +122,9 @@ pub enum AuthUser {
         #[serde(default, rename = "_id")]
         id: Id,
         username: String,
+
+        #[serde(default)]
+        email: Option<String>,
         password: HashedPassword,
         secret_key: CipherData
     }
@@ -134,22 +140,22 @@ impl Document for AuthUser {
 }
 
 impl AuthUser {
-    pub fn new_user(username: String, password: String) -> Result<Self, Box<dyn Error>> {
+    pub fn new_user(username: String, email: Option<String>, password: String) -> Result<Self, Box<dyn Error>> {
         let hashed_pass = HashedPassword::new(password.clone())?;
         let encryption_key = SecretKey::default();
         let password_key = SecretKey::derive(password.clone())?;
         let encrypted_key = password_key.encrypt(encryption_key)?;
 
-        Ok(AuthUser::User { id: Id::default(), username, password: hashed_pass, secret_key: encrypted_key })
+        Ok(AuthUser::User { id: Id::default(), username, email, password: hashed_pass, secret_key: encrypted_key })
     }
 
-    pub fn new_admin(username: String, password: String) -> Result<Self, Box<dyn Error>> {
+    pub fn new_admin(username: String, email: Option<String>, password: String) -> Result<Self, Box<dyn Error>> {
         let hashed_pass = HashedPassword::new(password.clone())?;
         let encryption_key = SecretKey::default();
         let password_key = SecretKey::derive(password.clone())?;
         let encrypted_key = password_key.encrypt(encryption_key)?;
 
-        Ok(AuthUser::Admin { id: Id::default(), username, password: hashed_pass, secret_key: encrypted_key })
+        Ok(AuthUser::Admin { id: Id::default(), username, email, password: hashed_pass, secret_key: encrypted_key })
     }
 
     pub fn verify_password(&self, test: String) -> bool {
@@ -179,8 +185,8 @@ impl AuthUser {
 impl Into<ClientUser> for AuthUser {
     fn into(self) -> ClientUser {
         match self {
-            AuthUser::Admin { id, username, .. } => ClientUser::Admin { id, username },
-            AuthUser::User { id, username, .. } => ClientUser::User {id, username},
+            AuthUser::Admin { id, email, username, .. } => ClientUser::Admin { id, email, username },
+            AuthUser::User { id, email, username, .. } => ClientUser::User {id, email, username},
         }
     }
 }
@@ -216,10 +222,12 @@ impl<'r> FromRequest<'r> for AuthUser {
 pub enum ClientUser {
     User {
         id: Id,
+        email: Option<String>,
         username: String
     },
     Admin {
         id: Id,
+        email: Option<String>,
         username: String
     }
 }

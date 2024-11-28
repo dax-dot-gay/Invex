@@ -46,6 +46,9 @@ impl Default for CustomizationConfig {
 #[derive(Deserialize, Clone, Debug)]
 pub struct AdminConfig {
     pub username: String,
+
+    #[serde(default)]
+    pub email: Option<String>,
     pub password: String
 }
 
