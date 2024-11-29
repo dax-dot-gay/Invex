@@ -24,6 +24,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { useApi, useUser } from "../../context/net";
 import { openContextModal } from "@mantine/modals";
 import { AuthMixin } from "../../context/net/methods/auth";
+import { ModalTitle } from "../../modals";
 
 function UserActionButton() {
     const user = useUser();
@@ -75,16 +76,10 @@ function UserActionButton() {
                     openContextModal({
                         modal: "login",
                         title: (
-                            <Group
-                                gap="sm"
-                                align="start"
-                                className="modal-title-wrapper"
-                            >
-                                <IconLogin2 className="modal-title-icon" />
-                                <Title order={4} className="modal-title-text">
-                                    {t("modals.login.title")}
-                                </Title>
-                            </Group>
+                            <ModalTitle
+                                icon={IconLogin2}
+                                name={t("modals.login.title")}
+                            />
                         ),
                         innerProps: {},
                     })

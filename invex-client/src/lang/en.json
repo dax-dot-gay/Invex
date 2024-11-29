@@ -57,6 +57,14 @@
       "invite": "Enter Invite",
       "success": "Logged in as {{user}}",
       "error": "Login failed!"
+    },
+    "createUser": {
+      "username": "Username",
+      "email": "Email (optional)",
+      "password": "Password",
+      "submit": "Create",
+      "adminTitle": "Create Administrator",
+      "userTitle": "Create User"
     }
   },
   "actions": {

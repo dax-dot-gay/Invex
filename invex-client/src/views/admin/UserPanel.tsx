@@ -24,6 +24,8 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { DataTable } from "mantine-datatable";
+import { modals } from "@mantine/modals";
+import { ModalTitle } from "../../modals";
 
 function AdminItem({ user }: { user: User }) {
     const { t } = useTranslation();
@@ -100,6 +102,20 @@ export function UserPanel() {
                             variant="filled"
                             leftSection={<IconShieldPlus size={20} />}
                             size="md"
+                            onClick={() =>
+                                modals.openContextModal({
+                                    modal: "createUser",
+                                    title: (
+                                        <ModalTitle
+                                            icon={IconShieldPlus}
+                                            name={t(
+                                                "modals.createUser.adminTitle"
+                                            )}
+                                        />
+                                    ),
+                                    innerProps: { type: "admin" },
+                                })
+                            }
                         >
                             {t("views.admin.users.admins.add")}
                         </Button>
@@ -142,6 +158,20 @@ export function UserPanel() {
                             variant="filled"
                             leftSection={<IconUserPlus size={20} />}
                             size="md"
+                            onClick={() =>
+                                modals.openContextModal({
+                                    modal: "createUser",
+                                    title: (
+                                        <ModalTitle
+                                            icon={IconUserPlus}
+                                            name={t(
+                                                "modals.createUser.userTitle"
+                                            )}
+                                        />
+                                    ),
+                                    innerProps: { type: "admin" },
+                                })
+                            }
                         >
                             {t("views.admin.users.users.add")}
                         </Button>
