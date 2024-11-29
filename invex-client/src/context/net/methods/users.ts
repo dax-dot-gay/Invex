@@ -1,5 +1,5 @@
 import { User } from "../../../types/auth";
-import { Paginated } from "../types";
+import { Paginated, Response } from "../types";
 import { ApiMixinConstructor } from "./base";
 import { omitBy } from "lodash";
 
@@ -22,6 +22,23 @@ export function UsersMixin<TBase extends ApiMixinConstructor>(base: TBase) {
             return result.success
                 ? result.data
                 : { offset: 0, total: 0, results: [] };
+        }
+
+        public async createUser(
+            kind: "admin" | "user",
+            username: string,
+            email: string,
+            password: string
+        ): Promise<Response<User>> {
+            return await this.request<User>("/users/create", {
+                method: "post",
+                data: {
+                    kind,
+                    username,
+                    email: email.length > 0 ? email : null,
+                    password,
+                },
+            });
         }
     };
 }

@@ -113,7 +113,7 @@ export function UserPanel() {
                                             )}
                                         />
                                     ),
-                                    innerProps: { type: "admin" },
+                                    innerProps: { type: "admin", refresh },
                                 })
                             }
                         >
@@ -169,7 +169,7 @@ export function UserPanel() {
                                             )}
                                         />
                                     ),
-                                    innerProps: { type: "admin" },
+                                    innerProps: { type: "user", refresh },
                                 })
                             }
                         >

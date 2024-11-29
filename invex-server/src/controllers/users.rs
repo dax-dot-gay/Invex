@@ -1,12 +1,17 @@
 use bson::doc;
-use rocket::{futures::TryStreamExt, serde::json::Json, Route};
+use rocket::{serde::json::Json, Route};
+use serde::{Deserialize, Serialize};
+use regex::escape;
 
 use crate::{
     models::{
         auth::{AuthUser, ClientUser, UserType},
         error::ApiError,
     },
-    util::database::{Docs, PaginationRequest, PaginationResult},
+    util::{
+        database::{Docs, PaginationRequest, PaginationResult},
+        ApiResult,
+    },
 };
 
 #[get("/?<search>&<kind>&<pagination..>")]
@@ -15,7 +20,7 @@ async fn list_users(
     users: Docs<AuthUser>,
     pagination: Option<PaginationRequest>,
     search: Option<String>,
-    kind: Option<UserType>
+    kind: Option<UserType>,
 ) -> Result<Json<PaginationResult<ClientUser>>, ApiError> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
@@ -25,7 +30,12 @@ async fn list_users(
 
     let mut query = doc! {};
     if let Some(search_val) = search {
-        let _ = query.insert("$text", doc! {"$search": search_val});
+        query = doc! {
+            "$or": [
+                {"username": {"$regex": escape(search_val.as_str())}}, 
+                {"email": {"$regex": escape(search_val.as_str())}}
+            ]
+        };
     }
 
     if let Some(kind_val) = kind {
@@ -50,6 +60,65 @@ async fn list_users(
     }
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+struct UserCreationModel {
+    pub kind: UserType,
+    pub username: String,
+
+    #[serde(default)]
+    pub email: Option<String>,
+    pub password: String,
+}
+
+#[post("/create", data = "<new_user>")]
+async fn create_user(
+    new_user: Json<UserCreationModel>,
+    user: AuthUser,
+    users: Docs<AuthUser>,
+) -> ApiResult<ClientUser> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to list users".to_string(),
+        ));
+    }
+
+    if let Ok(Some(_)) = users
+        .find_one(if new_user.email.is_some() {
+            doc! {"$or": [{"username": new_user.username.clone()}, {"email": new_user.email.clone().unwrap()}]}
+        } else {
+            doc! {"username": new_user.username.clone()}
+        })
+        .await
+    {
+        return Err(ApiError::MethodNotAllowed(
+            "A user with this username/email already exists".to_string(),
+        ));
+    }
+
+    if let Ok(created) = match new_user.kind {
+        UserType::Admin => AuthUser::new_admin(
+            new_user.username.clone(),
+            new_user.email.clone(),
+            new_user.password.clone(),
+        ),
+        UserType::User => AuthUser::new_user(
+            new_user.username.clone(),
+            new_user.email.clone(),
+            new_user.password.clone(),
+        ),
+    } {
+        if let Ok(_) = users.save(created.clone()).await {
+            Ok(Json(created.into()))
+        } else {
+            Err(ApiError::Internal("Failed to store new user".to_string()))
+        }
+    } else {
+        Err(ApiError::Internal(
+            "Failed to create user object".to_string(),
+        ))
+    }
+}
+
 pub fn routes() -> Vec<Route> {
-    return routes![list_users];
+    return routes![list_users, create_user];
 }

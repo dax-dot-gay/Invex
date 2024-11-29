@@ -10,22 +10,68 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { PasswordField } from "../components/fields";
+import { useApi, UsersMixin } from "../context/net";
+import { useNotifications } from "../util/notifications";
+import { useState } from "react";
 
 export function CreateUserModal({
     context,
     id,
     innerProps,
-}: ContextModalProps<{ type: "admin" | "user" }>) {
+}: ContextModalProps<{ type: "admin" | "user"; refresh?: () => void }>) {
+    const { t } = useTranslation();
     const form = useForm({
         initialValues: {
             username: "",
             email: "",
             password: "",
         },
+        validate: {
+            username: (v) => (v.length > 0 ? null : t("errors.form.empty")),
+            email: (v) =>
+                v.length > 0
+                    ? /^\S+@\S+\.\S+$/.test(v)
+                        ? null
+                        : t("errors.form.invalidEmail")
+                    : null,
+            password: (v) => (v.length > 0 ? null : t("errors.form.empty")),
+        },
     });
-    const { t } = useTranslation();
+    const api = useApi(UsersMixin);
+    const { success, error } = useNotifications();
+    const [loading, setLoading] = useState(false);
+
     return (
-        <form onSubmit={form.onSubmit((values) => console.log(values))}>
+        <form
+            onSubmit={form.onSubmit((values) => {
+                setLoading(true);
+                api.createUser(
+                    innerProps.type,
+                    values.username,
+                    values.email,
+                    values.password
+                ).then((response) => {
+                    setLoading(false);
+                    if (response.success) {
+                        if (innerProps.refresh) {
+                            innerProps.refresh();
+                        }
+                        success(t("modals.createUser.success"));
+                        context.closeContextModal(id);
+                    } else {
+                        if (response.response) {
+                            error(
+                                t("errors.network.response", {
+                                    reason: response.response.data as string,
+                                })
+                            );
+                        } else {
+                            error(t("errors.network.unknown"));
+                        }
+                    }
+                });
+            })}
+        >
             <Stack gap="sm">
                 <TextInput
                     label={t("modals.createUser.username")}
@@ -59,6 +105,7 @@ export function CreateUserModal({
                         leftSection={<IconPlus size={20} />}
                         justify="space-between"
                         type="submit"
+                        loading={loading}
                     >
                         {t("modals.createUser.submit")}
                     </Button>

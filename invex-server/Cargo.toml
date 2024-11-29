@@ -19,3 +19,4 @@ derive_builder = "0.20.2"
 bson = { version = "2.13.0", features = ["chrono-0_4"] }
 orion = { version = "0.17.7", features = ["serde"] }
 base64 = "0.22.1"
+regex = "1.11.1"
