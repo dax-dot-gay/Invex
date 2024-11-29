@@ -3,13 +3,28 @@ use std::ops::{Deref, DerefMut};
 use bevy_reflect::{Reflect, TypeRegistration, Typed};
 use convert_case::{Case, Casing};
 use mongodb::{bson::{self, doc, Bson}, Collection, Database};
-use rocket::{http::Status, request::{FromRequest, Outcome}, Request};
+use rocket::{futures::TryStreamExt, http::Status, request::{FromRequest, Outcome}, Request};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::models::error::ApiError;
 
-pub trait Document: Serialize + DeserializeOwned + Reflect + Typed {
+use super::InResult;
+
+#[derive(Serialize, Clone)]
+pub struct PaginationResult<T: Serialize + Clone> {
+    pub offset: u64,
+    pub total: u64,
+    pub results: Vec<T>
+}
+
+#[derive(FromForm, Clone, Debug)]
+pub struct PaginationRequest {
+    pub page: u64,
+    pub size: u64
+}
+
+pub trait Document: Serialize + DeserializeOwned + Reflect + Typed + Clone {
     fn id(&self) -> String;
     fn create(data: mongodb::bson::Document) -> Result<Self, mongodb::bson::de::Error> {
         let mut doc = data.clone();
@@ -38,6 +53,16 @@ impl<T: Document> Docs<T> {
             Ok(r) => r,
             Err(_) => None
         }
+    }
+
+    pub async fn paginate(&self, query: bson::Document, pagination: PaginationRequest) -> InResult<PaginationResult<T>> {
+        let total_count = self.count_documents(query.clone()).await?;
+        let cursor = self.find(query.clone()).skip(pagination.page * pagination.size).limit(i64::try_from(pagination.size).or::<()>(Ok(0)).unwrap()).await?;
+        Ok(PaginationResult {
+            offset: pagination.page * pagination.size,
+            total: total_count,
+            results: cursor.try_collect().await?
+        })
     }
 }
 

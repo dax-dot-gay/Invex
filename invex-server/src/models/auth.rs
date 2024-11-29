@@ -105,7 +105,7 @@ impl Fairing for SessionFairing {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Reflect)]
+#[derive(Serialize, Deserialize, Clone, Debug, Reflect, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum UserType {
     User,

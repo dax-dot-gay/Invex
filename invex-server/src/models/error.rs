@@ -17,4 +17,7 @@ pub enum ApiError {
 
     #[response(status = 404)]
     NotFound(String),
+
+    #[response(status = 403)]
+    Forbidden(String),
 }
