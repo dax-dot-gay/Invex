@@ -105,11 +105,20 @@ impl Fairing for SessionFairing {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Reflect, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Reflect, PartialEq, FromFormField)]
 #[serde(rename_all = "snake_case")]
 pub enum UserType {
     User,
     Admin
+}
+
+impl ToString for UserType {
+    fn to_string(&self) -> String {
+        match self {
+            UserType::Admin => String::from("admin"),
+            UserType::User => String::from("user")
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect, Document)]

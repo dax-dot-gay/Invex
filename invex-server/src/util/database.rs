@@ -55,14 +55,24 @@ impl<T: Document> Docs<T> {
         }
     }
 
-    pub async fn paginate(&self, query: bson::Document, pagination: PaginationRequest) -> InResult<PaginationResult<T>> {
+    pub async fn paginate(&self, query: bson::Document, pagination_opt: Option<PaginationRequest>) -> InResult<PaginationResult<T>> {
         let total_count = self.count_documents(query.clone()).await?;
-        let cursor = self.find(query.clone()).skip(pagination.page * pagination.size).limit(i64::try_from(pagination.size).or::<()>(Ok(0)).unwrap()).await?;
-        Ok(PaginationResult {
-            offset: pagination.page * pagination.size,
-            total: total_count,
-            results: cursor.try_collect().await?
-        })
+        if let Some(pagination) = pagination_opt {
+            let cursor = self.find(query.clone()).skip(pagination.page * pagination.size).limit(i64::try_from(pagination.size).or::<()>(Ok(0)).unwrap()).await?;
+            Ok(PaginationResult {
+                offset: pagination.page * pagination.size,
+                total: total_count,
+                results: cursor.try_collect().await?
+            })
+        } else {
+            let cursor = self.find(query.clone()).await?;
+            Ok(PaginationResult {
+                offset: 0,
+                total: total_count,
+                results: cursor.try_collect().await?
+            })
+        }
+        
     }
 }
 

@@ -1,7 +1,7 @@
 use bson::doc;
 use controllers::apply_routes;
 use models::auth::{AuthUser, SessionFairing, UserType};
-use mongodb::Database;
+use mongodb::{Database, IndexModel};
 use rocket::fairing::AdHoc;
 mod config;
 
@@ -29,6 +29,10 @@ async fn rocket() -> _ {
                 .expect("Failed to connect to DB"),
         )
         .attach(SessionFairing)
+        .attach(AdHoc::on_liftoff("Setup Database", |rocket| Box::pin(async move {
+            let users = Docs::<AuthUser>::new(rocket.state::<Database>().expect("Database not initialized").clone());
+            let _ = users.create_index(IndexModel::builder().keys(doc! {"username": "text", "email": "text"}).build()).await.expect("Failed to create index on users");
+        })))
         .attach(AdHoc::on_liftoff("Create Admin User",|rocket| Box::pin(async move {
             let users = Docs::<AuthUser>::new(rocket.state::<Database>().expect("Database not initialized").clone());
             let config = rocket.state::<Config>().expect("Config not initialized");

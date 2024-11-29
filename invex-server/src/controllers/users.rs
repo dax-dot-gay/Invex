@@ -9,11 +9,13 @@ use crate::{
     util::database::{Docs, PaginationRequest, PaginationResult},
 };
 
-#[get("/?<pagination..>")]
+#[get("/?<search>&<kind>&<pagination..>")]
 async fn list_users(
     user: AuthUser,
     users: Docs<AuthUser>,
-    pagination: PaginationRequest,
+    pagination: Option<PaginationRequest>,
+    search: Option<String>,
+    kind: Option<UserType>
 ) -> Result<Json<PaginationResult<ClientUser>>, ApiError> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
@@ -21,7 +23,16 @@ async fn list_users(
         ));
     }
 
-    match users.paginate(doc! {}, pagination).await {
+    let mut query = doc! {};
+    if let Some(search_val) = search {
+        let _ = query.insert("$text", doc! {"$search": search_val});
+    }
+
+    if let Some(kind_val) = kind {
+        let _ = query.insert("kind", kind_val.to_string());
+    }
+
+    match users.paginate(query, pagination).await {
         Ok(results) => {
             let transformed_results = PaginationResult::<ClientUser> {
                 offset: results.clone().offset,
@@ -39,31 +50,6 @@ async fn list_users(
     }
 }
 
-#[get("/all")]
-async fn list_all_users(
-    user: AuthUser,
-    users: Docs<AuthUser>,
-) -> Result<Json<Vec<ClientUser>>, ApiError> {
-    if user.kind != UserType::Admin {
-        return Err(ApiError::Forbidden(
-            "Must be an admin to list all users".to_string(),
-        ));
-    }
-
-    match users.find(doc! {}).await {
-        Ok(results) => Ok(Json(
-            results
-                .try_collect::<Vec<AuthUser>>()
-                .await
-                .or_else(|e| Err(ApiError::Internal(format!("Failed to list users: {e:?}"))))?
-                .iter()
-                .map(|v| v.clone().into())
-                .collect(),
-        )),
-        Err(e) => Err(ApiError::Internal(format!("Failed to list users: {e:?}"))),
-    }
-}
-
 pub fn routes() -> Vec<Route> {
-    return routes![list_users, list_all_users];
+    return routes![list_users];
 }
