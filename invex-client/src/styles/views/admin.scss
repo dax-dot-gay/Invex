@@ -1,0 +1,29 @@
+.admin-tabs {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+
+    .admin-tab {
+        display: flex;
+        flex-grow: 1;
+
+        .admin-panel {
+            flex-grow: 1;
+
+            &.users {
+                .admin-list {
+                    .admin-list-items {
+                        max-height: 256px;
+                        overflow-y: auto;
+                    }
+                }
+
+                .user-list {
+                    overflow: hidden;
+                }
+            }
+        }
+    }
+}

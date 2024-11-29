@@ -26,6 +26,11 @@ export type {
     Response,
 };
 
+import { AuthMixin } from "./methods/auth";
+import { UsersMixin } from "./methods/users";
+
+export { AuthMixin, UsersMixin };
+
 export function useNet(): NetContextType {
     return useContext(NetContext);
 }

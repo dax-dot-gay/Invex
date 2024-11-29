@@ -24,7 +24,21 @@
     },
     "admin": {
       "users": {
-        "title": "Users"
+        "title": "Users",
+        "admins": {
+          "title": "Administrators",
+          "add": "New Administrator"
+        },
+        "noEmail": "No Email",
+        "users": {
+          "title": "Members",
+          "add": "New Member",
+          "table": {
+            "username": "Username",
+            "email": "Email",
+            "actions": "Actions"
+          }
+        }
       },
       "invites": {
         "title": "Invites"

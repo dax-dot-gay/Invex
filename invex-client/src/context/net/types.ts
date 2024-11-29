@@ -49,3 +49,9 @@ export function isReady(obj: NetContextType): obj is ReadyNetContext {
 export type Response<T> =
     | (AxiosResponse<T> & { success: true })
     | (AxiosError & { success: false });
+
+export type Paginated<T> = {
+    offset: number;
+    total: number;
+    results: T[];
+};

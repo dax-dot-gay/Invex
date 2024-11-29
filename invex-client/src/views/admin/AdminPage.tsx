@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Group, Tabs, Text } from "@mantine/core";
 import { IconLink, IconServer, IconUser } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
+import { UserPanel } from "./UserPanel";
 
 type TabType = "users" | "services" | "invites";
 
@@ -25,6 +26,7 @@ export function AdminPage() {
             value={tab}
             onChange={(v) => setTab(v ? (v as TabType) : "users")}
             variant="outline"
+            className="admin-tabs"
         >
             <Tabs.List pt="sm" px="sm">
                 <Tabs.Tab value="users">
@@ -46,13 +48,13 @@ export function AdminPage() {
                     </Group>
                 </Tabs.Tab>
             </Tabs.List>
-            <Tabs.Panel value="users" p="sm">
-                Users
+            <Tabs.Panel value="users" p="sm" className="admin-tab users">
+                <UserPanel />
             </Tabs.Panel>
-            <Tabs.Panel value="invites" p="sm">
+            <Tabs.Panel value="invites" p="sm" className="admin-tab invites">
                 Invites
             </Tabs.Panel>
-            <Tabs.Panel value="services" p="sm">
+            <Tabs.Panel value="services" p="sm" className="admin-tab services">
                 Services
             </Tabs.Panel>
         </Tabs>
