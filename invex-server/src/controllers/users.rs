@@ -119,6 +119,24 @@ async fn create_user(
     }
 }
 
+#[delete("/<user_id>")]
+async fn delete_user(user_id: String, user: AuthUser, users: Docs<AuthUser>) -> Result<(), ApiError> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to list users".to_string(),
+        ));
+    }
+
+    if user.id.to_string() == user_id {
+        return Err(ApiError::MethodNotAllowed(
+            "Cannot delete own user".to_string(),
+        ));
+    }
+
+    let _ = users.delete_one(doc! {"_id": user_id}).await;
+    Ok(())
+}
+
 pub fn routes() -> Vec<Route> {
-    return routes![list_users, create_user];
+    return routes![list_users, create_user, delete_user];
 }

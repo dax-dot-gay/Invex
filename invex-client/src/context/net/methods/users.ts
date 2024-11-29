@@ -40,5 +40,9 @@ export function UsersMixin<TBase extends ApiMixinConstructor>(base: TBase) {
                 },
             });
         }
+
+        public async deleteUser(id: string): Promise<void> {
+            await this.request<void>(`/users/${id}`, { method: "delete" });
+        }
     };
 }

@@ -1,4 +1,5 @@
 import {
+    ActionIcon,
     Button,
     Divider,
     Group,
@@ -10,7 +11,7 @@ import {
     ThemeIcon,
     Title,
 } from "@mantine/core";
-import { useApi, UsersMixin } from "../../context/net";
+import { useApi, UsersMixin, useUser } from "../../context/net";
 import { useCallback, useEffect, useState } from "react";
 import { User } from "../../types/auth";
 import { useDebouncedValue } from "@mantine/hooks";
@@ -18,6 +19,7 @@ import {
     IconSearch,
     IconShieldHalfFilled,
     IconShieldPlus,
+    IconTrashFilled,
     IconUser,
     IconUserPlus,
     IconUserShield,
@@ -27,8 +29,10 @@ import { DataTable } from "mantine-datatable";
 import { modals } from "@mantine/modals";
 import { ModalTitle } from "../../modals";
 
-function AdminItem({ user }: { user: User }) {
+function AdminItem({ user, refresh }: { user: User; refresh: () => void }) {
     const { t } = useTranslation();
+    const currentUser = useUser();
+    const api = useApi(UsersMixin);
     return (
         <Paper
             className="paper-light admin-item"
@@ -48,6 +52,17 @@ function AdminItem({ user }: { user: User }) {
                         </Text>
                     </Stack>
                 </Group>
+                {currentUser?.id !== user.id && (
+                    <ActionIcon
+                        variant="transparent"
+                        color="red"
+                        radius="xl"
+                        size="xl"
+                        onClick={() => api.deleteUser(user.id).then(refresh)}
+                    >
+                        <IconTrashFilled />
+                    </ActionIcon>
+                )}
             </Group>
         </Paper>
     );
@@ -129,7 +144,7 @@ export function UserPanel() {
                         cols={{ base: 1, sm: 2, lg: 5 }}
                     >
                         {admins.map((v) => (
-                            <AdminItem user={v} key={v.id} />
+                            <AdminItem user={v} key={v.id} refresh={refresh} />
                         ))}
                     </SimpleGrid>
                 </Stack>
@@ -200,6 +215,25 @@ export function UserPanel() {
                                     "views.admin.users.users.table.actions"
                                 ),
                                 textAlign: "center",
+                                render(record) {
+                                    return (
+                                        <Group gap="sm" justify="center">
+                                            <ActionIcon
+                                                radius="xl"
+                                                size="md"
+                                                variant="light"
+                                                color="red"
+                                                onClick={() =>
+                                                    api
+                                                        .deleteUser(record.id)
+                                                        .then(refresh)
+                                                }
+                                            >
+                                                <IconTrashFilled size={16} />
+                                            </ActionIcon>
+                                        </Group>
+                                    );
+                                },
                             },
                         ]}
                         totalRecords={total}
