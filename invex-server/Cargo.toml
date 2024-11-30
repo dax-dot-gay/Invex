@@ -14,9 +14,11 @@ serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"
 uuid = { version = "1.11.0", features = ["serde", "v4", "fast-rng"] }
 invex-macros = {path = "invex-macros"}
+invex-sdk = {path = "../invex-sdk"}
 mongodb = "3.1.0"
 derive_builder = "0.20.2"
 bson = { version = "2.13.0", features = ["chrono-0_4"] }
 orion = { version = "0.17.7", features = ["serde"] }
 base64 = "0.22.1"
 regex = "1.11.1"
+serde_repr = "0.1.19"

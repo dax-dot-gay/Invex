@@ -1,12 +1,38 @@
-use extism::Wasm;
-use serde::{Deserialize, Serialize};
+use std::error::Error;
 
-pub struct PluginConfigurationField {
-    pub key: String,
-    
-}
+use extism::{convert::Json, Manifest, Plugin, Wasm};
+use rocket::tokio;
+use serde::{Deserialize, Serialize};
+use invex_sdk::{PluginConfigurationField, PluginMetadata};
+
+use super::InResult;
+
+
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PluginInfo {
-    pub source: Wasm
+    pub source: Manifest,
+    pub fields: Vec<PluginConfigurationField>,
+    pub metadata: PluginMetadata
+}
+
+impl PluginInfo {
+    pub async fn from_manifest(source: Manifest) -> InResult<Self> {
+        let manifest = source.clone();
+        let (metadata, fields) = tokio::task::spawn_blocking(move || {
+            let mut plugin = Plugin::new(&source, [], false)?;
+            let metadata = plugin.call::<(), Json<PluginMetadata>>("info_metadata", ())?.into_inner();
+            let fields = plugin.call::<(), Json<Vec<PluginConfigurationField>>>("info_fields", ())?.into_inner();
+            Ok::<(PluginMetadata, Vec<PluginConfigurationField>), Box<dyn Error + Send + Sync>>((metadata, fields))
+        }).await??;
+        Ok(PluginInfo {
+            source: manifest,
+            fields,
+            metadata
+        })
+    }
+
+    pub async fn from_wasm(source: Wasm) -> InResult<Self> {
+        Ok(PluginInfo::from_manifest(Manifest::new([source])).await?)
+    }
 }

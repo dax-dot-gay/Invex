@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+    "/workspaces/Invex/invex-server/",
+    "/workspaces/Invex/invex-sdk/",
+    "/workspaces/Invex/plugins/jellyfin"
+]
