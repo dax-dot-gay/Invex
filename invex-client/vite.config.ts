@@ -1,10 +1,21 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import fs from "node:fs";
+import dynamicImport from "vite-plugin-dynamic-import";
+import path from "node:path";
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        react(),
+        dynamicImport({
+            filter(id) {
+                if (id.includes("/node_modules/@tabler")) {
+                    return true;
+                }
+            },
+        }),
+    ],
     server: {
         https: {
             key: fs.readFileSync("certs/key.pem"),
@@ -24,6 +35,7 @@ export default defineConfig({
             // /esm/icons/index.mjs only exports the icons statically, so no separate chunks are created
             "@tabler/icons-react":
                 "@tabler/icons-react/dist/esm/icons/index.mjs",
+            "@/node_modules": path.join(__dirname, "node_modules"),
         },
     },
     css: {
