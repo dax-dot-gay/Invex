@@ -39,9 +39,10 @@ function PluginPreview({
 }: {
     preview: PluginMeta;
     onRemove: () => void;
-    onConfirm: () => void;
+    onConfirm: () => Promise<void>;
 }) {
     const { t } = useTranslation();
+    const [loading, setLoading] = useState(false);
     return (
         <Paper
             className="paper-light"
@@ -97,7 +98,11 @@ function PluginPreview({
             <Group justify="end">
                 <Button
                     leftSection={<IconUpload size={20} />}
-                    onClick={onConfirm}
+                    onClick={() => {
+                        setLoading(true);
+                        onConfirm().then(() => setLoading(false));
+                    }}
+                    loading={loading}
                 >
                     {t("modals.addPlugin.upload.confirm")}
                 </Button>
@@ -111,14 +116,18 @@ export function AddPluginModal({
     context,
     innerProps,
 }: ContextModalProps<{
-    onSubmitFile: (file: File) => void;
-    onSubmitUrl: (url: string) => void;
+    onSubmitFile: (file: File) => Promise<void>;
+    onSubmitUrl: (url: string) => Promise<void>;
 }>) {
     const [selectedFile, setSelectedFile] = useState<FileWithPath | null>(null);
     const [filePreview, setFilePreview] = useState<PluginMeta | null>(null);
     const [urlPreview, setUrlPreview] = useState<PluginMeta | null>(null);
     const [pluginUrl, setPluginUrl] = useInputState("");
-    const [loading, setLoading] = useState(false);
+    const [confirmedPluginUrl, setConfirmedPluginUrl] = useState<string | null>(
+        null
+    );
+    const [fileLoading, setFileLoading] = useState(false);
+    const [urlLoading, setUrlLoading] = useState(false);
     const { t } = useTranslation();
     const { error } = useNotifications();
     const api = useApi(PluginsMixin);
@@ -128,9 +137,9 @@ export function AddPluginModal({
             <Dropzone
                 disabled={filePreview && selectedFile ? true : false}
                 onDrop={(files) => {
-                    setLoading(true);
+                    setFileLoading(true);
                     api.preview_plugin_from_file(files[0]).then((response) => {
-                        setLoading(false);
+                        setFileLoading(false);
                         if (response.success) {
                             setFilePreview(response.data);
                             setSelectedFile(files[0]);
@@ -166,7 +175,12 @@ export function AddPluginModal({
                     >
                         <PluginPreview
                             preview={filePreview}
-                            onConfirm={() => {}}
+                            onConfirm={async () => {
+                                await innerProps.onSubmitFile(
+                                    selectedFile as File
+                                );
+                                context.closeContextModal(id);
+                            }}
                             onRemove={() => {
                                 setSelectedFile(null);
                                 setFilePreview(null);
@@ -181,7 +195,7 @@ export function AddPluginModal({
                         style={{ pointerEvents: "none" }}
                         className="add-plugin-drop-inner"
                     >
-                        {loading ? (
+                        {fileLoading ? (
                             <Loader />
                         ) : (
                             <>
@@ -235,18 +249,74 @@ export function AddPluginModal({
                     onChange={setPluginUrl}
                     style={{ flexGrow: 1 }}
                 />
-                <ActionIcon
-                    disabled={
-                        !validator.isURL(pluginUrl, {
-                            protocols: ["http", "https"],
-                            validate_length: true,
-                        })
-                    }
-                    size={42}
-                >
-                    <IconUpload />
-                </ActionIcon>
+                {confirmedPluginUrl ? (
+                    <ActionIcon
+                        size={42}
+                        onClick={() => {
+                            setPluginUrl("");
+                            setConfirmedPluginUrl(null);
+                            setUrlPreview(null);
+                        }}
+                    >
+                        <IconX />
+                    </ActionIcon>
+                ) : (
+                    <ActionIcon
+                        disabled={
+                            !validator.isURL(pluginUrl, {
+                                protocols: ["http", "https"],
+                                validate_length: true,
+                            })
+                        }
+                        size={42}
+                        loading={urlLoading}
+                        onClick={() => {
+                            setUrlLoading(true);
+                            api.preview_plugin_from_url(pluginUrl).then(
+                                (response) => {
+                                    setUrlLoading(false);
+                                    if (response.success) {
+                                        setUrlPreview(response.data);
+                                        setConfirmedPluginUrl(pluginUrl);
+                                    } else {
+                                        error(
+                                            t("modals.addPlugin.error", {
+                                                reason: response.response
+                                                    ? isString(response)
+                                                        ? response.response
+                                                        : (
+                                                              response.response
+                                                                  .data as any
+                                                          ).description ??
+                                                          "Unknown Error"
+                                                    : "Unknown Error",
+                                            })
+                                        );
+                                    }
+                                }
+                            );
+                        }}
+                    >
+                        <IconUpload />
+                    </ActionIcon>
+                )}
             </Group>
+            {confirmedPluginUrl && urlPreview && (
+                <PluginPreview
+                    preview={urlPreview}
+                    onConfirm={async () => {
+                        await innerProps.onSubmitUrl(
+                            confirmedPluginUrl as string
+                        );
+                        context.closeContextModal(id);
+                    }}
+                    onRemove={() => {
+                        setConfirmedPluginUrl(null);
+                        setUrlPreview(null);
+                        setPluginUrl("");
+                    }}
+                />
+            )}
         </Stack>
     );
 }

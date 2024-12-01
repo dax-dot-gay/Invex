@@ -55,6 +55,8 @@ export type Plugin = {
         filename: string | null;
         content_type: string;
     };
-    metadata: PluginMeta;
-    fields: PluginField[];
+    info: {
+        metadata: PluginMeta;
+        fields: PluginField[];
+    };
 };

@@ -55,7 +55,24 @@
         "capability": {
           "create_account": "Create Account",
           "delete_account": "Delete Account"
-        }
+        },
+        "feedback": {
+          "uploadSuccess": "Plugin {{name}} uploaded & activated!",
+          "uploadError": "Upload error: {{reason}}"
+        },
+        "item": {
+          "delete": "Uninstall",
+          "update": "Update",
+          "origin": {
+            "web": "Downloaded from the internet",
+            "upload": "Uploaded by administrator"
+          },
+          "state": {
+            "on": "Enabled",
+            "off": "Disabled"
+          }
+        },
+        "noUrl": "Source not provided"
       }
     }
   },
