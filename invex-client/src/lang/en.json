@@ -45,6 +45,9 @@
       },
       "services": {
         "title": "Services"
+      },
+      "plugins": {
+        "title": "Plugins"
       }
     }
   },

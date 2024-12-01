@@ -2,11 +2,16 @@ import { useNavigate } from "react-router-dom";
 import { useNetAccessible, useUser } from "../../context/net";
 import { useEffect, useState } from "react";
 import { Group, Tabs, Text } from "@mantine/core";
-import { IconLink, IconServer, IconUser } from "@tabler/icons-react";
+import {
+    IconLink,
+    IconPuzzle,
+    IconServer,
+    IconUser,
+} from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { UserPanel } from "./UserPanel";
 
-type TabType = "users" | "services" | "invites";
+type TabType = "users" | "services" | "invites" | "plugins";
 
 export function AdminPage() {
     const nav = useNavigate();
@@ -47,6 +52,12 @@ export function AdminPage() {
                         <Text fw={600}>{t("views.admin.services.title")}</Text>
                     </Group>
                 </Tabs.Tab>
+                <Tabs.Tab value="plugins">
+                    <Group gap="xs">
+                        <IconPuzzle size={20} />
+                        <Text fw={600}>{t("views.admin.plugins.title")}</Text>
+                    </Group>
+                </Tabs.Tab>
             </Tabs.List>
             <Tabs.Panel value="users" p="sm" className="admin-tab users">
                 <UserPanel />
@@ -56,6 +67,9 @@ export function AdminPage() {
             </Tabs.Panel>
             <Tabs.Panel value="services" p="sm" className="admin-tab services">
                 Services
+            </Tabs.Panel>
+            <Tabs.Panel value="plugins" p="sm" className="admin-tab plugins">
+                Plugins
             </Tabs.Panel>
         </Tabs>
     );
