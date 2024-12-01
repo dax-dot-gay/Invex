@@ -13,6 +13,7 @@ pub fn info_metadata() -> FnResult<Json<PluginMetadata>> {
             .name("Jellyfin Integration")
             .description("Connects to Jellyfin")
             .icon("img:https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/jellyfin.svg")
+            .url("https://github.com/dax-dot-gay/Invex/blob/main/plugin_builds/invex_plugin_jellyfin.wasm")
             .with_capability(Capability::CreateAccount)
             .with_capability(Capability::DeleteAccount)
             .version("0.1.0")

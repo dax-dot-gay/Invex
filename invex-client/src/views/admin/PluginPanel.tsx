@@ -132,7 +132,10 @@ function PluginItem({
                                 <IconLink size={20} />
                             </ThemeIcon>
                             {plugin.info.metadata.url ? (
-                                <Anchor href={plugin.info.metadata.url}>
+                                <Anchor
+                                    href={plugin.info.metadata.url}
+                                    target="_blank"
+                                >
                                     {new URL(plugin.info.metadata.url).origin}
                                 </Anchor>
                             ) : (
