@@ -10,6 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { UserPanel } from "./UserPanel";
+import { PluginPanel } from "./PluginPanel";
 
 type TabType = "users" | "services" | "invites" | "plugins";
 
@@ -69,7 +70,7 @@ export function AdminPage() {
                 Services
             </Tabs.Panel>
             <Tabs.Panel value="plugins" p="sm" className="admin-tab plugins">
-                Plugins
+                <PluginPanel />
             </Tabs.Panel>
         </Tabs>
     );

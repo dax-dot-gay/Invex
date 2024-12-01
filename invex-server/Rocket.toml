@@ -3,6 +3,9 @@ address = "0.0.0.0"
 port = 8081
 secret_key = "WuNALsM2E+xy7OMXn16LQK6K7DdpJjObJz9wmoSp56Q="
 
+[default.limits]
+data-form = "1GB"
+
 [default.tls]
 certs = "certs/cert.pem"
 key = "certs/key.pem"

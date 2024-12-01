@@ -28,8 +28,9 @@ export type {
 
 import { AuthMixin } from "./methods/auth";
 import { UsersMixin } from "./methods/users";
+import { PluginsMixin } from "./methods/plugins";
 
-export { AuthMixin, UsersMixin };
+export { AuthMixin, UsersMixin, PluginsMixin };
 
 export function useNet(): NetContextType {
     return useContext(NetContext);

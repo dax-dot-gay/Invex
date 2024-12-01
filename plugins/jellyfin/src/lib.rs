@@ -15,6 +15,7 @@ pub fn info_metadata() -> FnResult<Json<PluginMetadata>> {
             .icon("IconDeviceTv")
             .with_capability(Capability::CreateAccount)
             .with_capability(Capability::DeleteAccount)
+            .version("0.1.0")
             .build()?,
     ))
 }

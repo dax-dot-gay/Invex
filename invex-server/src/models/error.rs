@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Responder)]
@@ -21,3 +23,11 @@ pub enum ApiError {
     #[response(status = 403)]
     Forbidden(String),
 }
+
+impl Display for ApiError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(format!("{self:?}").as_str())
+    }
+}
+
+impl std::error::Error for ApiError {}

@@ -78,7 +78,7 @@ async fn create_user(
 ) -> ApiResult<ClientUser> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
-            "Must be an admin to list users".to_string(),
+            "Must be an admin to create users".to_string(),
         ));
     }
 
@@ -123,7 +123,7 @@ async fn create_user(
 async fn delete_user(user_id: String, user: AuthUser, users: Docs<AuthUser>) -> Result<(), ApiError> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
-            "Must be an admin to list users".to_string(),
+            "Must be an admin to delete users".to_string(),
         ));
     }
 

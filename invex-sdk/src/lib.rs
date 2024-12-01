@@ -97,17 +97,16 @@ pub struct PluginConfigurationField {
 #[serde(rename_all = "snake_case")]
 pub enum Capability {
     CreateAccount,
-    DeleteAccount,
-    ChangeOwnPassword,
-    DeleteOwnAccount
+    DeleteAccount
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+#[derive(Serialize, Deserialize, Clone, Debug, Builder, Default)]
 #[builder(setter(into, strip_option))]
 pub struct PluginMetadata {
     pub id: String,
     pub name: String,
     pub capabilities: Vec<Capability>,
+    pub version: String,
 
     #[serde(default)]
     #[builder(default = "None")]
