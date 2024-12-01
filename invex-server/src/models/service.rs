@@ -1,23 +1,16 @@
-use std::path::Path;
-
 use bevy_reflect::Reflect;
-use extism::Wasm;
 use invex_macros::Document;
 use serde::{Deserialize, Serialize};
 use crate::util::database::Id;
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-pub enum ServiceInfo {
-    Plugin {
-        source: Wasm
+#[derive(Serialize, Deserialize, Clone, Debug, Reflect)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ServiceGrant {
+    Account {
+        plugin_id: Id
     },
-    Information {
-        #[serde(default)]
-        content: Option<String>,
-
-        #[serde(default)]
-        urls: Option<Vec<String>>
+    File {
+        file_id: Id
     }
 }
 
@@ -26,5 +19,6 @@ pub struct Service {
     #[serde(rename = "_id")]
     pub id: Id,
     pub name: String,
-    pub details: Option<String>
+    pub help_text: Option<String>,
+    pub grants: Option<ServiceGrant>
 }
