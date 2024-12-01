@@ -28,7 +28,7 @@ import { useNotifications } from "../util/notifications";
 import { PluginMeta } from "../types/plugin";
 import { PluginsMixin, useApi } from "../context/net";
 import { isString } from "lodash";
-import { DynamicIcon } from "../components/icon";
+import { DynamicAvatar } from "../components/icon";
 import { useInputState } from "@mantine/hooks";
 import validator from "validator";
 
@@ -54,9 +54,9 @@ function PluginPreview({
             <Group gap="sm" justify="space-between" align="start" wrap="nowrap">
                 <Stack gap="sm">
                     <Group gap="sm">
-                        <DynamicIcon
+                        <DynamicAvatar
                             fallback={IconPuzzle}
-                            icon={preview.icon ?? "IconPuzzle"}
+                            source={(preview.icon as any) ?? "icon:_"}
                             size={28}
                         />
                         <Stack gap={0}>

@@ -12,7 +12,7 @@ pub fn info_metadata() -> FnResult<Json<PluginMetadata>> {
             .author("@dax-dot-gay")
             .name("Jellyfin Integration")
             .description("Connects to Jellyfin")
-            .icon("IconDeviceTv")
+            .icon("img:https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/jellyfin.svg")
             .with_capability(Capability::CreateAccount)
             .with_capability(Capability::DeleteAccount)
             .version("0.1.0")

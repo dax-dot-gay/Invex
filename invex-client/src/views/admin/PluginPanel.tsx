@@ -40,7 +40,7 @@ import {
     useState,
 } from "react";
 import { Plugin } from "../../types/plugin";
-import { DynamicIcon } from "../../components/icon";
+import { DynamicAvatar, DynamicIcon } from "../../components/icon";
 import { useDebouncedValue } from "@mantine/hooks";
 
 function PluginItem({
@@ -86,8 +86,11 @@ function PluginItem({
                 <Stack gap="sm" style={{ flexGrow: 1 }}>
                     <Group gap="sm" justify="space-between">
                         <Group gap="sm">
-                            <DynamicIcon
-                                icon={plugin.info.metadata.icon ?? "IconPuzzle"}
+                            <DynamicAvatar
+                                source={
+                                    (plugin.info.metadata.icon as any) ??
+                                    "icon:IconPuzzle"
+                                }
                                 fallback={IconPuzzle}
                                 size={28}
                             />
