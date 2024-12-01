@@ -1,3 +1,4 @@
+import { AddPluginModal } from "./AddPluginModal";
 import { CreateUserModal } from "./CreateUserModal";
 import { LoginModal } from "./LoginModal";
 import { Group, Title } from "@mantine/core";
@@ -5,6 +6,7 @@ import { Group, Title } from "@mantine/core";
 export const modals = {
     login: LoginModal,
     createUser: CreateUserModal,
+    addPlugin: AddPluginModal,
 };
 
 declare module "@mantine/modals" {

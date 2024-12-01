@@ -5,6 +5,7 @@ secret_key = "WuNALsM2E+xy7OMXn16LQK6K7DdpJjObJz9wmoSp56Q="
 
 [default.limits]
 data-form = "1GB"
+file = "1GB"
 
 [default.tls]
 certs = "certs/cert.pem"

@@ -47,7 +47,15 @@
         "title": "Services"
       },
       "plugins": {
-        "title": "Plugins"
+        "title": "Plugins",
+        "header": "Manage Plugins",
+        "upload": "Add/Upload Plugin",
+        "noDesc": "No Description.",
+        "noAuthor": "Unknown Author",
+        "capability": {
+          "create_account": "Create Account",
+          "delete_account": "Delete Account"
+        }
       }
     }
   },
@@ -69,6 +77,18 @@
       "adminTitle": "Create Administrator",
       "userTitle": "Create User",
       "success": "Created user!"
+    },
+    "addPlugin": {
+      "title": "Add or Upload Plugin",
+      "upload": {
+        "title": "Drag a plugin file here or click to select one",
+        "desc": "Accepts any .wasm file with a size not exceeding 1GB",
+        "confirm": "Upload"
+      },
+      "error": "Plugin upload failed: {{reason}}",
+      "url": {
+        "placeholder": "Plugin URL"
+      }
     }
   },
   "actions": {

@@ -1,4 +1,4 @@
-import { Plugin } from "../../../types/plugin";
+import { Plugin, PluginMeta } from "../../../types/plugin";
 import { Response } from "../types";
 import { ApiMixinConstructor } from "./base";
 
@@ -22,6 +22,34 @@ export function PluginsMixin<TBase extends ApiMixinConstructor>(base: TBase) {
             url: string
         ): Promise<Response<Plugin>> {
             return await this.request<Plugin>("/plugins/add/url", {
+                method: "post",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                data: {
+                    url,
+                },
+            });
+        }
+
+        public async preview_plugin_from_file(
+            file: File
+        ): Promise<Response<PluginMeta>> {
+            const data = new FormData();
+            data.append("plugin", file);
+            return await this.request<PluginMeta>("/plugins/preview/file", {
+                method: "post",
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+                data,
+            });
+        }
+
+        public async preview_plugin_from_url(
+            url: string
+        ): Promise<Response<PluginMeta>> {
+            return await this.request<PluginMeta>("/plugins/preview/url", {
                 method: "post",
                 headers: {
                     "Content-Type": "application/json",
