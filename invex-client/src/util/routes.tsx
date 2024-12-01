@@ -9,7 +9,7 @@ export const router = createBrowserRouter([
         element: <Layout />,
         children: [
             { path: "/", element: <HomePage /> },
-            { path: "admin", element: <AdminPage /> },
+            { path: "/admin", element: <AdminPage /> },
         ],
     },
 ]);

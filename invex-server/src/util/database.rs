@@ -225,6 +225,10 @@ impl Fs {
         stream.read_to_end(&mut buffer).await?;
         Ok(buffer)
     }
+
+    pub async fn delete(&self, id: Id) -> InResult<()> {
+        Ok(self.0.delete(id.into()).await?)
+    }
 }
 
 #[derive(Clone, Debug)]

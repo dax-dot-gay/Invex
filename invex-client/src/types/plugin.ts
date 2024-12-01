@@ -47,7 +47,7 @@ export type PluginField = {
 };
 
 export type Plugin = {
-    id: string;
+    _id: string;
     url: string | null;
     enabled: boolean;
     source: {

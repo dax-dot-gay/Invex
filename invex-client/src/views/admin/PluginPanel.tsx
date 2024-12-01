@@ -32,14 +32,50 @@ import { modals } from "@mantine/modals";
 import { ModalTitle } from "../../modals";
 import { useNotifications } from "../../util/notifications";
 import { isString } from "lodash";
-import { useCallback, useEffect, useState } from "react";
+import {
+    MutableRefObject,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 import { Plugin } from "../../types/plugin";
 import { DynamicIcon } from "../../components/icon";
+import { useDebouncedValue } from "@mantine/hooks";
 
-function PluginItem({ plugin }: { plugin: Plugin }) {
+function PluginItem({
+    plugin,
+    refresh,
+}: {
+    plugin: Plugin;
+    refresh: () => void;
+}) {
     const { t } = useTranslation();
+    const selfRef: MutableRefObject<HTMLDivElement | null> =
+        useRef<HTMLDivElement>() as any;
+    const api = useApi(PluginsMixin);
+    const [enabled, setEnabled] = useState(plugin.enabled);
+    const [debouncedEnabled] = useDebouncedValue(enabled, 250, {
+        leading: true,
+    });
+
+    useEffect(() => {
+        if (debouncedEnabled != plugin.enabled) {
+            if (debouncedEnabled) {
+                api.enable_plugin(plugin._id).then(refresh);
+            } else {
+                api.disable_plugin(plugin._id).then(refresh);
+            }
+        }
+    }, [debouncedEnabled]);
+
     return (
-        <Paper className="paper-light plugin-item" p="sm" shadow="sm">
+        <Paper
+            className="paper-light plugin-item"
+            p="sm"
+            shadow="sm"
+            ref={selfRef}
+        >
             <Group
                 gap="md"
                 justify="space-between"
@@ -120,7 +156,8 @@ function PluginItem({ plugin }: { plugin: Plugin }) {
                             <IconBoltFilled size={20} />
                         </ThemeIcon>
                         <SegmentedControl
-                            value={plugin.enabled ? "on" : "off"}
+                            value={enabled ? "on" : "off"}
+                            onChange={(v) => setEnabled(v === "on")}
                             style={{ flexGrow: 1 }}
                             color="primary"
                             bg="var(--mantine-color-default)"
@@ -154,7 +191,17 @@ function PluginItem({ plugin }: { plugin: Plugin }) {
                             withArrow
                             color="var(--mantine-color-body)"
                         >
-                            <ActionIcon variant="light" size="lg" radius="xl">
+                            <ActionIcon
+                                variant="light"
+                                size="lg"
+                                radius="xl"
+                                onClick={() => {
+                                    if (selfRef.current) {
+                                        selfRef.current.hidden = true;
+                                    }
+                                    api.delete_plugin(plugin._id).then(refresh);
+                                }}
+                            >
                                 <IconTrashFilled size={20} />
                             </ActionIcon>
                         </Tooltip>
@@ -266,6 +313,7 @@ export function PluginPanel() {
                                                     }
                                                 )
                                             );
+                                            refresh();
                                         } else {
                                             error(
                                                 t(
@@ -302,6 +350,7 @@ export function PluginPanel() {
                                                     }
                                                 )
                                             );
+                                            refresh();
                                         } else {
                                             error(
                                                 t(
@@ -337,10 +386,10 @@ export function PluginPanel() {
                     verticalSpacing="sm"
                     p="sm"
                     className="plugin-list"
-                    cols={{ base: 1, sm: 2, lg: 3 }}
+                    cols={{ base: 1, md: 2, xl: 3 }}
                 >
                     {plugins.map((v) => (
-                        <PluginItem plugin={v} key={v.id} />
+                        <PluginItem plugin={v} key={v._id} refresh={refresh} />
                     ))}
                 </SimpleGrid>
             </Stack>

@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useNetAccessible, useUser } from "../../context/net";
 import { useEffect, useState } from "react";
 import { Group, Tabs, Text } from "@mantine/core";
@@ -20,6 +20,15 @@ export function AdminPage() {
     const accessible = useNetAccessible();
     const [tab, setTab] = useState<TabType>("users");
     const { t } = useTranslation();
+    const [params, setParams] = useSearchParams(
+        new URLSearchParams({ tab: "users" })
+    );
+
+    useEffect(() => {
+        if (params.has("tab") && params.get("tab") !== tab) {
+            setTab(params.get("tab") as TabType);
+        }
+    }, [params, setTab]);
 
     useEffect(() => {
         if (user?.kind !== "admin" && accessible) {
@@ -30,7 +39,12 @@ export function AdminPage() {
     return (
         <Tabs
             value={tab}
-            onChange={(v) => setTab(v ? (v as TabType) : "users")}
+            onChange={(v) => {
+                setTab(v ? (v as TabType) : "users");
+                setParams(
+                    new URLSearchParams({ tab: v ? (v as TabType) : "users" })
+                );
+            }}
             variant="outline"
             className="admin-tabs"
         >

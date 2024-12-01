@@ -63,5 +63,21 @@ export function PluginsMixin<TBase extends ApiMixinConstructor>(base: TBase) {
         public async list_plugins(): Promise<Response<Plugin[]>> {
             return await this.request<Plugin[]>("/plugins");
         }
+
+        public async delete_plugin(id: string): Promise<void> {
+            await this.request<void>(`/plugins/${id}`, { method: "delete" });
+        }
+
+        public async enable_plugin(id: string): Promise<void> {
+            await this.request<void>(`/plugins/${id}/enable`, {
+                method: "post",
+            });
+        }
+
+        public async disable_plugin(id: string): Promise<void> {
+            await this.request<void>(`/plugins/${id}/disable`, {
+                method: "post",
+            });
+        }
     };
 }
