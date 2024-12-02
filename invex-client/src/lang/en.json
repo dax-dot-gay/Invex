@@ -7,6 +7,9 @@
     "notif": {
       "success": "Success!",
       "error": "Error:"
+    },
+    "actions": {
+      "create": "Create"
     }
   },
   "views": {
@@ -46,7 +49,8 @@
       "services": {
         "title": "Services",
         "header": "All Services",
-        "add": "New Service"
+        "add": "New Service",
+        "addTitle": "New Service"
       },
       "plugins": {
         "title": "Plugins",
@@ -108,6 +112,10 @@
       "url": {
         "placeholder": "Plugin URL"
       }
+    },
+    "addService": {
+      "title": "New Service",
+      "placeholder": "Service Name"
     }
   },
   "actions": {

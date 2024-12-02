@@ -8,13 +8,15 @@ import {
     Stack,
     Text,
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { IconPlus, IconServer } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-import { IconPicker } from "../../components/iconPicker";
+import { ModalTitle } from "../../modals";
 
 export function ServicePanel() {
     const { t } = useTranslation();
     const nums = new Array(100).fill(0);
+
     return (
         <Group gap="sm" className="admin-panel services" wrap="nowrap">
             <Paper className="service-selector paper-light" p={0}>
@@ -48,15 +50,25 @@ export function ServicePanel() {
                             justify="space-between"
                             leftSection={<IconPlus />}
                             size="md"
+                            onClick={() =>
+                                modals.openContextModal({
+                                    modal: "addService",
+                                    title: (
+                                        <ModalTitle
+                                            name={t("modals.addService.title")}
+                                            icon={IconPlus}
+                                        />
+                                    ),
+                                    innerProps: {},
+                                })
+                            }
                         >
                             {t("views.admin.services.add")}
                         </Button>
                     </Box>
                 </Stack>
             </Paper>
-            <Paper className="service-configurator" withBorder p="sm">
-                <IconPicker size="lg" radius="sm" iconSize={30} />
-            </Paper>
+            <Paper className="service-configurator" withBorder p="sm"></Paper>
         </Group>
     );
 }

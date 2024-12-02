@@ -1,4 +1,8 @@
 .icon-picker-modal {
+    .mantine-Modal-inner {
+        z-index: 500;
+    }
+    
     .icon-list {
         .icon-picker-item {
             cursor: pointer;

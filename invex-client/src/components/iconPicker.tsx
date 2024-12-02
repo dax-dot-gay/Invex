@@ -127,6 +127,9 @@ export function IconPicker({
                 </ActionIcon>
             </Tooltip>
             <Modal
+                overlayProps={{
+                    zIndex: 400,
+                }}
                 opened={open}
                 onClose={close}
                 size="xl"

@@ -24,6 +24,7 @@ pub struct Service {
     #[serde(rename = "_id")]
     pub id: Id,
     pub name: String,
+    pub icon: Option<String>,
     pub help_text: Option<String>,
     pub grants: Vec<ServiceGrant>
 }
