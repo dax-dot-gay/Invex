@@ -60,6 +60,7 @@ export function ServicePanel() {
                                         />
                                     ),
                                     innerProps: {},
+                                    centered: true,
                                 })
                             }
                         >

@@ -28,7 +28,7 @@ import {
     IconCheck,
 } from "@tabler/icons-react";
 
-import * as iconsList from "@tabler/icons-list";
+import iconsList from "@tabler/icons-list";
 import {
     ForwardRefExoticComponent,
     RefAttributes,
@@ -160,52 +160,59 @@ export function IconPicker({
                                     className="icon-list"
                                 >
                                     {viewingIcons.map((icon) => (
-                                        <Paper
-                                            p="xs"
-                                            bg="var(--mantine-color-default)"
+                                        <Tooltip
+                                            label={icon[0]}
+                                            withArrow
+                                            color="var(--mantine-color-default-hover)"
                                             key={icon[0]}
-                                            style={
-                                                _value ===
-                                                `icon:Icon${pascalCase(
-                                                    icon[0]
-                                                )}`
-                                                    ? {
-                                                          borderColor:
-                                                              theme.colors
-                                                                  .primary[6],
-                                                      }
-                                                    : undefined
-                                            }
-                                            className="icon-picker-item"
-                                            onClick={() =>
-                                                _value ===
-                                                `icon:Icon${pascalCase(
-                                                    icon[0]
-                                                )}`
-                                                    ? _onChange(null)
-                                                    : _onChange(
-                                                          `icon:Icon${pascalCase(
-                                                              icon[0]
-                                                          )}`
-                                                      )
-                                            }
                                         >
-                                            <AspectRatio ratio={1}>
-                                                <Stack
-                                                    align="center"
-                                                    justify="center"
-                                                >
-                                                    <DynamicIcon
-                                                        icon={pascalCase(
-                                                            "icon_" + icon[0]
-                                                        )}
-                                                        fallback={
-                                                            IconQuestionMark
-                                                        }
-                                                    />
-                                                </Stack>
-                                            </AspectRatio>
-                                        </Paper>
+                                            <Paper
+                                                p="xs"
+                                                bg="var(--mantine-color-default)"
+                                                style={
+                                                    _value ===
+                                                    `icon:Icon${pascalCase(
+                                                        icon[0]
+                                                    )}`
+                                                        ? {
+                                                              borderColor:
+                                                                  theme.colors
+                                                                      .primary[6],
+                                                          }
+                                                        : undefined
+                                                }
+                                                className="icon-picker-item"
+                                                onClick={() =>
+                                                    _value ===
+                                                    `icon:Icon${pascalCase(
+                                                        icon[0]
+                                                    )}`
+                                                        ? _onChange(null)
+                                                        : _onChange(
+                                                              `icon:Icon${pascalCase(
+                                                                  icon[0]
+                                                              )}`
+                                                          )
+                                                }
+                                            >
+                                                <AspectRatio ratio={1}>
+                                                    <Stack
+                                                        align="center"
+                                                        justify="center"
+                                                    >
+                                                        <DynamicIcon
+                                                            icon={pascalCase(
+                                                                "icon_" +
+                                                                    icon[0]
+                                                            )}
+                                                            fallback={
+                                                                IconQuestionMark
+                                                            }
+                                                        />
+                                                    </Stack>
+                                                </AspectRatio>
+                                            </Paper>
+                                        </Tooltip>
                                     ))}
                                 </SimpleGrid>
                             </ScrollAreaAutosize>
