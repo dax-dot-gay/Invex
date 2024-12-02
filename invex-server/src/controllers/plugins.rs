@@ -225,6 +225,21 @@ async fn disable_plugin(
     }
 }
 
+#[get("/<id>")]
+async fn get_plugin(user: AuthUser, id: &str, plugins: Docs<RegisteredPlugin>) -> ApiResult<RegisteredPlugin> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to get full plugin information".to_string(),
+        ));
+    }
+
+    if let Some(plugin) = plugins.get(id).await {
+        Ok(Json(plugin))
+    } else {
+        Err(ApiError::NotFound("Unknown plugin ID".to_string()))
+    }
+}
+
 pub fn routes() -> Vec<Route> {
     return routes![
         add_plugin_file,
@@ -234,6 +249,7 @@ pub fn routes() -> Vec<Route> {
         preview_plugin_url,
         delete_plugin,
         enable_plugin,
-        disable_plugin
+        disable_plugin,
+        get_plugin
     ];
 }

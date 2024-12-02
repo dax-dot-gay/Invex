@@ -11,6 +11,7 @@
 
         .admin-panel {
             flex-grow: 1;
+            max-height: calc(100vh - 120px - ( 2 * var(--mantine-spacing-sm)));
 
             &.users {
                 .admin-list {
@@ -22,6 +23,37 @@
 
                 .user-list {
                     overflow: hidden;
+                }
+            }
+
+            &.services {
+                position: relative;
+                .service-selector {
+                    height: 100%;
+                    max-width: 50%;
+                    width: 256px;
+                    position: relative;
+
+                    .service-nav-stack {
+                        height: 100%;
+                        overflow-y: hidden;
+
+                        .service-list {
+                            display: inline-block;
+                            max-height: 100%;
+                            overflow: hidden;
+
+                            .service-list-scroll {
+                                overflow-y: hidden;
+                                max-height: 100%;
+                            }
+                        }
+                    }
+                }
+
+                .service-configurator {
+                    height: 100%;
+                    flex-grow: 1;
                 }
             }
         }

@@ -44,7 +44,9 @@
         "title": "Invites"
       },
       "services": {
-        "title": "Services"
+        "title": "Services",
+        "header": "All Services",
+        "add": "New Service"
       },
       "plugins": {
         "title": "Plugins",

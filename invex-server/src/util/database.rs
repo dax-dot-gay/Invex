@@ -1,4 +1,7 @@
-use std::{io::Write, ops::{Deref, DerefMut}};
+use std::{
+    io::Write,
+    ops::{Deref, DerefMut},
+};
 
 use bevy_reflect::{Reflect, TypeRegistration, Typed};
 use convert_case::{Case, Casing};
@@ -9,7 +12,13 @@ use mongodb::{
     Collection, Database,
 };
 use rocket::{
-    data::ToByteUnit, form::{self, DataField, FromFormField}, futures::{AsyncReadExt as _, AsyncWriteExt as _, TryStreamExt}, http::Status, request::{FromRequest, Outcome}, tokio::io::AsyncReadExt, Request
+    data::ToByteUnit,
+    form::{self, DataField, FromFormField},
+    futures::{AsyncReadExt as _, AsyncWriteExt as _, TryStreamExt},
+    http::Status,
+    request::{FromRequest, Outcome},
+    tokio::io::AsyncReadExt,
+    Request,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tempfile::NamedTempFile;
@@ -182,15 +191,29 @@ impl<'r> FromRequest<'r> for Fs {
 
 impl Fs {
     pub fn from_db(db: &Database) -> Self {
-        Fs(db.gridfs_bucket(Some(GridFsBucketOptions::builder().bucket_name(Some("fs".to_string())).build())))
+        Fs(db.gridfs_bucket(Some(
+            GridFsBucketOptions::builder()
+                .bucket_name(Some("fs".to_string()))
+                .build(),
+        )))
     }
 
-    pub async fn upload<T: AsyncReadExt + Unpin>(&self, data: &mut T, content_type: String, filename: Option<String>) -> InResult<File> {
+    pub async fn upload<T: AsyncReadExt + Unpin>(
+        &self,
+        data: &mut T,
+        content_type: String,
+        filename: Option<String>,
+    ) -> InResult<File> {
         let id = Id::default();
-        let mut uploader = self.0.open_upload_stream(id.to_string().as_str()).id(id.clone().into()).metadata(doc! {
-            "original_filename": filename.clone(),
-            "content_type": content_type.clone()
-        }).await?;
+        let mut uploader = self
+            .0
+            .open_upload_stream(id.to_string().as_str())
+            .id(id.clone().into())
+            .metadata(doc! {
+                "original_filename": filename.clone(),
+                "content_type": content_type.clone()
+            })
+            .await?;
         let mut content = Vec::<u8>::new();
         data.read_to_end(&mut content).await?;
         uploader.write_all(&content).await?;
@@ -200,23 +223,35 @@ impl Fs {
             id,
             filename,
             content_type,
-            fs: self.clone()
+            fs: self.clone(),
         })
     }
 
-    pub async fn get_uploader(&self, content_type: String, filename: Option<String>) -> InResult<(File, GridFsUploadStream)> {
+    pub async fn get_uploader(
+        &self,
+        content_type: String,
+        filename: Option<String>,
+    ) -> InResult<(File, GridFsUploadStream)> {
         let id = Id::default();
-        let uploader = self.0.open_upload_stream(id.to_string().as_str()).id(id.clone().into()).metadata(doc! {
-            "original_filename": filename.clone(),
-            "content_type": content_type.clone()
-        }).await?;
+        let uploader = self
+            .0
+            .open_upload_stream(id.to_string().as_str())
+            .id(id.clone().into())
+            .metadata(doc! {
+                "original_filename": filename.clone(),
+                "content_type": content_type.clone()
+            })
+            .await?;
 
-        Ok((File {
-            id,
-            filename,
-            content_type,
-            fs: self.clone()
-        }, uploader))
+        Ok((
+            File {
+                id,
+                filename,
+                content_type,
+                fs: self.clone(),
+            },
+            uploader,
+        ))
     }
 
     pub async fn download(&self, id: Id) -> InResult<Vec<u8>> {
@@ -236,7 +271,7 @@ pub struct File {
     pub id: Id,
     pub filename: Option<String>,
     pub content_type: String,
-    pub fs: Fs
+    pub fs: Fs,
 }
 
 #[rocket::async_trait]
@@ -244,14 +279,35 @@ impl<'r> FromFormField<'r> for File {
     async fn from_data(field: DataField<'r, '_>) -> form::Result<'r, Self> {
         match field.request.guard::<Fs>().await {
             Outcome::Success(fs) => {
-                let mut stream = field.data.open(field.request.limits().get(field.request.route().unwrap().uri.to_string()).unwrap_or(1.gibibytes()));
-                if let Ok(result) = fs.upload(&mut stream,field.content_type.to_string(), field.file_name.and_then(|f| f.as_str().and_then(|s| Some(s.to_string())))).await {
+                let mut stream = field.data.open(
+                    field
+                        .request
+                        .limits()
+                        .get(field.request.route().unwrap().uri.to_string())
+                        .unwrap_or(1.gibibytes()),
+                );
+                if let Ok(result) = fs
+                    .upload(
+                        &mut stream,
+                        field.content_type.to_string(),
+                        field
+                            .file_name
+                            .and_then(|f| f.as_str().and_then(|s| Some(s.to_string()))),
+                    )
+                    .await
+                {
                     Ok(result)
                 } else {
-                    Err(form::Error::custom(ApiError::Internal(String::from("Failed to upload file"))).into())
+                    Err(form::Error::custom(ApiError::Internal(String::from(
+                        "Failed to upload file",
+                    )))
+                    .into())
                 }
-            },
-            _ => Err(form::Error::custom(ApiError::Internal(String::from("Unable to retrieve FS object"))).into())
+            }
+            _ => Err(form::Error::custom(ApiError::Internal(String::from(
+                "Unable to retrieve FS object",
+            )))
+            .into()),
         }
     }
 }
@@ -262,7 +318,7 @@ impl File {
             id: info.id,
             filename: info.filename,
             content_type: info.content_type,
-            fs: fs.clone()
+            fs: fs.clone(),
         }
     }
 
@@ -281,7 +337,7 @@ impl File {
 pub struct FileInfo {
     pub id: Id,
     pub filename: Option<String>,
-    pub content_type: String
+    pub content_type: String,
 }
 
 impl From<File> for FileInfo {
@@ -289,7 +345,7 @@ impl From<File> for FileInfo {
         FileInfo {
             id: value.id,
             filename: value.filename,
-            content_type: value.content_type
+            content_type: value.content_type,
         }
     }
 }

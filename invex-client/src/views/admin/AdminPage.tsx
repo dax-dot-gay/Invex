@@ -11,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { UserPanel } from "./UserPanel";
 import { PluginPanel } from "./PluginPanel";
+import { ServicePanel } from "./ServicePanel";
 
 type TabType = "users" | "services" | "invites" | "plugins";
 
@@ -81,7 +82,7 @@ export function AdminPage() {
                 Invites
             </Tabs.Panel>
             <Tabs.Panel value="services" p="sm" className="admin-tab services">
-                Services
+                <ServicePanel />
             </Tabs.Panel>
             <Tabs.Panel value="plugins" p="sm" className="admin-tab plugins">
                 <PluginPanel />
