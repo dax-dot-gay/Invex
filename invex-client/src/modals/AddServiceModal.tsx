@@ -1,25 +1,31 @@
 import { Button, Group, Stack, Textarea, TextInput } from "@mantine/core";
-import { useInputState } from "@mantine/hooks";
 import { ContextModalProps } from "@mantine/modals";
-import { useState } from "react";
 import { IconPicker } from "../components/iconPicker";
 import { AvatarSource } from "../components/icon";
 import { useTranslation } from "react-i18next";
 import { IconPlus } from "@tabler/icons-react";
 import { useForm } from "@mantine/form";
+import { ServiceMixin, useApi } from "../context/net";
+import { useNotifications } from "../util/notifications";
 
-export function AddServiceModal({ id, context }: ContextModalProps<{}>) {
+export function AddServiceModal({
+    id,
+    context,
+    innerProps,
+}: ContextModalProps<{ refresh: () => void }>) {
     const form = useForm<{
         icon: AvatarSource | null;
         name: string;
         description: string;
     }>({
         initialValues: {
-            icon: null,
+            icon: "icon:IconServer",
             name: "",
             description: "",
         },
     });
+    const api = useApi(ServiceMixin);
+    const { error, success } = useNotifications();
     const { t } = useTranslation();
     return (
         <Stack gap="sm">
@@ -48,6 +54,23 @@ export function AddServiceModal({ id, context }: ContextModalProps<{}>) {
                 <Button
                     leftSection={<IconPlus size={20} />}
                     disabled={form.values.name.length < 1}
+                    onClick={() => {
+                        api.createService(
+                            form.values.name,
+                            form.values.icon,
+                            form.values.description.length > 0
+                                ? form.values.description
+                                : null
+                        ).then((response) => {
+                            if (response.success) {
+                                innerProps.refresh();
+                                success(t("modals.addService.success"));
+                                context.closeContextModal(id);
+                            } else {
+                                error(t("modals.addService.error"));
+                            }
+                        });
+                    }}
                 >
                     {t("common.actions.create")}
                 </Button>

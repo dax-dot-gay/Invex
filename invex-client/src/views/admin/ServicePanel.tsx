@@ -7,15 +7,32 @@ import {
     ScrollArea,
     Stack,
     Text,
+    useMantineTheme,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconPlus, IconServer } from "@tabler/icons-react";
+import { IconPlus, IconServer, IconX } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { ModalTitle } from "../../modals";
+import { useCallback, useEffect, useState } from "react";
+import { Service } from "../../types/service";
+import { ServiceMixin, useApi } from "../../context/net";
+import { DynamicAvatar } from "../../components/icon";
 
 export function ServicePanel() {
     const { t } = useTranslation();
-    const nums = new Array(100).fill(0);
+    const api = useApi(ServiceMixin);
+    const [services, setServices] = useState<Service[]>([]);
+    const [selectedService, setSelectedService] = useState<string | null>(null);
+    const refresh = useCallback(() => {
+        api.getServices().then((v) =>
+            setServices(v.sort((a, b) => a.name.localeCompare(b.name)))
+        );
+    }, [setServices, api.getServices]);
+    const theme = useMantineTheme();
+
+    useEffect(() => {
+        refresh();
+    }, [refresh]);
 
     return (
         <Group gap="sm" className="admin-panel services" wrap="nowrap">
@@ -32,13 +49,51 @@ export function ServicePanel() {
                             className="service-list-scroll"
                         >
                             <Stack gap="xs">
-                                {nums.map((_, i) => (
+                                {services.map((service) => (
                                     <Paper
-                                        shadow="sm"
-                                        bg="var(--mantine-color-default)"
+                                        key={service._id}
                                         p="sm"
-                                        key={i}
-                                    ></Paper>
+                                        bg="var(--mantine-color-body)"
+                                        className="service-item"
+                                        style={
+                                            selectedService === service._id
+                                                ? {
+                                                      borderColor:
+                                                          theme.colors
+                                                              .primary[6],
+                                                  }
+                                                : undefined
+                                        }
+                                        onClick={() =>
+                                            selectedService === service._id
+                                                ? setSelectedService(null)
+                                                : setSelectedService(
+                                                      service._id
+                                                  )
+                                        }
+                                    >
+                                        <Group gap="sm" wrap="nowrap">
+                                            <DynamicAvatar
+                                                variant="transparent"
+                                                source={service.icon as any}
+                                                fallback={IconServer}
+                                            />
+                                            <Stack gap={0}>
+                                                <Text size="lg">
+                                                    {service.name}
+                                                </Text>
+                                                {service.description && (
+                                                    <Text
+                                                        lineClamp={1}
+                                                        size="xs"
+                                                        c="dimmed"
+                                                    >
+                                                        {service.description}
+                                                    </Text>
+                                                )}
+                                            </Stack>
+                                        </Group>
+                                    </Paper>
                                 ))}
                             </Stack>
                         </ScrollArea.Autosize>
@@ -59,7 +114,9 @@ export function ServicePanel() {
                                             icon={IconPlus}
                                         />
                                     ),
-                                    innerProps: {},
+                                    innerProps: {
+                                        refresh,
+                                    },
                                     centered: true,
                                 })
                             }
@@ -69,7 +126,44 @@ export function ServicePanel() {
                     </Box>
                 </Stack>
             </Paper>
-            <Paper className="service-configurator" withBorder p="sm"></Paper>
+            <Paper className="service-configurator" withBorder p="sm">
+                {selectedService ? (
+                    <></>
+                ) : (
+                    <Stack gap="md" className="no-service" w="256">
+                        <Group gap="sm" justify="space-between">
+                            <IconX opacity={0.6} size={28} />
+                            <Text size="xl" opacity={0.6}>
+                                {t("views.admin.services.noService")}
+                            </Text>
+                        </Group>
+                        <Button
+                            fullWidth
+                            variant="light"
+                            leftSection={<IconPlus />}
+                            size="lg"
+                            justify="space-between"
+                            onClick={() =>
+                                modals.openContextModal({
+                                    modal: "addService",
+                                    title: (
+                                        <ModalTitle
+                                            name={t("modals.addService.title")}
+                                            icon={IconPlus}
+                                        />
+                                    ),
+                                    innerProps: {
+                                        refresh,
+                                    },
+                                    centered: true,
+                                })
+                            }
+                        >
+                            {t("views.admin.services.add")}
+                        </Button>
+                    </Stack>
+                )}
+            </Paper>
         </Group>
     );
 }

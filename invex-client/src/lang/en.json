@@ -50,7 +50,8 @@
         "title": "Services",
         "header": "All Services",
         "add": "New Service",
-        "addTitle": "New Service"
+        "addTitle": "New Service",
+        "noService": "No Service Selected"
       },
       "plugins": {
         "title": "Plugins",
@@ -116,7 +117,9 @@
     "addService": {
       "title": "New Service",
       "placeholder": "Service Name",
-      "description": "Briefly describe the service"
+      "description": "Briefly describe the service",
+      "success": "Created service!",
+      "error": "Failed to add service."
     }
   },
   "actions": {

@@ -42,10 +42,21 @@
                             display: inline-block;
                             max-height: 100%;
                             overflow: hidden;
+                            flex-grow: 1;
 
                             .service-list-scroll {
                                 overflow-y: hidden;
                                 max-height: 100%;
+
+                                .service-item {
+                                    border: 1px solid #00000000;
+                                    transition: background-color 0.1s;
+                                    cursor: pointer;
+
+                                    &:hover {
+                                        background-color: var(--mantine-color-default) !important;
+                                    }
+                                }
                             }
                         }
                     }
@@ -54,6 +65,14 @@
                 .service-configurator {
                     height: 100%;
                     flex-grow: 1;
+                    position: relative;
+
+                    .no-service {
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                    }
                 }
             }
         }
