@@ -14,7 +14,7 @@ export function DynamicIcon({
     fallback,
     ...props
 }: {
-    icon: string;
+    icon: string | null;
     fallback?: ForwardRefExoticComponent<IconProps & RefAttributes<Icon>>;
 } & Partial<IconProps>) {
     const [Element, setElement] = useState<
@@ -22,11 +22,17 @@ export function DynamicIcon({
     >(fallback ?? IconLoader);
 
     useEffect(() => {
-        import(
-            `@/node_modules/@tabler/icons-react/dist/esm/icons/${icon}`
-        ).then((v) =>
-            v ? setElement(v.default) : setElement(fallback ?? IconLoader)
-        );
+        if (icon) {
+            import(`@/node_modules/@tabler/icons-react/dist/esm/icons/${icon}`)
+                .then((v) =>
+                    v
+                        ? setElement(v.default)
+                        : setElement(fallback ?? IconLoader)
+                )
+                .catch(() => setElement(fallback ?? IconLoader));
+        } else {
+            setElement(fallback ?? IconLoader);
+        }
     }, [icon, setElement]);
 
     return <Element className="dynamic-icon" {...props} />;
@@ -37,31 +43,39 @@ export function DynamicAvatar({
     fallback,
     ...props
 }: {
-    source: AvatarSource;
+    source: AvatarSource | null;
     fallback: ForwardRefExoticComponent<IconProps & RefAttributes<Icon>>;
 } & Partial<AvatarProps>) {
-    const [kind, ...reference] = source.split(":") as [
-        "icon" | "img",
-        string[]
-    ];
+    if (source) {
+        const [kind, ...reference] = source.split(":") as [
+            "icon" | "img",
+            string[]
+        ];
 
-    switch (kind) {
-        case "icon":
-            return (
-                <Avatar {...props} radius="sm">
-                    <DynamicIcon
-                        icon={reference.join(":")}
-                        fallback={fallback}
-                        size="80%"
-                    />
-                </Avatar>
-            );
-        case "img":
-            const Fallback = fallback;
-            return (
-                <Avatar src={reference.join(":")} {...props} radius="sm">
-                    <Fallback size="80%" />
-                </Avatar>
-            );
+        switch (kind) {
+            case "icon":
+                return (
+                    <Avatar {...props} radius="sm">
+                        <DynamicIcon
+                            icon={reference.join(":")}
+                            fallback={fallback}
+                            size="80%"
+                        />
+                    </Avatar>
+                );
+            case "img":
+                const Fallback = fallback;
+                return (
+                    <Avatar src={reference.join(":")} {...props} radius="sm">
+                        <Fallback size="80%" />
+                    </Avatar>
+                );
+        }
+    } else {
+        return (
+            <Avatar {...props} radius="sm">
+                <DynamicIcon icon={null} fallback={fallback} size="80%" />
+            </Avatar>
+        );
     }
 }

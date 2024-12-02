@@ -142,8 +142,14 @@ impl<T: Document> DerefMut for Docs<T> {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Reflect)]
+#[derive(Clone, Debug, Serialize, Deserialize, Reflect, PartialEq, Eq, Hash)]
 pub struct Id(String);
+
+impl From<String> for Id {
+    fn from(value: String) -> Self {
+        Id(value)
+    }
+}
 
 impl Default for Id {
     fn default() -> Self {

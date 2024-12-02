@@ -115,7 +115,8 @@
     },
     "addService": {
       "title": "New Service",
-      "placeholder": "Service Name"
+      "placeholder": "Service Name",
+      "description": "Briefly describe the service"
     }
   },
   "actions": {

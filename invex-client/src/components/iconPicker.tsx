@@ -120,7 +120,7 @@ export function IconPicker({
                 >
                     <DynamicAvatar
                         variant="transparent"
-                        source={_value ?? "icon:_"}
+                        source={_value ?? null}
                         fallback={FallbackIcon}
                         size={iconSize}
                     />
