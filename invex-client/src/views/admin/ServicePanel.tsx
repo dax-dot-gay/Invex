@@ -17,6 +17,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Service } from "../../types/service";
 import { ServiceMixin, useApi } from "../../context/net";
 import { DynamicAvatar } from "../../components/icon";
+import { ServiceConfig } from "./ServiceConfig";
 
 export function ServicePanel() {
     const { t } = useTranslation();
@@ -126,9 +127,13 @@ export function ServicePanel() {
                     </Box>
                 </Stack>
             </Paper>
-            <Paper className="service-configurator" withBorder p="sm">
+            <Paper className="service-configurator" withBorder p={0}>
                 {selectedService ? (
-                    <></>
+                    <ServiceConfig
+                        id={selectedService}
+                        refresh={refresh}
+                        close={() => setSelectedService(null)}
+                    />
                 ) : (
                     <Stack gap="md" className="no-service" w="256">
                         <Group gap="sm" justify="space-between">
