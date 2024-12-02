@@ -10,6 +10,7 @@ import {
 } from "@mantine/core";
 import { IconPlus, IconServer } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
+import { IconPicker } from "../../components/iconPicker";
 
 export function ServicePanel() {
     const { t } = useTranslation();
@@ -53,7 +54,9 @@ export function ServicePanel() {
                     </Box>
                 </Stack>
             </Paper>
-            <Paper className="service-configurator" withBorder p="sm"></Paper>
+            <Paper className="service-configurator" withBorder p="sm">
+                <IconPicker size="lg" radius="sm" iconSize={30} />
+            </Paper>
         </Group>
     );
 }

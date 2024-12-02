@@ -36,6 +36,13 @@ export default defineConfig({
             "@tabler/icons-react":
                 "@tabler/icons-react/dist/esm/icons/index.mjs",
             "@/node_modules": path.join(__dirname, "node_modules"),
+            "@tabler/icons-list": path.join(
+                __dirname,
+                "node_modules",
+                "@tabler",
+                "icons",
+                "icons.json"
+            ),
         },
     },
     css: {

@@ -7,6 +7,8 @@ import {
     useState,
 } from "react";
 
+export type AvatarSource = `icon:${string}` | `img:${string}`;
+
 export function DynamicIcon({
     icon,
     fallback,
@@ -35,7 +37,7 @@ export function DynamicAvatar({
     fallback,
     ...props
 }: {
-    source: `icon:${string}` | `img:${string}`;
+    source: AvatarSource;
     fallback: ForwardRefExoticComponent<IconProps & RefAttributes<Icon>>;
 } & Partial<AvatarProps>) {
     const [kind, ...reference] = source.split(":") as [

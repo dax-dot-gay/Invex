@@ -1,0 +1,17 @@
+.icon-picker-modal {
+    .icon-list {
+        .icon-picker-item {
+            cursor: pointer;
+            border: 1px solid #00000000;
+            transition: background-color 0.1s;
+
+            &:hover {
+                background-color: var(--mantine-color-default-border) !important;
+            }
+
+            &.selected {
+                border-color: var(--mantine-color-primary);
+            }
+        }
+    }
+}

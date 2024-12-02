@@ -122,5 +122,14 @@
       "unknown": "An unknown server error occurred.",
       "response": "Failed: {{reason}}"
     }
+  },
+  "components": {
+    "iconPicker": {
+      "tooltip": "Choose Icon",
+      "modal": {
+        "title": "Select Icon or Image",
+        "url": "Enter Image URL"
+      }
+    }
   }
 }
