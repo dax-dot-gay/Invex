@@ -1,13 +1,12 @@
 use std::{
-    io::Write,
-    ops::{Deref, DerefMut},
+    io::Write, ops::{Deref, DerefMut}
 };
 
 use bevy_reflect::{Reflect, TypeRegistration, Typed};
 use convert_case::{Case, Casing};
 use mongodb::{
     bson::{self, doc, Bson},
-    gridfs::{GridFsBucket, GridFsUploadStream},
+    gridfs::{GridFsBucket, GridFsDownloadStream, GridFsUploadStream},
     options::GridFsBucketOptions,
     Collection, Database,
 };
@@ -265,6 +264,26 @@ impl Fs {
         let mut buffer: Vec<u8> = Vec::new();
         stream.read_to_end(&mut buffer).await?;
         Ok(buffer)
+    }
+
+    pub async fn get_downloader(&self, id: Id) -> InResult<GridFsDownloadStream> {
+        Ok(self.0.open_download_stream(id.into()).await?)
+    }
+
+    pub async fn get_file(&self, id: Id) -> Option<File> {
+        if let Ok(Some(document)) = self.0.find_one(doc! {"_id": id.to_string()}).await {
+            if let Some(metadata) = document.metadata {
+                if let Ok(info) = bson::from_document::<FileInfo>(metadata) {
+                    Some(File::from_info(info, &self))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        }
     }
 
     pub async fn delete(&self, id: Id) -> InResult<()> {
