@@ -5,6 +5,8 @@ import { Service } from "../../types/service";
 import { ActionIcon, Divider, Group, Loader, Stack, Text } from "@mantine/core";
 import { DynamicAvatar } from "../../components/icon";
 import { IconPencil, IconServer, IconTrashFilled } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
+import { ModalTitle } from "../../modals";
 
 export function ServiceConfig({
     id,
@@ -57,10 +59,41 @@ export function ServiceConfig({
                     </Stack>
                 </Group>
                 <ActionIcon.Group>
-                    <ActionIcon size="xl" variant="light">
+                    <ActionIcon
+                        size="xl"
+                        variant="light"
+                        onClick={() =>
+                            modals.openContextModal({
+                                modal: "updateService",
+                                title: (
+                                    <ModalTitle
+                                        icon={IconPencil}
+                                        name={t("modals.updateService.title")}
+                                    />
+                                ),
+                                innerProps: {
+                                    refresh: function (): void {
+                                        refresh();
+                                        refreshSelf();
+                                    },
+                                    service,
+                                },
+                            })
+                        }
+                    >
                         <IconPencil />
                     </ActionIcon>
-                    <ActionIcon size="xl" variant="light" color="red">
+                    <ActionIcon
+                        size="xl"
+                        variant="light"
+                        color="red"
+                        onClick={() =>
+                            api.deleteService(service._id).then(() => {
+                                refresh();
+                                close();
+                            })
+                        }
+                    >
                         <IconTrashFilled />
                     </ActionIcon>
                 </ActionIcon.Group>

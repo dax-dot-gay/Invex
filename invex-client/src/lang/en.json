@@ -9,7 +9,8 @@
       "error": "Error:"
     },
     "actions": {
-      "create": "Create"
+      "create": "Create",
+      "update": "Update"
     }
   },
   "views": {
@@ -120,6 +121,13 @@
       "description": "Briefly describe the service",
       "success": "Created service!",
       "error": "Failed to add service."
+    },
+    "updateService": {
+      "placeholder": "Service Name",
+      "description": "Briefly describe the service",
+      "success": "Updated service",
+      "error": "Failed to update service details",
+      "title": "Edit Service Details"
     }
   },
   "actions": {

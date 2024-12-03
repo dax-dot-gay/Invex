@@ -3,12 +3,14 @@ import { AddServiceModal } from "./AddServiceModal";
 import { CreateUserModal } from "./CreateUserModal";
 import { LoginModal } from "./LoginModal";
 import { Group, Title } from "@mantine/core";
+import { UpdateServiceModal } from "./UpdateServiceModal";
 
 export const modals = {
     login: LoginModal,
     createUser: CreateUserModal,
     addPlugin: AddPluginModal,
     addService: AddServiceModal,
+    updateService: UpdateServiceModal,
 };
 
 declare module "@mantine/modals" {
