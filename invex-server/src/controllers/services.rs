@@ -172,6 +172,29 @@ async fn update_service_grant(
     }
 }
 
+#[get("/<id>/grants/<grant_id>")]
+async fn get_service_grant(
+    user: AuthUser,
+    services: Docs<Service>,
+    id: &str,
+    grant_id: &str,
+) -> ApiResult<ServiceGrant> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to get service grant data".to_string(),
+        ));
+    }
+    if let Some(result) = services.get(id).await {
+        if let Some(grant) = result.get_grant(grant_id) {
+            Ok(Json(grant))
+        } else {
+            Err(ApiError::NotFound("Unknown grant ID".to_string()))
+        }
+    } else {
+        Err(ApiError::NotFound("Unknown service ID".to_string()))
+    }
+}
+
 #[delete("/<id>/grants/<grant_id>")]
 async fn delete_service_grant(
     user: AuthUser,
@@ -209,6 +232,7 @@ pub fn routes() -> Vec<Route> {
         update_service,
         create_service_grant,
         update_service_grant,
-        delete_service_grant
+        delete_service_grant,
+        get_service_grant
     ];
 }

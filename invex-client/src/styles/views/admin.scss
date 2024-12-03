@@ -73,6 +73,23 @@
                         left: 50%;
                         transform: translate(-50%, -50%);
                     }
+
+                    .service-config-stack {
+                        height: 100%;
+                        .grant-container {
+                            flex-grow: 1;
+                            position: relative;
+
+                            .create-grant {
+                                &.empty {
+                                    position: absolute;
+                                    top: 50%;
+                                    left: 50%;
+                                    transform: translate(-50%, -50%);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

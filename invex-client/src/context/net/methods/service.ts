@@ -46,5 +46,45 @@ export function ServiceMixin<TBase extends ApiMixinConstructor>(base: TBase) {
                 data: update,
             });
         }
+
+        public async createServiceGrant(
+            service: string,
+            grant: ServiceGrant
+        ): Promise<Response<Service>> {
+            return await this.request<Service>(`/services/${service}/grants`, {
+                method: "post",
+                data: grant,
+            });
+        }
+
+        public async getServiceGrant(
+            service: string,
+            grant: string
+        ): Promise<ServiceGrant | null> {
+            const result = await this.request<ServiceGrant>(
+                `/services/${service}/grants/${grant}`
+            );
+            return result.success ? result.data : null;
+        }
+
+        public async updateServiceGrant(
+            service: string,
+            grant: string,
+            update: ServiceGrant
+        ): Promise<Response<Service>> {
+            return await this.request<Service>(
+                `/services/${service}/grants/${grant}`,
+                { method: "post", data: update }
+            );
+        }
+
+        public async deleteServiceGrant(
+            service: string,
+            grant: string
+        ): Promise<void> {
+            await this.request<void>(`/services/${service}/grants/${grant}`, {
+                method: "delete",
+            });
+        }
     };
 }
