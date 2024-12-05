@@ -10,6 +10,8 @@ import {
     Divider,
     Group,
     Loader,
+    Paper,
+    ScrollAreaAutosize,
     Stack,
     Text,
 } from "@mantine/core";
@@ -25,6 +27,87 @@ import {
 } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { ModalTitle } from "../../modals";
+
+function GrantItem({
+    grant,
+    selected,
+    onSelect,
+}: {
+    grant: ServiceGrant;
+    selected: boolean;
+    onSelect: () => void;
+}) {
+    const { t } = useTranslation();
+    switch (grant.type) {
+        case "account":
+            return (
+                <Paper
+                    className={"grant-item" + (selected ? " selected" : "")}
+                    onClick={onSelect}
+                    p="sm"
+                    radius={0}
+                    shadow="none"
+                >
+                    <Group gap="sm">
+                        <IconUserPlus size={28} />
+                        <Stack gap={0}>
+                            <Text>
+                                {t(
+                                    "views.admin.services.config.grants.account.title"
+                                )}
+                            </Text>
+                        </Stack>
+                    </Group>
+                </Paper>
+            );
+        case "message":
+            return (
+                <Paper
+                    className={"grant-item" + (selected ? " selected" : "")}
+                    onClick={onSelect}
+                    p="sm"
+                    radius={0}
+                    shadow="none"
+                >
+                    <Group gap="sm">
+                        <IconTextPlus size={28} />
+                        <Stack gap={0}>
+                            <Text>{grant.title}</Text>
+                            <Text c="dimmed" size="sm">
+                                {t(
+                                    "views.admin.services.config.grants.message.type"
+                                )}
+                            </Text>
+                        </Stack>
+                    </Group>
+                </Paper>
+            );
+        case "attachment":
+            return (
+                <Paper
+                    className={"grant-item" + (selected ? " selected" : "")}
+                    onClick={onSelect}
+                    p="sm"
+                    radius={0}
+                    shadow="none"
+                >
+                    <Group gap="sm">
+                        <IconFilePlus size={28} />
+                        <Stack gap={0}>
+                            <Text>{grant.display_name}</Text>
+                            <Text c="dimmed" size="sm">
+                                {t(
+                                    "views.admin.services.config.grants.attachment.type"
+                                )}
+                            </Text>
+                        </Stack>
+                    </Group>
+                </Paper>
+            );
+        case "inline_image":
+            return <></>;
+    }
+}
 
 export function ServiceConfig({
     id,
@@ -55,6 +138,7 @@ export function ServiceConfig({
         }
     }, [service]);
     const jsonService = JSON.stringify(service);
+    const [viewingGrant, setViewingGrant] = useState<string | null>(null);
 
     const addGrant = useCallback(
         (type: ServiceGrant["type"]) => {
@@ -147,9 +231,82 @@ export function ServiceConfig({
                 </ActionIcon.Group>
             </Group>
             <Divider />
-            <Box className="grant-container" p="sm">
+            <Box className="grant-container" p={0}>
                 {Object.keys(service.grants).length > 0 ? (
-                    <></>
+                    <Group gap={0} p={0} h="100%" w="100%">
+                        <Box
+                            className="grant-scroll"
+                            w="256px"
+                            maw="50%"
+                            h="100%"
+                        >
+                            <Stack gap={0} h="100%">
+                                <ScrollAreaAutosize
+                                    mah="calc(100% - 42px)"
+                                    h="calc(100% - 42px)"
+                                >
+                                    <Stack gap={0}>
+                                        {Object.entries(service.grants)
+                                            .filter(
+                                                ([_, { type }]) =>
+                                                    type !== "inline_image"
+                                            )
+                                            .map(([id, grant]) => (
+                                                <GrantItem
+                                                    key={id}
+                                                    grant={grant}
+                                                    selected={
+                                                        viewingGrant === id
+                                                    }
+                                                    onSelect={() =>
+                                                        setViewingGrant((cur) =>
+                                                            cur === id
+                                                                ? null
+                                                                : id
+                                                        )
+                                                    }
+                                                />
+                                            ))}
+                                    </Stack>
+                                </ScrollAreaAutosize>
+                                <Divider />
+                                <ActionIcon.Group w="100%">
+                                    <ActionIcon
+                                        style={{ flexGrow: 1 }}
+                                        radius={0}
+                                        size="xl"
+                                        variant="light"
+                                        onClick={() => addGrant("account")}
+                                    >
+                                        <IconUserPlus />
+                                    </ActionIcon>
+                                    <ActionIcon
+                                        style={{ flexGrow: 1 }}
+                                        size="xl"
+                                        variant="light"
+                                        onClick={() => addGrant("attachment")}
+                                    >
+                                        <IconFilePlus />
+                                    </ActionIcon>
+                                    <ActionIcon
+                                        style={{ flexGrow: 1 }}
+                                        size="xl"
+                                        radius={0}
+                                        variant="light"
+                                        onClick={() => addGrant("message")}
+                                    >
+                                        <IconTextPlus />
+                                    </ActionIcon>
+                                </ActionIcon.Group>
+                            </Stack>
+                        </Box>
+                        <Divider orientation="vertical" h="100%" />
+                        <Box
+                            className="grant-viewer"
+                            h="100%"
+                            style={{ flexGrow: 1 }}
+                        ></Box>
+                    </Group>
                 ) : (
                     <Stack
                         gap="md"

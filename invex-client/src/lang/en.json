@@ -57,7 +57,18 @@
           "addAccount": "Add Account Creation",
           "addAttachment": "Add Attachment",
           "addMessage": "Add Message",
-          "noGrants": "No Service Grants Created"
+          "noGrants": "No Service Grants Created",
+          "grants": {
+            "attachment": {
+              "type": "Attachment"
+            },
+            "message": {
+              "type": "Message"
+            },
+            "account": {
+              "title": "Account Creation"
+            }
+          }
         }
       },
       "plugins": {

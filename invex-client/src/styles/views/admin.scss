@@ -64,6 +64,7 @@
 
                 .service-configurator {
                     height: 100%;
+                    max-height: 100%;
                     flex-grow: 1;
                     position: relative;
 
@@ -76,9 +77,12 @@
 
                     .service-config-stack {
                         height: 100%;
+                        position: relative;
                         .grant-container {
                             flex-grow: 1;
                             position: relative;
+                            max-height: 100%;
+                            overflow: hidden;
 
                             .create-grant {
                                 &.empty {
@@ -86,6 +90,25 @@
                                     top: 50%;
                                     left: 50%;
                                     transform: translate(-50%, -50%);
+                                }
+                            }
+
+                            .grant-scroll {
+                                .grant-item {
+                                    cursor: pointer;
+                                    transition: background-color 0.1s;
+
+                                    &:hover {
+                                        background-color: var(--mantine-color-default);
+                                    }
+
+                                    &.selected {
+                                        background-color: var(--mantine-color-default-hover);
+                                    }
+
+                                    &.selected:hover {
+                                        background-color: var(--mantine-color-default-border);
+                                    }
                                 }
                             }
                         }
