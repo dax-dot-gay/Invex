@@ -4,11 +4,14 @@ export type ServiceGrant =
           plugin_id: string;
           options: any;
           url: string | null;
+          help: string | null;
       }
     | {
           type: "attachment";
           file_id: string;
           display_name: string | null;
+          help: string | null;
+          preview: boolean;
       }
     | {
           type: "message";

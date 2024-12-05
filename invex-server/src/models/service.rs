@@ -14,11 +14,14 @@ pub enum ServiceGrant {
 
         #[reflect(ignore)]
         options: Value,
-        url: Option<String>
+        url: Option<String>,
+        help: Option<String>
     },
     Attachment {
         file_id: Id,
         display_name: Option<String>,
+        help: Option<String>,
+        preview: bool
     },
     Message {
         title: String,

@@ -30,6 +30,34 @@ async fn get_file(user: AuthUser, id: &str, fs: Fs) -> Result<(ContentType, Read
     }
 }
 
+#[get("/<id>/meta")]
+async fn get_file_metadata(user: AuthUser, id: &str, fs: Fs) -> ApiResult<FileInfo> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to get arbitrary files".to_string(),
+        ));
+    }
+    if let Some(file) = fs.get_file(id.to_string().into()).await {
+        Ok(Json(file.into()))
+    } else {
+        Err(ApiError::NotFound("File not found or inaccessible".to_string()))
+    }
+}
+
+#[delete("/<id>")]
+async fn delete_file(user: AuthUser, id: &str, fs: Fs) -> Result<(), ApiError> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to delete files".to_string(),
+        ));
+    }
+    if let Some(_) = fs.get_file(id.to_string().into()).await {
+        fs.delete(id.to_string().into()).await.or(Err(ApiError::Internal("Failed to delete file".to_string())))
+    } else {
+        Err(ApiError::NotFound("File not found or inaccessible".to_string()))
+    }
+}
+
 pub fn routes() -> Vec<Route> {
-    routes![upload_file, get_file]
+    routes![upload_file, get_file, delete_file, get_file_metadata]
 }
