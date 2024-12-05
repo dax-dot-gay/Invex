@@ -40,7 +40,7 @@ pub struct Service {
     pub name: String,
     pub icon: Option<String>,
     pub description: Option<String>,
-    pub grants: HashMap<Id, ServiceGrant>
+    pub grants: HashMap<String, ServiceGrant>
 }
 
 impl Service {
@@ -55,18 +55,18 @@ impl Service {
     }
 
     pub fn add_grant(&mut self, grant: ServiceGrant) {
-        self.grants.insert(Id::default(), grant.clone());
+        self.grants.insert(Id::default().to_string(), grant.clone());
     }
 
     pub fn modify_grant<T: AsRef<str>>(&mut self, id: T, grant: ServiceGrant) {
-        self.grants.insert(id.as_ref().to_string().into(), grant.clone());
+        self.grants.insert(id.as_ref().to_string(), grant.clone());
     }
 
     pub fn get_grant<T: AsRef<str>>(&self, id: T) -> Option<ServiceGrant> {
-        self.grants.get(&id.as_ref().to_string().into()).and_then(|v| Some(v.clone()))
+        self.grants.get(&id.as_ref().to_string()).and_then(|v| Some(v.clone()))
     }
 
     pub fn remove_grant<T: AsRef<str>>(&mut self, id: T) {
-        self.grants.remove(&id.as_ref().to_string().into());
+        self.grants.remove(&id.as_ref().to_string());
     }
 }

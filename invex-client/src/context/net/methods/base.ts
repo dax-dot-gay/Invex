@@ -30,20 +30,19 @@ export class ApiBase {
                     url,
                     ...(config ?? {}),
                 });
-                return { success: true, ...result };
+                return Response.ok<T>(result);
             } catch (e: any) {
                 const error: AxiosError<E> = e;
-                return { success: false, ...error };
+                return Response.err<T>(error);
             }
         } else {
-            return {
-                success: false,
+            return Response.err<T>({
                 status: 0,
                 message: "Network context not ready",
                 isAxiosError: false,
                 name: "context.not_ready",
                 toJSON: () => ({}),
-            };
+            });
         }
     }
 

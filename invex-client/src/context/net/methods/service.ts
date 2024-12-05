@@ -21,7 +21,7 @@ export function ServiceMixin<TBase extends ApiMixinConstructor>(base: TBase) {
 
         public async getServices(): Promise<Service[]> {
             const result = await this.request<Service[]>("/services");
-            return result.success ? result.data : [];
+            return result.or_default([]);
         }
 
         public async getService(id: string): Promise<Service | null> {

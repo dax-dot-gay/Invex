@@ -51,13 +51,15 @@ async fn get_services(user: AuthUser, services: Docs<Service>) -> ApiResult<Vec<
         ));
     }
     if let Ok(cursor) = services.find(doc! {}).await {
-        if let Ok(results) = cursor.try_collect::<Vec<Service>>().await {
-            Ok(Json(results))
-        } else {
-            Err(ApiError::Internal("Failed to list services".to_string()))
+        match cursor.try_collect::<Vec<Service>>().await {
+            Ok(results) => Ok(Json(results)),
+            Err(e) => {
+                println!("{e:?}");
+                Err(ApiError::Internal("Failed to list services - collection".to_string()))
+            }
         }
     } else {
-        Err(ApiError::Internal("Failed to list services".to_string()))
+        Err(ApiError::Internal("Failed to list services - query".to_string()))
     }
 }
 
@@ -157,7 +159,7 @@ async fn update_service_grant(
         ));
     }
     if let Some(mut result) = services.get(id).await {
-        if result.grants.contains_key(&grant_id.to_string().into()) {
+        if result.grants.contains_key(&grant_id.to_string()) {
             result.modify_grant(id, grant.into_inner());
             if let Ok(_) = services.save(result.clone()).await {
                 Ok(Json(result))
@@ -208,7 +210,7 @@ async fn delete_service_grant(
         ));
     }
     if let Some(mut result) = services.get(id).await {
-        if result.grants.contains_key(&grant_id.to_string().into()) {
+        if result.grants.contains_key(&grant_id.to_string()) {
             result.remove_grant(id);
             if let Ok(_) = services.save(result.clone()).await {
                 Ok(Json(result))

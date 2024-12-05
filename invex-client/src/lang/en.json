@@ -48,17 +48,17 @@
         "title": "Invites"
       },
       "services": {
-          "title": "Services",
-          "header": "All Services",
-          "add": "New Service",
-          "addTitle": "New Service",
-          "noService": "No Service Selected",
-          "config": {
-              "addAccount": "Add Account Creation",
-              "addAttachment": "Add Attachment",
-              "addMessage": "Add Message",
-              "noGrants": "No Service Grants Created"
-          }
+        "title": "Services",
+        "header": "All Services",
+        "add": "New Service",
+        "addTitle": "New Service",
+        "noService": "No Service Selected",
+        "config": {
+          "addAccount": "Add Account Creation",
+          "addAttachment": "Add Attachment",
+          "addMessage": "Add Message",
+          "noGrants": "No Service Grants Created"
+        }
       },
       "plugins": {
         "title": "Plugins",
@@ -91,64 +91,77 @@
     }
   },
   "modals": {
-      "login": {
-          "title": "Log In",
-          "email": "Email or Username",
-          "password": "Password",
-          "login": "Log In",
-          "invite": "Enter Invite",
-          "success": "Logged in as {{user}}",
-          "error": "Login failed!"
+    "login": {
+      "title": "Log In",
+      "email": "Email or Username",
+      "password": "Password",
+      "login": "Log In",
+      "invite": "Enter Invite",
+      "success": "Logged in as {{user}}",
+      "error": "Login failed!"
+    },
+    "createUser": {
+      "username": "Username",
+      "email": "Email (optional)",
+      "password": "Password",
+      "submit": "Create",
+      "adminTitle": "Create Administrator",
+      "userTitle": "Create User",
+      "success": "Created user!"
+    },
+    "addPlugin": {
+      "title": "Add or Upload Plugin",
+      "upload": {
+        "title": "Drag a plugin file here or click to select one",
+        "desc": "Accepts any .wasm file with a size not exceeding 1GB",
+        "confirm": "Upload"
       },
-      "createUser": {
-          "username": "Username",
-          "email": "Email (optional)",
-          "password": "Password",
-          "submit": "Create",
-          "adminTitle": "Create Administrator",
-          "userTitle": "Create User",
-          "success": "Created user!"
-      },
-      "addPlugin": {
-          "title": "Add or Upload Plugin",
-          "upload": {
-              "title": "Drag a plugin file here or click to select one",
-              "desc": "Accepts any .wasm file with a size not exceeding 1GB",
-              "confirm": "Upload"
-          },
-          "error": "Plugin upload failed: {{reason}}",
-          "url": {
-              "placeholder": "Plugin URL"
-          }
-      },
-      "addService": {
-          "title": "New Service",
-          "placeholder": "Service Name",
-          "description": "Briefly describe the service",
-          "success": "Created service!",
-          "error": "Failed to add service."
-      },
-      "updateService": {
-          "placeholder": "Service Name",
-          "description": "Briefly describe the service",
-          "success": "Updated service",
-          "error": "Failed to update service details",
-          "title": "Edit Service Details"
-      },
-      "addGrant": {
-          "account": {
-              "title": "Add Account Creator"
-          },
-          "attachment": {
-              "title": "Attach File"
-          },
-          "message": {
-              "title": "Attach a Message"
-          }
+      "error": "Plugin upload failed: {{reason}}",
+      "url": {
+        "placeholder": "Plugin URL"
       }
+    },
+    "addService": {
+      "title": "New Service",
+      "placeholder": "Service Name",
+      "description": "Briefly describe the service",
+      "success": "Created service!",
+      "error": "Failed to add service."
+    },
+    "updateService": {
+      "placeholder": "Service Name",
+      "description": "Briefly describe the service",
+      "success": "Updated service",
+      "error": "Failed to update service details",
+      "title": "Edit Service Details"
+    },
+    "addGrant": {
+      "account": {
+        "title": "Add Account Creator"
+      },
+      "attachment": {
+        "title": "Attach File",
+        "drop": {
+          "title": "Drop an attachment here, or click to open a file dialog",
+          "subtitle": "Accepts any file up to 1GB"
+        },
+        "displayName": "Display Name",
+        "preview": "Preview",
+        "helpText": "Help/Tooltip Text",
+        "fileError": "Unable to upload file: {{reason}}"
+      },
+      "message": {
+        "title": "Attach a Message"
+      },
+      "feedback": {
+        "success": "Added grant to current service!",
+        "error": "Failed to add grant: {{reason}}"
+      }
+    }
   },
   "actions": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "create": "Create"
   },
   "errors": {
     "form": {

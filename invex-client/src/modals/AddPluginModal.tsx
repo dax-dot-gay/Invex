@@ -27,7 +27,6 @@ import { useTranslation } from "react-i18next";
 import { useNotifications } from "../util/notifications";
 import { PluginMeta } from "../types/plugin";
 import { PluginsMixin, useApi } from "../context/net";
-import { isString } from "lodash";
 import { DynamicAvatar } from "../components/icon";
 import { useInputState } from "@mantine/hooks";
 import validator from "validator";
@@ -140,22 +139,19 @@ export function AddPluginModal({
                     setFileLoading(true);
                     api.preview_plugin_from_file(files[0]).then((response) => {
                         setFileLoading(false);
-                        if (response.success) {
-                            setFilePreview(response.data);
-                            setSelectedFile(files[0]);
-                        } else {
-                            error(
-                                t("modals.addPlugin.error", {
-                                    reason: response.response
-                                        ? isString(response)
-                                            ? response.response
-                                            : (response.response.data as any)
-                                                  .description ??
-                                              "Unknown Error"
-                                        : "Unknown Error",
-                                })
+                        response
+                            .and_then((data) => {
+                                setFilePreview(data);
+                                setSelectedFile(files[0]);
+                            })
+                            .or_else((_) =>
+                                error(
+                                    t("modals.addPlugin.error", {
+                                        reason:
+                                            response.reason ?? "Unknown Error",
+                                    })
+                                )
                             );
-                        }
                     });
                 }}
                 onReject={console.log}
@@ -275,24 +271,20 @@ export function AddPluginModal({
                             api.preview_plugin_from_url(pluginUrl).then(
                                 (response) => {
                                     setUrlLoading(false);
-                                    if (response.success) {
-                                        setUrlPreview(response.data);
-                                        setConfirmedPluginUrl(pluginUrl);
-                                    } else {
-                                        error(
-                                            t("modals.addPlugin.error", {
-                                                reason: response.response
-                                                    ? isString(response)
-                                                        ? response.response
-                                                        : (
-                                                              response.response
-                                                                  .data as any
-                                                          ).description ??
-                                                          "Unknown Error"
-                                                    : "Unknown Error",
-                                            })
+                                    response
+                                        .and_then((data) => {
+                                            setUrlPreview(data);
+                                            setConfirmedPluginUrl(pluginUrl);
+                                        })
+                                        .or_else((_) =>
+                                            error(
+                                                t("modals.addPlugin.error", {
+                                                    reason:
+                                                        response.reason ??
+                                                        "Unknown Error",
+                                                })
+                                            )
                                         );
-                                    }
                                 }
                             );
                         }}

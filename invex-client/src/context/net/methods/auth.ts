@@ -16,13 +16,12 @@ export function AuthMixin<TBase extends ApiMixinConstructor>(base: TBase) {
                 method: "post",
                 data: { email: username, password },
             });
-            if (result.success) {
-                await this.refresh();
-                this.setSecretKey(result.data.client_key);
-                return result.data.user;
-            } else {
-                return null;
-            }
+            await this.refresh();
+
+            return result.resolve((data) => {
+                this.setSecretKey(data.client_key);
+                return data.user;
+            }, null);
         }
 
         public async logout(): Promise<Response<void>> {

@@ -52,23 +52,25 @@ export function CreateUserModal({
                     values.password
                 ).then((response) => {
                     setLoading(false);
-                    if (response.success) {
-                        if (innerProps.refresh) {
-                            innerProps.refresh();
-                        }
-                        success(t("modals.createUser.success"));
-                        context.closeContextModal(id);
-                    } else {
-                        if (response.response) {
-                            error(
-                                t("errors.network.response", {
-                                    reason: response.response.data as string,
-                                })
-                            );
-                        } else {
-                            error(t("errors.network.unknown"));
-                        }
-                    }
+                    response
+                        .and_then((_) => {
+                            if (innerProps.refresh) {
+                                innerProps.refresh();
+                            }
+                            success(t("modals.createUser.success"));
+                            context.closeContextModal(id);
+                        })
+                        .or_else((_, reason) => {
+                            if (reason) {
+                                error(
+                                    t("errors.network.response", {
+                                        reason: reason,
+                                    })
+                                );
+                            } else {
+                                error(t("errors.network.unknown"));
+                            }
+                        });
                 });
             })}
         >

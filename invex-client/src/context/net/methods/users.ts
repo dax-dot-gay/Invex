@@ -19,9 +19,7 @@ export function UsersMixin<TBase extends ApiMixinConstructor>(base: TBase) {
                     params: omitBy(options, (v) => v === undefined),
                 }
             );
-            return result.success
-                ? result.data
-                : { offset: 0, total: 0, results: [] };
+            return result.or_default({ offset: 0, total: 0, results: [] });
         }
 
         public async createUser(

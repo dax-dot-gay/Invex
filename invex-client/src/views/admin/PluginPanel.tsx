@@ -31,7 +31,6 @@ import {
 import { modals } from "@mantine/modals";
 import { ModalTitle } from "../../modals";
 import { useNotifications } from "../../util/notifications";
-import { isString } from "lodash";
 import {
     MutableRefObject,
     useCallback,
@@ -40,7 +39,7 @@ import {
     useState,
 } from "react";
 import { Plugin } from "../../types/plugin";
-import { DynamicAvatar, DynamicIcon } from "../../components/icon";
+import { DynamicAvatar } from "../../components/icon";
 import { useDebouncedValue } from "@mantine/hooks";
 
 function PluginItem({
@@ -267,11 +266,7 @@ export function PluginPanel() {
 
     const refresh = useCallback(() => {
         api.list_plugins().then((r) => {
-            if (r.success) {
-                setPlugins(r.data);
-            } else {
-                setPlugins([]);
-            }
+            setPlugins(r.or_default([]));
         });
     }, [setPlugins, api.list_plugins]);
 
@@ -309,74 +304,62 @@ export function PluginPanel() {
                                             await api.add_plugin_from_file(
                                                 file
                                             );
-                                        if (response.success) {
-                                            success(
-                                                t(
-                                                    "views.admin.plugins.feedback.uploadSuccess",
-                                                    {
-                                                        name: response.data.info
-                                                            .metadata.name,
-                                                    }
+                                        response
+                                            .and_then((data) => {
+                                                success(
+                                                    t(
+                                                        "views.admin.plugins.feedback.uploadSuccess",
+                                                        {
+                                                            name: data.info
+                                                                .metadata.name,
+                                                        }
+                                                    )
+                                                );
+                                                refresh();
+                                            })
+                                            .or_else((_, reason) =>
+                                                error(
+                                                    t(
+                                                        "views.admin.plugins.feedback.uploadError",
+                                                        {
+                                                            reason:
+                                                                reason ??
+                                                                "Unknown Error",
+                                                        }
+                                                    )
                                                 )
                                             );
-                                            refresh();
-                                        } else {
-                                            error(
-                                                t(
-                                                    "views.admin.plugins.feedback.uploadError",
-                                                    {
-                                                        reason: response.response
-                                                            ? isString(response)
-                                                                ? response.response
-                                                                : (
-                                                                      response
-                                                                          .response
-                                                                          .data as any
-                                                                  )
-                                                                      .description ??
-                                                                  "Unknown Error"
-                                                            : "Unknown Error",
-                                                    }
-                                                )
-                                            );
-                                        }
                                     },
                                     onSubmitUrl: async function (
                                         url: string
                                     ): Promise<void> {
                                         const response =
                                             await api.add_plugin_from_url(url);
-                                        if (response.success) {
-                                            success(
-                                                t(
-                                                    "views.admin.plugins.feedback.uploadSuccess",
-                                                    {
-                                                        name: response.data.info
-                                                            .metadata.name,
-                                                    }
+                                        response
+                                            .and_then((data) => {
+                                                success(
+                                                    t(
+                                                        "views.admin.plugins.feedback.uploadSuccess",
+                                                        {
+                                                            name: data.info
+                                                                .metadata.name,
+                                                        }
+                                                    )
+                                                );
+                                                refresh();
+                                            })
+                                            .or_else((_, reason) =>
+                                                error(
+                                                    t(
+                                                        "views.admin.plugins.feedback.uploadError",
+                                                        {
+                                                            reason:
+                                                                reason ??
+                                                                "Unknown Error",
+                                                        }
+                                                    )
                                                 )
                                             );
-                                            refresh();
-                                        } else {
-                                            error(
-                                                t(
-                                                    "views.admin.plugins.feedback.uploadError",
-                                                    {
-                                                        reason: response.response
-                                                            ? isString(response)
-                                                                ? response.response
-                                                                : (
-                                                                      response
-                                                                          .response
-                                                                          .data as any
-                                                                  )
-                                                                      .description ??
-                                                                  "Unknown Error"
-                                                            : "Unknown Error",
-                                                    }
-                                                )
-                                            );
-                                        }
                                     },
                                 },
                                 size: "lg",
