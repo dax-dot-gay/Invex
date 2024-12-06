@@ -1,31 +1,5 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
-use serde_repr::{Deserialize_repr, Serialize_repr};
-
-#[derive(Serialize_repr, Deserialize_repr, PartialEq, Clone, Debug)]
-#[repr(u8)]
-pub enum FieldColumns {
-    One = 1,
-    Two = 2,
-    Three = 3
-}
-
-impl From<u8> for FieldColumns {
-    fn from(value: u8) -> Self {
-        match value {
-            1 => Self::One,
-            2 => Self::Two,
-            3 => Self::Three,
-            _ => Self::One
-        }
-    }
-}
-
-impl Default for FieldColumns {
-    fn default() -> Self {
-        Self::One
-    }
-}
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(untagged)]
@@ -75,7 +49,7 @@ pub enum FieldType {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Builder)]
 #[builder(setter(into, strip_option), name = "FieldBuilder")]
-pub struct PluginConfigurationField {
+pub struct PluginArgument {
     pub key: String,
     pub label: String,
     pub field: FieldType,
@@ -85,20 +59,31 @@ pub struct PluginConfigurationField {
     pub icon: Option<String>,
 
     #[serde(default)]
-    #[builder(default = "FieldColumns::default()")]
-    pub width: FieldColumns,
-
-    #[serde(default)]
     #[builder(default = "false")]
     pub required: bool
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "type")]
 pub enum Capability {
-    CreateAccount,
-    DeleteAccount
+    Configure {
+        method: String,
+        fields: Vec<PluginArgument>
+    },
+    Grant {
+        method: String,
+        fields: Vec<PluginArgument>
+    },
+    Revoke {
+        method: String
+    },
+    Action {
+        label: String,
+        method: String,
+        fields: Vec<PluginArgument>
+    }
 }
+
 
 #[derive(Serialize, Deserialize, Clone, Debug, Builder, Default)]
 #[builder(setter(into, strip_option))]
@@ -135,5 +120,43 @@ impl PluginMetadataBuilder {
         cap.push(capability);
         self.capabilities(cap);
         self
+    }
+
+    pub fn validate(&self) -> Result<(), String> {
+        if let Some(capabilities) = &self.capabilities {
+            let mut count_configure = 0;
+            let mut count_grant = 0;
+            let mut count_revoke = 0;
+            let mut actions = Vec::<String>::new();
+            for capability in capabilities {
+                match capability {
+                    Capability::Configure { .. } => count_configure+=1,
+                    Capability::Grant { .. } => count_grant+=1,
+                    Capability::Revoke {..} => count_revoke+=1,
+                    Capability::Action {label, ..} => {
+                        if actions.contains(&label) {
+                            return Err(String::from("Plugins cannot have duplicate action labels"))
+                        }
+                        actions.push(label.clone());
+                    }
+                };
+            }
+
+            if count_configure != 1 {
+                return Err(String::from("Plugins must expose exactly one Configure{} capability"));
+            }
+
+            if count_grant != 1 {
+                return Err(String::from("Plugins must expose exactly one Grant{} capability"));
+            }
+
+            if count_revoke > 1 {
+                return Err(String::from("Plugins cannot expose more than one Revoke{} capability"));
+            }
+
+            Ok(())
+        } else {
+            Err(String::from("Plugins must expose at least 1 capability"))
+        }
     }
 }
