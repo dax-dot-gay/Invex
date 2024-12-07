@@ -83,6 +83,13 @@ impl<T: Document> Docs<T> {
         }
     }
 
+    pub async fn query_one(&self, query: bson::Document) -> Option<T> {
+        match self.inner.find_one(query).await {
+            Ok(r) => r,
+            Err(_) => None,
+        }
+    }
+
     pub async fn paginate(
         &self,
         query: bson::Document,

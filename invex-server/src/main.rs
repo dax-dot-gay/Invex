@@ -1,12 +1,15 @@
+use std::{collections::HashMap, sync::Arc};
+
 use bson::doc;
 use controllers::apply_routes;
-use models::auth::{AuthUser, SessionFairing, UserType};
+use models::{auth::{AuthUser, SessionFairing, UserType}, plugin::{PluginRegistry, RegisteredPlugin}};
 use mongodb::{Database, IndexModel};
-use rocket::fairing::AdHoc;
+use rocket::{fairing::AdHoc, futures::TryStreamExt};
+use tokio::sync::Mutex;
 mod config;
 
 use config::Config;
-use util::database::{Docs, Document};
+use util::{database::{Docs, Document, Fs}, PluginRegistryMap};
 
 #[macro_use]
 extern crate rocket;
@@ -28,6 +31,7 @@ async fn rocket() -> _ {
                 .await
                 .expect("Failed to connect to DB"),
         )
+        .manage::<PluginRegistryMap>(Arc::new(Mutex::new(HashMap::new())))
         .attach(SessionFairing)
         .attach(AdHoc::on_liftoff("Setup Database", |rocket| Box::pin(async move {
             let users = Docs::<AuthUser>::new(rocket.state::<Database>().expect("Database not initialized").clone());
@@ -47,5 +51,15 @@ async fn rocket() -> _ {
 
             let new_user = AuthUser::new_admin(config.admin.username.clone(), config.admin.email.clone(), config.admin.password.clone()).expect("Invalid admin parameters.");
             users.save(new_user).await.expect("Unable to insert admin user");
+        })))
+        .attach(AdHoc::on_liftoff("Register Current Plugins", |rocket| Box::pin(async move {
+            let plugins = rocket.state::<PluginRegistryMap>().expect("Plugins not initialized").clone();
+            let plugins_db = Docs::<RegisteredPlugin>::new(rocket.state::<Database>().expect("Database not initialized").clone());
+            let fs = Fs::from_db(rocket.state::<Database>().expect("Database not initialized"));
+            let registry = PluginRegistry::new(plugins.clone(), plugins_db.clone(), fs.clone());
+            let existing = plugins_db.find(doc! {}).await.expect("Failed to fetch from DB").try_collect::<Vec<RegisteredPlugin>>().await.expect("Failed to collect results");
+            for plugin in existing {
+                registry.register_existing(plugin).await.expect("Failed to register existing plugin");
+            }
         })))
 }

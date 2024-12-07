@@ -4,10 +4,10 @@ import {
     ActionIcon,
     Anchor,
     Button,
+    Chip,
     Divider,
     Group,
     Paper,
-    Pill,
     SegmentedControl,
     SimpleGrid,
     Stack,
@@ -61,9 +61,9 @@ function PluginItem({
     useEffect(() => {
         if (debouncedEnabled != plugin.enabled) {
             if (debouncedEnabled) {
-                api.enable_plugin(plugin._id).then(refresh);
+                api.enable_plugin(plugin.id).then(refresh);
             } else {
-                api.disable_plugin(plugin._id).then(refresh);
+                api.disable_plugin(plugin.id).then(refresh);
             }
         }
     }, [debouncedEnabled]);
@@ -87,26 +87,24 @@ function PluginItem({
                         <Group gap="sm">
                             <DynamicAvatar
                                 source={
-                                    (plugin.info.metadata.icon as any) ??
+                                    (plugin.metadata.icon as any) ??
                                     "icon:IconPuzzle"
                                 }
                                 fallback={IconPuzzle}
                                 size={28}
                             />
                             <Stack gap={0}>
-                                <Text fw="600">
-                                    {plugin.info.metadata.name}
-                                </Text>
+                                <Text fw="600">{plugin.metadata.name}</Text>
                                 <Text c="dimmed" size="xs">
-                                    {plugin.info.metadata.id} - v
-                                    {plugin.info.metadata.version}
+                                    {plugin.metadata.id} - v
+                                    {plugin.metadata.version}
                                 </Text>
                             </Stack>
                         </Group>
                     </Group>
                     <Paper bg="var(--mantine-color-default)" p="xs">
-                        {plugin.info.metadata.description ? (
-                            <Text>{plugin.info.metadata.description}</Text>
+                        {plugin.metadata.description ? (
+                            <Text>{plugin.metadata.description}</Text>
                         ) : (
                             <Text c="dimmed">
                                 {t("views.admin.plugins.noDesc")}
@@ -118,8 +116,8 @@ function PluginItem({
                             <ThemeIcon variant="transparent">
                                 <IconUserEdit size={20} />
                             </ThemeIcon>
-                            {plugin.info.metadata.author ? (
-                                <Text>{plugin.info.metadata.author}</Text>
+                            {plugin.metadata.author ? (
+                                <Text>{plugin.metadata.author}</Text>
                             ) : (
                                 <Text c="dimmed" fs="italic">
                                     {t("views.admin.plugins.noAuthor")}
@@ -130,12 +128,12 @@ function PluginItem({
                             <ThemeIcon variant="transparent">
                                 <IconLink size={20} />
                             </ThemeIcon>
-                            {plugin.info.metadata.url ? (
+                            {plugin.metadata.url ? (
                                 <Anchor
-                                    href={plugin.info.metadata.url}
+                                    href={plugin.metadata.url}
                                     target="_blank"
                                 >
-                                    {new URL(plugin.info.metadata.url).origin}
+                                    {new URL(plugin.metadata.url).origin}
                                 </Anchor>
                             ) : (
                                 <Text c="dimmed" fs="italic">
@@ -149,11 +147,49 @@ function PluginItem({
                             <IconAssemblyFilled size={20} />
                         </ThemeIcon>
                         <Group gap={4}>
-                            {plugin.info.metadata.capabilities.map((v) => (
-                                <Pill bg="gray.8" key={v}>
-                                    {t(`views.admin.plugins.capability.${v}`)}
-                                </Pill>
-                            ))}
+                            <Chip
+                                checked={
+                                    plugin.metadata.capabilities.filter(
+                                        (v) => v.type === "grant"
+                                    ).length > 0
+                                }
+                            >
+                                {t("views.admin.plugins.capability.grant")}
+                            </Chip>
+                            <Chip
+                                checked={
+                                    plugin.metadata.capabilities.filter(
+                                        (v) => v.type === "revoke"
+                                    ).length > 0
+                                }
+                            >
+                                {t("views.admin.plugins.capability.revoke")}
+                            </Chip>
+                            <Chip
+                                checked={
+                                    plugin.metadata.capabilities.filter(
+                                        (v) => v.type === "action"
+                                    ).length > 0
+                                }
+                            >
+                                {(() => {
+                                    const actions =
+                                        plugin.metadata.capabilities.filter(
+                                            (v) => v.type === "action"
+                                        ).length;
+                                    return actions
+                                        ? t(
+                                              "views.admin.plugins.capability.action.count",
+                                              {
+                                                  actionCount:
+                                                      actions.toString(),
+                                              }
+                                          )
+                                        : t(
+                                              "views.admin.plugins.capability.action.countNone"
+                                          );
+                                })()}
+                            </Chip>
                         </Group>
                     </Group>
                     <Group gap="sm" wrap="nowrap">
@@ -204,7 +240,7 @@ function PluginItem({
                                     if (selfRef.current) {
                                         selfRef.current.hidden = true;
                                     }
-                                    api.delete_plugin(plugin._id).then(refresh);
+                                    api.delete_plugin(plugin.id).then(refresh);
                                 }}
                             >
                                 <IconTrashFilled size={20} />
@@ -310,8 +346,8 @@ export function PluginPanel() {
                                                     t(
                                                         "views.admin.plugins.feedback.uploadSuccess",
                                                         {
-                                                            name: data.info
-                                                                .metadata.name,
+                                                            name: data.metadata
+                                                                .name,
                                                         }
                                                     )
                                                 );
@@ -341,8 +377,8 @@ export function PluginPanel() {
                                                     t(
                                                         "views.admin.plugins.feedback.uploadSuccess",
                                                         {
-                                                            name: data.info
-                                                                .metadata.name,
+                                                            name: data.metadata
+                                                                .name,
                                                         }
                                                     )
                                                 );
@@ -378,7 +414,7 @@ export function PluginPanel() {
                     cols={{ base: 1, md: 2, xl: 3 }}
                 >
                     {plugins.map((v) => (
-                        <PluginItem plugin={v} key={v._id} refresh={refresh} />
+                        <PluginItem plugin={v} key={v.id} refresh={refresh} />
                     ))}
                 </SimpleGrid>
             </Stack>

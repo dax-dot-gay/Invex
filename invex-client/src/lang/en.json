@@ -78,8 +78,12 @@
         "noDesc": "No Description.",
         "noAuthor": "Unknown Author",
         "capability": {
-          "create_account": "Create Account",
-          "delete_account": "Delete Account"
+            "grant": "Grant Access",
+            "revoke": "Revoke Access",
+            "action": {
+                "count": "{{actionCount}} Actions",
+                "countNone": "No Actions"
+            }
         },
         "feedback": {
           "uploadSuccess": "Plugin {{name}} uploaded & activated!",

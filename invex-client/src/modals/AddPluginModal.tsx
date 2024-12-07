@@ -1,12 +1,13 @@
 import {
     ActionIcon,
     Button,
+    Chip,
     Divider,
     Group,
     Loader,
     Paper,
-    Pill,
     rem,
+    Space,
     Stack,
     Text,
     TextInput,
@@ -82,11 +83,48 @@ function PluginPreview({
                             <IconAssemblyFilled size={20} />
                         </ThemeIcon>
                         <Group gap={4}>
-                            {preview.capabilities.map((v) => (
-                                <Pill bg="gray.8" key={v}>
-                                    {t(`views.admin.plugins.capability.${v}`)}
-                                </Pill>
-                            ))}
+                            <Chip
+                                checked={
+                                    preview.capabilities.filter(
+                                        (v) => v.type === "grant"
+                                    ).length > 0
+                                }
+                            >
+                                {t("views.admin.plugins.capability.grant")}
+                            </Chip>
+                            <Chip
+                                checked={
+                                    preview.capabilities.filter(
+                                        (v) => v.type === "revoke"
+                                    ).length > 0
+                                }
+                            >
+                                {t("views.admin.plugins.capability.revoke")}
+                            </Chip>
+                            <Chip
+                                checked={
+                                    preview.capabilities.filter(
+                                        (v) => v.type === "action"
+                                    ).length > 0
+                                }
+                            >
+                                {(() => {
+                                    const actions = preview.capabilities.filter(
+                                        (v) => v.type === "action"
+                                    ).length;
+                                    return actions
+                                        ? t(
+                                              "views.admin.plugins.capability.action.count",
+                                              {
+                                                  actionCount:
+                                                      actions.toString(),
+                                              }
+                                          )
+                                        : t(
+                                              "views.admin.plugins.capability.action.countNone"
+                                          );
+                                })()}
+                            </Chip>
                         </Group>
                     </Group>
                 </Stack>
@@ -94,6 +132,7 @@ function PluginPreview({
                     <IconX />
                 </ActionIcon>
             </Group>
+            <Space h="sm" />
             <Group justify="end">
                 <Button
                     leftSection={<IconUpload size={20} />}

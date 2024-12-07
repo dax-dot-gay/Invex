@@ -1,4 +1,27 @@
-export type PluginCapability = "create_account" | "delete_account";
+export type PluginCapabilityGrant = {
+    type: "grant";
+    method: string;
+    fields: PluginField[];
+};
+
+export type PluginCapabilityRevoke = {
+    type: "revoke";
+    method: string;
+};
+
+export type PluginCapabilityAction = {
+    type: "action";
+    label: string;
+    icon: string | null;
+    description: string | null;
+    method: string;
+    fields: PluginField[];
+};
+
+export type PluginCapability =
+    | PluginCapabilityGrant
+    | PluginCapabilityRevoke
+    | PluginCapabilityAction;
 
 export type PluginMeta = {
     id: string;
@@ -9,6 +32,7 @@ export type PluginMeta = {
     url: string | null;
     description: string | null;
     icon: string | null;
+    config: PluginField[];
 };
 
 export type FieldParams =
@@ -42,21 +66,12 @@ export type PluginField = {
     label: string;
     field: FieldParams;
     icon: string | null;
-    width: 1 | 2 | 3;
     required: boolean;
 };
 
 export type Plugin = {
-    _id: string;
+    id: string;
+    metadata: PluginMeta;
     url: string | null;
     enabled: boolean;
-    source: {
-        id: string;
-        filename: string | null;
-        content_type: string;
-    };
-    info: {
-        metadata: PluginMeta;
-        fields: PluginField[];
-    };
 };
