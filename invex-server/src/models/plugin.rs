@@ -1,17 +1,18 @@
 use bevy_reflect::Reflect;
 use extism::Wasm;
 use invex_macros::Document;
+use invex_sdk::PluginMetadata;
 use reqwest::header::HeaderValue;
 use rocket::futures::AsyncWriteExt;
 use serde::{Deserialize, Serialize};
 
-use crate::util::{database::{File, FileInfo, Fs, Id}, plugins::PluginInfo, InResult};
+use crate::util::{database::{File, FileInfo, Fs, Id}, InResult};
 
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect, Document)]
 pub struct RegisteredPlugin {
     #[serde(rename = "_id")]
     pub id: Id,
-    pub info: PluginInfo,
+    pub metadata: PluginMetadata,
     pub source: FileInfo,
     pub url: Option<String>,
     pub enabled: bool

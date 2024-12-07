@@ -1,40 +1,27 @@
-use std::error::Error;
+use std::{collections::HashMap, error::Error, sync::{Arc, Mutex}};
 
 use bevy_reflect::Reflect;
 use extism::{convert::Json, Manifest, Plugin, Wasm};
 use rocket::tokio;
 use serde::{Deserialize, Serialize};
-use invex_sdk::{PluginConfigurationField, PluginMetadata};
+use invex_sdk::PluginMetadata;
 
 use super::InResult;
 
-#[derive(Serialize, Deserialize, Clone, Debug, Reflect)]
-pub struct PluginInfo {
-    #[reflect(ignore)]
-    pub source: Manifest,
-    #[reflect(ignore)]
-    pub fields: Vec<PluginConfigurationField>,
-    #[reflect(ignore)]
-    pub metadata: PluginMetadata
+pub struct PluginInstance {
+    pub record: Id,
+    pub metadata: PluginMetadata,
+    pub manifest: Manifest,
+    pub instance: Plugin
 }
 
-impl PluginInfo {
-    pub async fn from_manifest(source: Manifest) -> InResult<Self> {
-        let manifest = source.clone();
-        let (metadata, fields) = tokio::task::spawn_blocking(move || {
-            let mut plugin = Plugin::new(&source, [], false)?;
-            let metadata = plugin.call::<(), Json<PluginMetadata>>("info_metadata", ())?.into_inner();
-            let fields = plugin.call::<(), Json<Vec<PluginConfigurationField>>>("info_fields", ())?.into_inner();
-            Ok::<(PluginMetadata, Vec<PluginConfigurationField>), Box<dyn Error + Send + Sync>>((metadata, fields))
-        }).await??;
-        Ok(PluginInfo {
-            source: manifest,
-            fields,
-            metadata
-        })
+#[derive(Clone)]
+pub struct PluginRegistry(HashMap<String, Arc<Mutex<PluginInstance>>>);
+
+impl PluginRegistry {
+    pub fn new() -> Self {
+        PluginRegistry(HashMap::new())
     }
 
-    pub async fn from_wasm(source: Wasm) -> InResult<Self> {
-        Ok(PluginInfo::from_manifest(Manifest::new([source])).await?)
-    }
+
 }
