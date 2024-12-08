@@ -39,6 +39,7 @@ import {
 import { Plugin } from "../../types/plugin";
 import { DynamicAvatar } from "../../components/icon";
 import { useDebouncedValue } from "@mantine/hooks";
+import { selectFile } from "../../util/selectFile";
 
 function PluginItem({
     plugin,
@@ -65,6 +66,7 @@ function PluginItem({
             }
         }
     }, [debouncedEnabled]);
+    const { success, error } = useNotifications();
 
     return (
         <Paper
@@ -200,7 +202,67 @@ function PluginItem({
                             withArrow
                             color="var(--mantine-color-body)"
                         >
-                            <ActionIcon variant="light" size="lg" radius="xl">
+                            <ActionIcon
+                                variant="light"
+                                size="lg"
+                                radius="xl"
+                                onClick={() => {
+                                    if (plugin.url) {
+                                        api.add_plugin_from_url(
+                                            plugin.url
+                                        ).then((response) =>
+                                            response
+                                                .and_then(() => {
+                                                    refresh();
+                                                    success(
+                                                        t(
+                                                            "views.admin.plugins.update.success"
+                                                        )
+                                                    );
+                                                })
+                                                .or_else((_, reason) =>
+                                                    error(
+                                                        t(
+                                                            "views.admin.plugins.update.error",
+                                                            { reason }
+                                                        )
+                                                    )
+                                                )
+                                        );
+                                    } else {
+                                        selectFile("application/wasm").then(
+                                            (file) => {
+                                                if (file) {
+                                                    api.add_plugin_from_file(
+                                                        file
+                                                    ).then((response) =>
+                                                        response
+                                                            .and_then(() => {
+                                                                refresh();
+                                                                success(
+                                                                    t(
+                                                                        "views.admin.plugins.update.success"
+                                                                    )
+                                                                );
+                                                            })
+                                                            .or_else(
+                                                                (_, reason) =>
+                                                                    error(
+                                                                        t(
+                                                                            "views.admin.plugins.update.error",
+                                                                            {
+                                                                                reason,
+                                                                            }
+                                                                        )
+                                                                    )
+                                                            )
+                                                    );
+                                                }
+                                            }
+                                        );
+                                    }
+                                }}
+                            >
                                 <IconCloudUp size={20} />
                             </ActionIcon>
                         </Tooltip>

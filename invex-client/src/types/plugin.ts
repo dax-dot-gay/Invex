@@ -44,6 +44,10 @@ export type FieldParams =
     | {
           type: "text_area";
           lines: number | null;
+      }
+    | {
+          type: "plugin_defined";
+          method: string;
       };
 
 export type PluginField = {

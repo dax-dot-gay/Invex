@@ -67,6 +67,9 @@
             },
             "account": {
               "title": "Account Creation"
+            },
+            "grant": {
+              "title": "Plugin Grant"
             }
           }
         }
@@ -78,12 +81,12 @@
         "noDesc": "No Description.",
         "noAuthor": "Unknown Author",
         "capability": {
-            "grant": "Grant Access",
-            "revoke": "Revoke Access",
-            "action": {
-                "count": "{{actionCount}} Actions",
-                "countNone": "No Actions"
-            }
+          "grant": "Grant Access",
+          "revoke": "Revoke Access",
+          "action": {
+            "count": "{{actionCount}} Actions",
+            "countNone": "No Actions"
+          }
         },
         "feedback": {
           "uploadSuccess": "Plugin {{name}} uploaded & activated!",
@@ -101,7 +104,11 @@
             "off": "Disabled"
           }
         },
-        "noUrl": "Source not provided"
+        "noUrl": "Source not provided",
+        "update": {
+          "success": "Updated successfully!",
+          "error": "Failed to update: {{reason}}"
+        }
       }
     }
   },

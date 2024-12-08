@@ -45,6 +45,9 @@ pub enum FieldType {
         #[serde(default)]
         lines: Option<u64>,
     },
+    PluginDefined {
+        method: String
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Builder)]

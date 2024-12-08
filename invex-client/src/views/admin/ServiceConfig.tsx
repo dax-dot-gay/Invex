@@ -19,10 +19,10 @@ import { DynamicAvatar } from "../../components/icon";
 import {
     IconFilePlus,
     IconPencil,
+    IconScriptPlus,
     IconServer,
     IconTextPlus,
     IconTrashFilled,
-    IconUserPlus,
     IconX,
 } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
@@ -39,7 +39,7 @@ function GrantItem({
 }) {
     const { t } = useTranslation();
     switch (grant.type) {
-        case "account":
+        case "grant":
             return (
                 <Paper
                     className={"grant-item" + (selected ? " selected" : "")}
@@ -49,11 +49,11 @@ function GrantItem({
                     shadow="none"
                 >
                     <Group gap="sm">
-                        <IconUserPlus size={28} />
+                        <IconScriptPlus size={28} />
                         <Stack gap={0}>
                             <Text>
                                 {t(
-                                    "views.admin.services.config.grants.account.title"
+                                    "views.admin.services.config.grants.grant.title"
                                 )}
                             </Text>
                         </Stack>
@@ -148,8 +148,8 @@ export function ServiceConfig({
                     title: (
                         <ModalTitle
                             icon={
-                                type === "account"
-                                    ? IconUserPlus
+                                type === "grant"
+                                    ? IconScriptPlus
                                     : type === "attachment"
                                     ? IconFilePlus
                                     : IconTextPlus
@@ -276,9 +276,9 @@ export function ServiceConfig({
                                         radius={0}
                                         size="xl"
                                         variant="light"
-                                        onClick={() => addGrant("account")}
+                                        onClick={() => addGrant("grant")}
                                     >
-                                        <IconUserPlus />
+                                        <IconScriptPlus />
                                     </ActionIcon>
                                     <ActionIcon
                                         style={{ flexGrow: 1 }}
@@ -325,10 +325,10 @@ export function ServiceConfig({
                         </Group>
                         <ButtonGroup>
                             <Button
-                                leftSection={<IconUserPlus />}
+                                leftSection={<IconScriptPlus />}
                                 variant="light"
                                 size="lg"
-                                onClick={() => addGrant("account")}
+                                onClick={() => addGrant("grant")}
                             >
                                 {t("views.admin.services.config.addAccount")}
                             </Button>
