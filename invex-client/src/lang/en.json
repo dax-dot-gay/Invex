@@ -2,7 +2,8 @@
   "common": {
     "appName": "Invex",
     "words": {
-      "or": "or"
+      "or": "or",
+      "saving": "Saving..."
     },
     "notif": {
       "success": "Success!",
@@ -60,10 +61,12 @@
           "noGrants": "No Service Grants Created",
           "grants": {
             "attachment": {
-                "title": "Attachment"
+              "title": "Attachment",
+              "displayName": "Display Name",
+              "helpText": "Help Text / Description"
             },
             "message": {
-                "title": "Message"
+              "title": "Message"
             },
             "grant": {
               "title": "Plugin Grant"

@@ -4,12 +4,13 @@ import { AttachmentGrantEditor } from "./AttachmentGrantEditor";
 import {
     ActionIcon,
     Group,
+    Loader,
     Paper,
     ScrollAreaAutosize,
     Stack,
     Text,
 } from "@mantine/core";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
     IconFilePlus,
     IconScriptPlus,
@@ -17,6 +18,7 @@ import {
     IconTrashFilled,
 } from "@tabler/icons-react";
 import { ServiceMixin, useApi } from "../../../context/net";
+import { isEqual } from "lodash";
 
 function GrantEditorInner(props: {
     id: string;
@@ -57,6 +59,24 @@ export function GrantEditor(props: {
                 return [IconFilePlus, ""];
         }
     }, [props.grant.type, props.id]);
+    const [loading, setLoading] = useState(false);
+
+    const save = useCallback(
+        async (grant: ServiceGrant) => {
+            if (!isEqual(grant, props.service.grants[props.id])) {
+                setLoading(true);
+                await api.updateServiceGrant(
+                    props.service._id,
+                    props.id,
+                    grant
+                );
+                props.refresh();
+                setLoading(false);
+            }
+        },
+        [props.id, props.service._id, api.updateServiceGrant, setLoading]
+    );
+
     return (
         <Stack gap="sm" p="sm" h="100%" mah="100%">
             <Paper p="sm" className="paper-light">
@@ -72,18 +92,29 @@ export function GrantEditor(props: {
                             </Text>
                         </Stack>
                     </Group>
-                    <ActionIcon
-                        variant="light"
-                        size="xl"
-                        color="red"
-                        onClick={() =>
-                            api
-                                .deleteServiceGrant(props.service._id, props.id)
-                                .then(props.refresh)
-                        }
-                    >
-                        <IconTrashFilled />
-                    </ActionIcon>
+                    <Group gap="md">
+                        {loading && (
+                            <Group gap="xs">
+                                <Loader size="sm" />
+                                <Text>{t("common.words.saving")}</Text>
+                            </Group>
+                        )}
+                        <ActionIcon
+                            variant="light"
+                            size="xl"
+                            color="red"
+                            onClick={() =>
+                                api
+                                    .deleteServiceGrant(
+                                        props.service._id,
+                                        props.id
+                                    )
+                                    .then(props.refresh)
+                            }
+                        >
+                            <IconTrashFilled />
+                        </ActionIcon>
+                    </Group>
                 </Group>
             </Paper>
             <Paper
@@ -97,7 +128,7 @@ export function GrantEditor(props: {
                         id={props.id}
                         service={props.service}
                         grant={props.grant}
-                        save={async (grant) => {}}
+                        save={save}
                     />
                 </ScrollAreaAutosize>
             </Paper>

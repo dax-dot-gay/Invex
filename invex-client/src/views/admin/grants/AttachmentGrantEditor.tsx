@@ -6,6 +6,8 @@ import {
     Paper,
     Stack,
     Text,
+    Textarea,
+    TextInput,
 } from "@mantine/core";
 import { Service, ServiceGrant } from "../../../types/service";
 import { useTranslation } from "react-i18next";
@@ -13,7 +15,14 @@ import { FilesMixin, ServiceMixin, useApi } from "../../../context/net";
 import { useCallback, useEffect, useState } from "react";
 import { FileInfo } from "../../../types/files";
 import { FileIcon } from "../../../components/fileIcon";
-import { IconFile, IconId, IconLabel } from "@tabler/icons-react";
+import {
+    IconFile,
+    IconId,
+    IconLabel,
+    IconLabelFilled,
+} from "@tabler/icons-react";
+import { useForm } from "@mantine/form";
+import { useDebouncedValue } from "@mantine/hooks";
 
 export function AttachmentGrantEditor({
     id,
@@ -29,13 +38,35 @@ export function AttachmentGrantEditor({
     const { t } = useTranslation();
     const api = useApi(ServiceMixin, FilesMixin);
     const [metadata, setMetadata] = useState<FileInfo | null>(null);
+    const form = useForm({
+        initialValues: {
+            displayName: grant.display_name,
+            helpText: grant.help,
+        },
+    });
     const refreshSelf = useCallback(() => {
         api.get_file_info(grant.file_id).then(setMetadata);
+        form.setValues({
+            displayName: grant.display_name,
+            helpText: grant.help,
+        });
     }, [id, grant.display_name, grant.file_id, grant.help, grant.preview]);
 
     useEffect(() => {
         refreshSelf();
     }, [refreshSelf]);
+
+    const [debouncedForm] = useDebouncedValue(form.values, 500);
+
+    useEffect(() => {
+        if ((debouncedForm.displayName?.length ?? 0) > 0) {
+            save({
+                ...grant,
+                display_name: debouncedForm.displayName,
+                help: debouncedForm.helpText,
+            });
+        }
+    }, [debouncedForm.displayName, debouncedForm.helpText]);
 
     return metadata ? (
         <Stack gap="sm">
@@ -107,6 +138,24 @@ export function AttachmentGrantEditor({
                     </Stack>
                 </Paper>
             </Group>
+            <TextInput
+                label={t(
+                    "views.admin.services.config.grants.attachment.displayName"
+                )}
+                leftSection={<IconLabelFilled />}
+                size="md"
+                variant="default"
+                {...form.getInputProps("displayName")}
+            />
+            <Textarea
+                label={t(
+                    "views.admin.services.config.grants.attachment.helpText"
+                )}
+                size="md"
+                rows={9}
+                variant="default"
+                {...form.getInputProps("helpText")}
+            />
         </Stack>
     ) : (
         <Stack align="center" justify="center" p="xl">

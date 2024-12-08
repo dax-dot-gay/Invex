@@ -160,7 +160,7 @@ async fn update_service_grant(
     }
     if let Some(mut result) = services.get(id).await {
         if result.grants.contains_key(&grant_id.to_string()) {
-            result.modify_grant(id, grant.into_inner());
+            result.modify_grant(grant_id, grant.into_inner());
             if let Ok(_) = services.save(result.clone()).await {
                 Ok(Json(result))
             } else {
