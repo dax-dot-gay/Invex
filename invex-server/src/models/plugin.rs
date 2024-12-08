@@ -67,6 +67,7 @@ impl From<RegisteredPlugin> for PluginInfo {
 }
 
 #[derive(Clone)]
+#[allow(dead_code)]
 pub struct Plugin {
     docs: Docs<RegisteredPlugin>,
     metadata: RegisteredPlugin,
@@ -94,6 +95,7 @@ impl Plugin {
         self.metadata.enabled = enabled;
     }
 
+    #[allow(dead_code)]
     pub fn info(&self) -> RegisteredPlugin {
         self.metadata.clone()
     }

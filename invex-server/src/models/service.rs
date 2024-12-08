@@ -9,8 +9,9 @@ use crate::util::database::Id;
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ServiceGrant {
-    Account {
+    Grant {
         plugin_id: Id,
+        key: String,
 
         #[reflect(ignore)]
         options: Value,
