@@ -1,32 +1,17 @@
-export type PluginCapabilityGrant = {
-    type: "grant";
+export type GrantAction = {
+    key: string;
     method: string;
-    fields: PluginField[];
-};
-
-export type PluginCapabilityRevoke = {
-    type: "revoke";
-    method: string;
-};
-
-export type PluginCapabilityAction = {
-    type: "action";
     label: string;
-    icon: string | null;
+    arguments: FieldParams[];
     description: string | null;
-    method: string;
-    fields: PluginField[];
+    icon: string | null;
+    revoke_method: string | null;
 };
-
-export type PluginCapability =
-    | PluginCapabilityGrant
-    | PluginCapabilityRevoke
-    | PluginCapabilityAction;
 
 export type PluginMeta = {
     id: string;
     name: string;
-    capabilities: PluginCapability[];
+    grants: GrantAction[];
     version: string;
     author: string | null;
     url: string | null;

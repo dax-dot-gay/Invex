@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use bevy_reflect::Reflect;
 use chrono::{DateTime, Utc};
 use invex_macros::Document;
+use invex_sdk::GrantResource;
 use serde::{Deserialize, Serialize};
 
 use crate::util::database::Id;
@@ -23,6 +26,12 @@ pub struct Invite {
     pub services: Vec<Id>
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct InviteGrant {
+    pub service: Id,
+    pub resources: HashMap<String, Vec<GrantResource>>
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect, Document)]
 pub struct InviteUsage {
     #[serde(rename = "_id")]
@@ -30,5 +39,7 @@ pub struct InviteUsage {
 
     pub user: Id,
     pub invite: (Id, String),
-    pub granted_services: Vec<Id>
+
+    #[reflect(ignore)]
+    pub grants: Vec<InviteGrant>
 }

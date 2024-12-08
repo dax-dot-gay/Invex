@@ -1,7 +1,6 @@
 import {
     ActionIcon,
     Button,
-    Chip,
     Divider,
     Group,
     Loader,
@@ -77,55 +76,6 @@ function PluginPreview({
                                 {t("views.admin.plugins.noAuthor")}
                             </Text>
                         )}
-                    </Group>
-                    <Group gap="sm" wrap="nowrap">
-                        <ThemeIcon variant="transparent">
-                            <IconAssemblyFilled size={20} />
-                        </ThemeIcon>
-                        <Group gap={4}>
-                            <Chip
-                                checked={
-                                    preview.capabilities.filter(
-                                        (v) => v.type === "grant"
-                                    ).length > 0
-                                }
-                            >
-                                {t("views.admin.plugins.capability.grant")}
-                            </Chip>
-                            <Chip
-                                checked={
-                                    preview.capabilities.filter(
-                                        (v) => v.type === "revoke"
-                                    ).length > 0
-                                }
-                            >
-                                {t("views.admin.plugins.capability.revoke")}
-                            </Chip>
-                            <Chip
-                                checked={
-                                    preview.capabilities.filter(
-                                        (v) => v.type === "action"
-                                    ).length > 0
-                                }
-                            >
-                                {(() => {
-                                    const actions = preview.capabilities.filter(
-                                        (v) => v.type === "action"
-                                    ).length;
-                                    return actions
-                                        ? t(
-                                              "views.admin.plugins.capability.action.count",
-                                              {
-                                                  actionCount:
-                                                      actions.toString(),
-                                              }
-                                          )
-                                        : t(
-                                              "views.admin.plugins.capability.action.countNone"
-                                          );
-                                })()}
-                            </Chip>
-                        </Group>
                     </Group>
                 </Stack>
                 <ActionIcon variant="transparent" size="md" onClick={onRemove}>

@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use derive_builder::Builder;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(untagged)]
@@ -62,28 +63,47 @@ pub struct PluginArgument {
     pub required: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "snake_case", tag = "type")]
-pub enum Capability {
-    Grant {
-        method: String,
-        fields: Vec<PluginArgument>,
-    },
-    Revoke {
-        method: String,
-    },
-    Action {
-        label: String,
-        icon: Option<String>,
-        description: Option<String>,
-        method: String,
-        fields: Vec<PluginArgument>,
-    },
+#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+#[builder(setter(into, strip_option))]
+pub struct GrantAction {
+    pub key: String,
+    pub method: String,
+    pub label: String,
+
+    #[serde(default)]
+    #[builder(default = "Vec::new()")]
+    pub arguments: Vec<PluginArgument>,
+
+    #[serde(default)]
+    #[builder(default = "None")]
+    pub description: Option<String>,
+
+    #[serde(default)]
+    #[builder(default = "None")]
+    pub icon: Option<String>,
+
+    #[serde(default)]
+    #[builder(default = "None")]
+    pub revoke_method: Option<String>
+}
+
+impl GrantActionBuilder {
+    pub fn with_argument(&mut self, field: PluginArgument) -> &mut Self {
+        if self.arguments.is_none() {
+            self.arguments(Vec::new());
+        }
+
+        let mut args = self.arguments.clone().unwrap();
+        args.push(field);
+        args.dedup_by(|a, b| a.key.eq_ignore_ascii_case(&b.key));
+        self.arguments(args);
+        self
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "snake_case", tag = "type")]
-pub enum GrantResource<Meta> {
+pub enum GrantResource {
     Account {
         id: String,
 
@@ -100,7 +120,7 @@ pub enum GrantResource<Meta> {
         password: Option<String>,
 
         #[serde(default = "Default::default")]
-        metadata: Option<Meta>,
+        metadata: Option<Value>,
     },
     File {
         id: String,
@@ -113,7 +133,7 @@ pub enum GrantResource<Meta> {
         content_type: Option<String>,
 
         #[serde(default = "Default::default")]
-        metadata: Option<Meta>,
+        metadata: Option<Value>,
     },
     Url {
         id: String,
@@ -126,35 +146,63 @@ pub enum GrantResource<Meta> {
         label: Option<String>,
 
         #[serde(default = "Default::default")]
-        metadata: Option<Meta>,
+        metadata: Option<Value>,
     },
     Generic {
         id: String,
 
         #[serde(default = "Default::default")]
-        metadata: Option<Meta>,
+        metadata: Option<Value>,
     },
+    Action {
+        id: String,
+
+        #[serde(default = "Default::default")]
+        metadata: Option<Value>,
+
+        method: String,
+        label: String,
+
+        #[serde(default)]
+        arguments: Vec<PluginArgument>,
+
+        #[serde(default)]
+        description: Option<String>,
+
+        #[serde(default)]
+        icon: Option<String>
+    }
 }
 
-impl<Meta: Serialize + DeserializeOwned + Clone + Debug> GrantResource<Meta> {
+impl GrantResource {
     pub fn id(&self) -> String {
         match self {
             Self::Account { id, .. } => id,
             Self::File { id, .. } => id,
             Self::Url { id, .. } => id,
             Self::Generic { id, .. } => id,
+            Self::Action {id, ..} => id
         }
         .clone()
     }
 
-    pub fn metadata(&self) -> Option<Meta> {
-        match self {
+    pub fn metadata<Meta: DeserializeOwned>(&self) -> Option<Meta> {
+        let serialized = match self {
             Self::Account { metadata, .. } => metadata,
             Self::File { metadata, .. } => metadata,
             Self::Url { metadata, .. } => metadata,
             Self::Generic { metadata, .. } => metadata,
+            Self::Action { metadata, .. } => metadata,
+        };
+        if let Some(data) = serialized {
+            if let Ok(meta) = serde_json::from_value::<Meta>(data.clone()) {
+                Some(meta)
+            } else {
+                None
+            }
+        } else {
+            None
         }
-        .clone()
     }
 }
 
@@ -163,7 +211,7 @@ impl<Meta: Serialize + DeserializeOwned + Clone + Debug> GrantResource<Meta> {
 pub struct PluginMetadata {
     pub id: String,
     pub name: String,
-    pub capabilities: Vec<Capability>,
+    pub grants: Vec<GrantAction>,
     pub version: String,
 
     #[serde(default)]
@@ -188,14 +236,14 @@ pub struct PluginMetadata {
 }
 
 impl PluginMetadataBuilder {
-    pub fn with_capability(&mut self, capability: Capability) -> &mut Self {
-        if self.capabilities.is_none() {
-            self.capabilities(Vec::new());
+    pub fn with_grant(&mut self, grant: GrantAction) -> &mut Self {
+        if self.grants.is_none() {
+            self.grants(Vec::new());
         }
 
-        let mut cap = self.capabilities.clone().unwrap();
-        cap.push(capability);
-        self.capabilities(cap);
+        let mut grants = self.grants.clone().unwrap();
+        grants.push(grant);
+        self.grants(grants);
         self
     }
 
@@ -209,43 +257,5 @@ impl PluginMetadataBuilder {
         conf.dedup_by(|a, b| a.key.eq_ignore_ascii_case(&b.key));
         self.config(conf);
         self
-    }
-
-    pub fn validate(&self) -> Result<(), String> {
-        if let Some(capabilities) = &self.capabilities {
-            let mut count_grant = 0;
-            let mut count_revoke = 0;
-            let mut actions = Vec::<String>::new();
-            for capability in capabilities {
-                match capability {
-                    Capability::Grant { .. } => count_grant += 1,
-                    Capability::Revoke { .. } => count_revoke += 1,
-                    Capability::Action { label, .. } => {
-                        if actions.contains(&label) {
-                            return Err(String::from(
-                                "Plugins cannot have duplicate action labels",
-                            ));
-                        }
-                        actions.push(label.clone());
-                    }
-                };
-            }
-
-            if count_grant != 1 {
-                return Err(String::from(
-                    "Plugins must expose exactly one Grant{} capability",
-                ));
-            }
-
-            if count_revoke > 1 {
-                return Err(String::from(
-                    "Plugins cannot expose more than one Revoke{} capability",
-                ));
-            }
-
-            Ok(())
-        } else {
-            Err(String::from("Plugins must expose at least 1 capability"))
-        }
     }
 }
