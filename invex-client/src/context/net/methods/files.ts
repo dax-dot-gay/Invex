@@ -17,7 +17,7 @@ export function FilesMixin<TBase extends ApiMixinConstructor>(base: TBase) {
         }
 
         public async get_file_info(id: string): Promise<FileInfo | null> {
-            const result = await this.request<FileInfo>(`/files/${id}`);
+            const result = await this.request<FileInfo>(`/files/${id}/meta`);
             return result.success ? result.data : null;
         }
 

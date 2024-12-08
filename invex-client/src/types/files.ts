@@ -1,5 +1,5 @@
 export type FileInfo = {
     id: string;
-    filename: string | null;
+    original_filename: string | null;
     content_type: string;
 };

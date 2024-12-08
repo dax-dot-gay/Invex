@@ -222,6 +222,7 @@ impl Fs {
             .open_upload_stream(id.to_string().as_str())
             .id(id.clone().into())
             .metadata(doc! {
+                "id": id.to_string(),
                 "original_filename": filename.clone(),
                 "content_type": content_type.clone()
             })
@@ -233,7 +234,7 @@ impl Fs {
 
         Ok(File {
             id,
-            filename,
+            original_filename: filename,
             content_type,
             fs: self.clone(),
         })
@@ -250,6 +251,7 @@ impl Fs {
             .open_upload_stream(id.to_string().as_str())
             .id(id.clone().into())
             .metadata(doc! {
+                "id": id.to_string(),
                 "original_filename": filename.clone(),
                 "content_type": content_type.clone()
             })
@@ -258,7 +260,7 @@ impl Fs {
         Ok((
             File {
                 id,
-                filename,
+                original_filename: filename,
                 content_type,
                 fs: self.clone(),
             },
@@ -301,7 +303,7 @@ impl Fs {
 #[derive(Clone, Debug)]
 pub struct File {
     pub id: Id,
-    pub filename: Option<String>,
+    pub original_filename: Option<String>,
     pub content_type: String,
     pub fs: Fs,
 }
@@ -348,7 +350,7 @@ impl File {
     pub fn from_info(info: FileInfo, fs: &Fs) -> Self {
         File {
             id: info.id,
-            filename: info.filename,
+            original_filename: info.original_filename,
             content_type: info.content_type,
             fs: fs.clone(),
         }
@@ -368,7 +370,7 @@ impl File {
 #[derive(Clone, Debug, Serialize, Deserialize, Reflect)]
 pub struct FileInfo {
     pub id: Id,
-    pub filename: Option<String>,
+    pub original_filename: Option<String>,
     pub content_type: String,
 }
 
@@ -376,7 +378,7 @@ impl From<File> for FileInfo {
     fn from(value: File) -> Self {
         FileInfo {
             id: value.id,
-            filename: value.filename,
+            original_filename: value.original_filename,
             content_type: value.content_type,
         }
     }

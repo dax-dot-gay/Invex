@@ -60,13 +60,10 @@
           "noGrants": "No Service Grants Created",
           "grants": {
             "attachment": {
-              "type": "Attachment"
+                "title": "Attachment"
             },
             "message": {
-              "type": "Message"
-            },
-            "account": {
-              "title": "Account Creation"
+                "title": "Message"
             },
             "grant": {
               "title": "Plugin Grant"

@@ -27,6 +27,7 @@ import {
 } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { ModalTitle } from "../../modals";
+import { GrantEditor } from "./grants/GrantEditor";
 
 function GrantItem({
     grant,
@@ -75,7 +76,7 @@ function GrantItem({
                             <Text>{grant.title}</Text>
                             <Text c="dimmed" size="sm">
                                 {t(
-                                    "views.admin.services.config.grants.message.type"
+                                    "views.admin.services.config.grants.message.title"
                                 )}
                             </Text>
                         </Stack>
@@ -97,7 +98,7 @@ function GrantItem({
                             <Text>{grant.display_name}</Text>
                             <Text c="dimmed" size="sm">
                                 {t(
-                                    "views.admin.services.config.grants.attachment.type"
+                                    "views.admin.services.config.grants.attachment.title"
                                 )}
                             </Text>
                         </Stack>
@@ -233,7 +234,7 @@ export function ServiceConfig({
             <Divider />
             <Box className="grant-container" p={0}>
                 {Object.keys(service.grants).length > 0 ? (
-                    <Group gap={0} p={0} h="100%" w="100%">
+                    <Group gap={0} p={0} h="100%" w="100%" wrap="nowrap">
                         <Box
                             className="grant-scroll"
                             w="256px"
@@ -305,7 +306,24 @@ export function ServiceConfig({
                             className="grant-viewer"
                             h="100%"
                             style={{ flexGrow: 1 }}
-                        ></Box>
+                        >
+                            {viewingGrant &&
+                            Object.keys(service.grants).includes(
+                                viewingGrant
+                            ) ? (
+                                <GrantEditor
+                                    id={viewingGrant}
+                                    service={service}
+                                    grant={service.grants[viewingGrant]}
+                                    refresh={() => {
+                                        refreshSelf();
+                                        refresh();
+                                    }}
+                                />
+                            ) : (
+                                <></>
+                            )}
+                        </Box>
                     </Group>
                 ) : (
                     <Stack

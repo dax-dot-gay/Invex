@@ -27,7 +27,7 @@ import { filesize } from "filesize";
 import { FilesMixin, ServiceMixin, useApi } from "../context/net";
 import { useNotifications } from "../util/notifications";
 
-function AddAccount({
+function AddGrant({
     service,
     refresh,
     close,
@@ -36,7 +36,7 @@ function AddAccount({
     refresh: () => void;
     close: () => void;
 }) {
-    return <Stack gap="sm" className="grant-add account"></Stack>;
+    return <Stack gap="sm" className="grant-add grant"></Stack>;
 }
 
 function AddAttachment({
@@ -316,9 +316,9 @@ export function AddServiceGrantModal({
     refresh: () => void;
 }>) {
     switch (innerProps.type) {
-        case "account":
+        case "grant":
             return (
-                <AddAccount
+                <AddGrant
                     {...innerProps}
                     close={() => context.closeContextModal(id)}
                 />

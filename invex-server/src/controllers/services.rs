@@ -211,7 +211,7 @@ async fn delete_service_grant(
     }
     if let Some(mut result) = services.get(id).await {
         if result.grants.contains_key(&grant_id.to_string()) {
-            result.remove_grant(id);
+            result.remove_grant(grant_id);
             if let Ok(_) = services.save(result.clone()).await {
                 Ok(Json(result))
             } else {
