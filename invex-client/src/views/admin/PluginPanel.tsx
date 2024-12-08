@@ -4,7 +4,6 @@ import {
     ActionIcon,
     Anchor,
     Button,
-    Chip,
     Divider,
     Group,
     Paper,
@@ -17,7 +16,6 @@ import {
     Tooltip,
 } from "@mantine/core";
 import {
-    IconAssemblyFilled,
     IconBoltFilled,
     IconCloudUp,
     IconFolderCode,
@@ -140,56 +138,6 @@ function PluginItem({
                                     {t("views.admin.plugins.noUrl")}
                                 </Text>
                             )}
-                        </Group>
-                    </Group>
-                    <Group gap="sm" wrap="nowrap">
-                        <ThemeIcon variant="transparent">
-                            <IconAssemblyFilled size={20} />
-                        </ThemeIcon>
-                        <Group gap={4}>
-                            <Chip
-                                checked={
-                                    plugin.metadata.capabilities.filter(
-                                        (v) => v.type === "grant"
-                                    ).length > 0
-                                }
-                            >
-                                {t("views.admin.plugins.capability.grant")}
-                            </Chip>
-                            <Chip
-                                checked={
-                                    plugin.metadata.capabilities.filter(
-                                        (v) => v.type === "revoke"
-                                    ).length > 0
-                                }
-                            >
-                                {t("views.admin.plugins.capability.revoke")}
-                            </Chip>
-                            <Chip
-                                checked={
-                                    plugin.metadata.capabilities.filter(
-                                        (v) => v.type === "action"
-                                    ).length > 0
-                                }
-                            >
-                                {(() => {
-                                    const actions =
-                                        plugin.metadata.capabilities.filter(
-                                            (v) => v.type === "action"
-                                        ).length;
-                                    return actions
-                                        ? t(
-                                              "views.admin.plugins.capability.action.count",
-                                              {
-                                                  actionCount:
-                                                      actions.toString(),
-                                              }
-                                          )
-                                        : t(
-                                              "views.admin.plugins.capability.action.countNone"
-                                          );
-                                })()}
-                            </Chip>
                         </Group>
                     </Group>
                     <Group gap="sm" wrap="nowrap">

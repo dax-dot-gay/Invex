@@ -1,7 +1,8 @@
 export type ServiceGrant =
     | {
-          type: "account";
+          type: "grant";
           plugin_id: string;
+          key: string;
           options: any;
           url: string | null;
           help: string | null;

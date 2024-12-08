@@ -14,6 +14,7 @@ pub fn metadata() -> FnResult<Json<PluginMetadata>> {
             .icon("img:https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/svg/jellyfin.svg")
             .url("https://github.com/dax-dot-gay/Invex/blob/main/plugin_builds/invex_plugin_jellyfin.wasm")
             .version("0.1.0")
+            .grants(Vec::new())
             .build()?,
     ))
 }
