@@ -67,4 +67,31 @@ body {
     --baseSolid: var(--mantine-color-default-border);
     --baseBorderHover: var(--mantine-color-default-border);
     --baseBorder: var(--mantine-color-default-border);
+
+    --admonitionTipBg: var(--mantine-color-default-hover);
+    --admonitionTipBorder: var(--mantine-color-lime-6);
+
+    --admonitionInfoBg: var(--mantine-color-default-hover);
+    --admonitionInfoBorder: var(--mantine-color-blue-4);
+
+    --admonitionCautionBg: var(--mantine-color-default-hover);
+    --admonitionCautionBorder: var(--mantine-color-yellow-4);
+
+    --admonitionDangerBg: var(--mantine-color-default-hover);
+    --admonitionDangerBorder: var(--mantine-color-red-6);
+
+    --admonitionNoteBg: var(--mantine-color-default-hover);
+    --admonitionNoteBorder: var(--mantine-color-primary-6);
+
+    background-color: var(--mantine-color-body);
+    border-radius: var(--mantine-radius-sm);
+    height: 100%;
+
+    .mdxeditor-toolbar {
+        border-radius: var(--mantine-radius-sm);
+    }
+}
+
+.mantine-ScrollArea-thumb {
+    z-index: 1000;
 }

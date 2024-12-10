@@ -6,6 +6,7 @@ import {
     Group,
     Loader,
     Paper,
+    ScrollArea,
     ScrollAreaAutosize,
     Stack,
     Text,
@@ -75,7 +76,13 @@ export function GrantEditor(props: {
                 setLoading(false);
             }
         },
-        [props.id, props.service._id, api.updateServiceGrant, setLoading]
+        [
+            props.id,
+            props.service._id,
+            api.updateServiceGrant,
+            setLoading,
+            props.service.grants[props.id],
+        ]
     );
 
     return (
@@ -124,14 +131,14 @@ export function GrantEditor(props: {
                 className="grant-editor-inner"
                 bg={"var(--mantine-color-default)"}
             >
-                <ScrollAreaAutosize mah="100%">
+                <ScrollArea mah="100%" h="100%" className="grant-editor-scroll">
                     <GrantEditorInner
                         id={props.id}
                         service={props.service}
                         grant={props.grant}
                         save={save}
                     />
-                </ScrollAreaAutosize>
+                </ScrollArea>
             </Paper>
         </Stack>
     );

@@ -252,6 +252,9 @@ export function ServiceConfig({
                                                 ([_, { type }]) =>
                                                     type !== "inline_image"
                                             )
+                                            .sort((a, b) =>
+                                                a[0].localeCompare(b[0])
+                                            )
                                             .map(([id, grant]) => (
                                                 <GrantItem
                                                     key={id}

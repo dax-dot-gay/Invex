@@ -70,7 +70,8 @@
               "fields": {
                 "title": "Message Title",
                 "subtitle": "Message Subtitle"
-              }
+              },
+              "uploadFailed": "Failed to upload image."
             },
             "grant": {
               "title": "Plugin Grant"

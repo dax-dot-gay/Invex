@@ -10,7 +10,6 @@ import {
     linkPlugin,
     imagePlugin,
     tablePlugin,
-    codeBlockPlugin,
     directivesPlugin,
     AdmonitionDirectiveDescriptor,
     quotePlugin,
@@ -22,17 +21,22 @@ import {
     BlockTypeSelect,
     StrikeThroughSupSubToggles,
     ListsToggle,
-    CreateLink,
     InsertImage,
     InsertTable,
     InsertThematicBreak,
     thematicBreakPlugin,
-    InsertCodeBlock,
     InsertAdmonition,
+    MDXEditorMethods,
+    linkDialogPlugin,
 } from "@mdxeditor/editor";
+import { useEffect, useRef } from "react";
+import { useDebouncedValue } from "@mantine/hooks";
+import { isEqual } from "lodash";
+import { FilesMixin, ServiceMixin, useApi } from "../../../context/net";
+import { useNotifications } from "../../../util/notifications";
 
 export function MessageGrantEditor({
-    id,
+    service,
     grant,
     save,
 }: {
@@ -49,9 +53,38 @@ export function MessageGrantEditor({
             content: grant.content,
         },
     });
+    const editor = useRef<MDXEditorMethods>(null);
+    const [debouncedForm] = useDebouncedValue(form.values, 500);
+    const api = useApi(ServiceMixin, FilesMixin);
+    const { error } = useNotifications();
+
+    useEffect(() => {
+        const vals = {
+            title: debouncedForm.title,
+            subtitle:
+                debouncedForm.subtitle.length > 0
+                    ? debouncedForm.subtitle
+                    : null,
+            content: debouncedForm.content,
+        };
+        if (vals.title.length > 0 && !isEqual(grant, vals)) {
+            save({
+                ...grant,
+                ...vals,
+            });
+        }
+    }, [
+        debouncedForm.content,
+        debouncedForm.subtitle,
+        debouncedForm.title,
+        save,
+        grant.content,
+        grant.subtitle,
+        grant.title,
+    ]);
 
     return (
-        <Stack gap="sm">
+        <Stack gap="sm" mah="100%">
             <Paper className="paper-light" p="sm">
                 <Group gap="md" align="center" wrap="nowrap">
                     <IconHeading size={32} />
@@ -69,7 +102,9 @@ export function MessageGrantEditor({
                         <TextInput
                             size="sm"
                             styles={{
-                                input: { color: "var(--mantine-color-dimmed)" },
+                                input: {
+                                    color: "var(--mantine-color-dimmed)",
+                                },
                             }}
                             className="subtle-input"
                             variant="unstyled"
@@ -82,20 +117,47 @@ export function MessageGrantEditor({
                 </Group>
             </Paper>
             <MDXEditor
+                ref={editor}
                 markdown={form.values.content}
-                onChange={console.log}
+                onChange={(v) => form.setFieldValue("content", v)}
                 className="mdx-editor-dark dark-theme"
+                contentEditableClassName="mdx-content"
                 plugins={[
                     directivesPlugin({
                         directiveDescriptors: [AdmonitionDirectiveDescriptor],
                     }),
                     linkPlugin(),
+                    linkDialogPlugin(),
                     listsPlugin(),
                     headingsPlugin(),
-                    codeBlockPlugin(),
                     quotePlugin(),
                     markdownShortcutPlugin(),
                     thematicBreakPlugin(),
+                    imagePlugin({
+                        imageUploadHandler: async (image) => {
+                            const uploadResult = (
+                                await api.upload_file(image)
+                            ).or_default(null);
+                            if (uploadResult) {
+                                const grantResult = (
+                                    await api.createServiceGrant(service._id, {
+                                        type: "inline_image",
+                                        file_id: uploadResult.id,
+                                    })
+                                ).or_default(null);
+                                if (grantResult) {
+                                    return `${location.origin}/api/files/${uploadResult.id}`;
+                                }
+                            }
+                            error(
+                                t(
+                                    "views.admin.services.config.grants.message.uploadFailed"
+                                )
+                            );
+                            return "https://http.cat/images/418.jpg";
+                        },
+                    }),
+                    tablePlugin(),
                     toolbarPlugin({
                         toolbarClassName: "mdx-toolbar",
                         toolbarContents: () => (
@@ -110,12 +172,9 @@ export function MessageGrantEditor({
                                     <Divider orientation="vertical" />
                                     <ListsToggle />
                                     <Divider orientation="vertical" />
-                                    <CreateLink />
                                     <InsertImage />
-                                    <Divider orientation="vertical" />
                                     <InsertTable />
                                     <InsertThematicBreak />
-                                    <InsertCodeBlock />
                                     <InsertAdmonition />
                                 </Group>
                                 <BlockTypeSelect />
