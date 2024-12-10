@@ -19,6 +19,8 @@ import {
     IconFile,
     IconEdit,
     IconPlus,
+    IconLabelFilled,
+    IconLabel,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
@@ -303,7 +305,81 @@ function AddMessage({
     refresh: () => void;
     close: () => void;
 }) {
-    return <Stack gap="sm" className="grant-add message"></Stack>;
+    const { t } = useTranslation();
+    const api = useApi(ServiceMixin);
+    const form = useForm({
+        initialValues: {
+            title: "",
+            subtitle: "",
+        },
+        validate: {
+            title: (value) =>
+                value.length > 0 ? null : t("errors.form.empty"),
+        },
+        transformValues(values) {
+            return {
+                title: values.title,
+                subtitle: values.subtitle.length > 0 ? values.subtitle : null,
+                content: "",
+            };
+        },
+    });
+    const { success, error } = useNotifications();
+    return (
+        <form
+            onSubmit={form.onSubmit((values) => {
+                api.createServiceGrant(service._id, {
+                    type: "message",
+                    ...values,
+                }).then((response) =>
+                    response
+                        .and_then((_) => {
+                            success(t("modals.addGrant.feedback.success"));
+                            refresh();
+                            close();
+                        })
+                        .or_else((_, reason) =>
+                            error(
+                                t("modals.addGrant.feedback.error", { reason })
+                            )
+                        )
+                );
+            })}
+        >
+            <Stack gap="sm" className="grant-add message">
+                <TextInput
+                    size="md"
+                    label={t("modals.addGrant.message.field.title")}
+                    withAsterisk
+                    {...form.getInputProps("title")}
+                    leftSection={<IconLabelFilled />}
+                />
+                <TextInput
+                    size="md"
+                    label={t("modals.addGrant.message.field.subtitle")}
+                    {...form.getInputProps("subtitle")}
+                    leftSection={<IconLabel />}
+                />
+                <Group gap="sm" justify="space-between">
+                    <Button
+                        leftSection={<IconX size={24} />}
+                        variant="light"
+                        size="md"
+                        onClick={close}
+                    >
+                        {t("actions.cancel")}
+                    </Button>
+                    <Button
+                        leftSection={<IconPlus size={24} />}
+                        size="md"
+                        type="submit"
+                    >
+                        {t("actions.create")}
+                    </Button>
+                </Group>
+            </Stack>
+        </form>
+    );
 }
 
 export function AddServiceGrantModal({

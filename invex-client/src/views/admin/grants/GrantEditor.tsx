@@ -19,6 +19,7 @@ import {
 } from "@tabler/icons-react";
 import { ServiceMixin, useApi } from "../../../context/net";
 import { isEqual } from "lodash";
+import { MessageGrantEditor } from "./MessageGrantEditor";
 
 function GrantEditorInner(props: {
     id: string;
@@ -32,7 +33,7 @@ function GrantEditorInner(props: {
         case "grant":
             return <></>;
         case "message":
-            return <></>;
+            return <MessageGrantEditor {...(props as any)} />;
     }
 }
 

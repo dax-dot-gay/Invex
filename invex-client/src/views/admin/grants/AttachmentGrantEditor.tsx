@@ -26,7 +26,6 @@ import { useDebouncedValue } from "@mantine/hooks";
 
 export function AttachmentGrantEditor({
     id,
-    service,
     grant,
     save,
 }: {

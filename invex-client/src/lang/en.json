@@ -66,7 +66,11 @@
               "helpText": "Help Text / Description"
             },
             "message": {
-              "title": "Message"
+              "title": "Message",
+              "fields": {
+                "title": "Message Title",
+                "subtitle": "Message Subtitle"
+              }
             },
             "grant": {
               "title": "Plugin Grant"
@@ -158,8 +162,8 @@
       "title": "Edit Service Details"
     },
     "addGrant": {
-      "account": {
-        "title": "Add Account Creator"
+      "grant": {
+        "title": "Add Plugin Grant"
       },
       "attachment": {
         "title": "Attach File",
@@ -173,7 +177,11 @@
         "fileError": "Unable to upload file: {{reason}}"
       },
       "message": {
-        "title": "Attach a Message"
+        "title": "Attach a Message",
+        "field": {
+          "title": "Message Title",
+          "subtitle": "Message Subtitle (optional)"
+        }
       },
       "feedback": {
         "success": "Added grant to current service!",

@@ -7,7 +7,7 @@
 
 /* For dark mode */
 :root[data-mantine-color-scheme="dark"] {
-    --mantine-color-default-border: #2f1f2f !important;
+    --mantine-color-default-border: #3d303d !important;
     --mantine-color-default-hover: #2b1b2b !important;
     --mantine-color-default: #1d131d !important;
     --mantine-color-body: #120d12 !important;
@@ -19,4 +19,52 @@ body {
 
 .paper-light {
     background-color: var(--mantine-color-default-hover) !important;
+}
+
+.dark-input * {
+    --input-bg: var(--mantine-color-body) !important;
+}
+
+.subtle-input {
+    &.mantine-InputWrapper-root.mantine-TextInput-root {
+        padding: 0px !important;
+    }
+    & * {
+        --input-bg: #00000000 !important;
+        &:hover {
+            --input-bg: var(--mantine-color-default) !important;
+        }
+    }
+
+    & input {
+        line-height: unset;
+        min-height: auto;
+        height: auto;
+        padding: 2px;
+        padding-left: 6px;
+    }
+}
+
+.mdx-editor-dark {
+    --baseBg: var(--mantine-color-default-hover);
+    --baseBgSubtle: var(--mantine-color-default-hover);
+    --accentBg: var(--mantine-color-default-hover);
+    --accentBase: var(--mantine-color-default-hover);
+    --basePageBg: var(--mantine-color-default-border);
+    --baseBgHover: var(--mantine-color-default-border);
+    --baseBgActive: var(--mantine-color-default-border);
+    --baseLine: var(--mantine-color-default-border);
+    --baseText: var(--mantine-color-text);
+    --baseTextContrast: var(--mantine-color-text);
+    --accentBgHover: var(--mantine-color-default-border);
+    --accentBgActive: var(--mantine-color-default-border);
+    --accentBgSubtle: var(--mantine-color-default-border);
+    --accentBorder: var(--mantine-color-default-border);
+    --accentBorderHover: var(--mantine-color-default-border);
+    --accentSolid: var(--mantine-color-default-border);
+    --accentSolidHover: var(--mantine-color-default-border);
+    --baseSolidHover: var(--mantine-color-default-border);
+    --baseSolid: var(--mantine-color-default-border);
+    --baseBorderHover: var(--mantine-color-default-border);
+    --baseBorder: var(--mantine-color-default-border);
 }
