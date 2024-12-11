@@ -11,7 +11,8 @@ use rocket::{
     Request,
 };
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use serde_json::Value;
+use std::{collections::HashMap, sync::Arc};
 use tokio::{
     io::{AsyncBufRead, AsyncReadExt},
     sync::Mutex,
@@ -34,6 +35,20 @@ pub struct RegisteredPlugin {
     pub source: FileInfo,
     pub url: Option<String>,
     pub enabled: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Reflect, Document)]
+pub struct PluginConfiguration {
+    #[serde(rename = "_id")]
+    pub id: Id,
+    pub plugin: String,
+
+    #[serde(default)]
+    pub icon: Option<String>,
+    pub name: String,
+
+    #[reflect(ignore)]
+    pub options: HashMap<String, Value>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
