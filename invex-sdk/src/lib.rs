@@ -75,6 +75,10 @@ pub struct GrantAction {
 
     #[serde(default)]
     #[builder(default = "Vec::new()")]
+    pub options: Vec<PluginArgument>,
+
+    #[serde(default)]
+    #[builder(default = "Vec::new()")]
     pub arguments: Vec<PluginArgument>,
 
     #[serde(default)]
@@ -100,6 +104,18 @@ impl GrantActionBuilder {
         args.push(field);
         args.dedup_by(|a, b| a.key.eq_ignore_ascii_case(&b.key));
         self.arguments(args);
+        self
+    }
+
+    pub fn with_option(&mut self, field: PluginArgument) -> &mut Self {
+        if self.options.is_none() {
+            self.options(Vec::new());
+        }
+
+        let mut args = self.options.clone().unwrap();
+        args.push(field);
+        args.dedup_by(|a, b| a.key.eq_ignore_ascii_case(&b.key));
+        self.options(args);
         self
     }
 }
@@ -214,6 +230,8 @@ impl GrantResource {
 pub struct PluginMetadata {
     pub id: String,
     pub name: String,
+
+    #[builder(default)]
     pub grants: Vec<GrantAction>,
     pub version: String,
 
