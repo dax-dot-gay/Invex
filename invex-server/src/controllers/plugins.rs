@@ -1,19 +1,21 @@
+use std::collections::HashMap;
+
 use bson::doc;
 use invex_sdk::PluginMetadata;
 use rocket::{
-    form::Form, fs::TempFile, serde::json::Json,
-    Route,
+    form::Form, fs::TempFile, futures::TryStreamExt, serde::json::Json, Route
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::{
     models::{
         auth::{AuthUser, UserType},
         error::ApiError,
-        plugin::{PluginInfo, PluginRegistry},
+        plugin::{PluginConfiguration, PluginInfo, PluginRegistry},
     },
     util::{
-        database::File,
+        database::{Docs, File, Id},
         ApiResult,
     },
 };
@@ -206,6 +208,68 @@ async fn get_plugin(user: AuthUser, id: &str, plugins: PluginRegistry) -> ApiRes
     }
 }
 
+#[derive(Deserialize, Serialize, Clone, Debug)]
+struct PluginConfigModel {
+    #[serde(default)]
+    pub icon: Option<String>,
+    pub name: String,
+    pub options: HashMap<String, Value>
+}
+
+#[post("/<id>/configs", data = "<conf>")]
+async fn create_plugin_config(user: AuthUser, id: &str, plugins: PluginRegistry, configs: Docs<PluginConfiguration>, conf: Json<PluginConfigModel>) -> ApiResult<PluginConfiguration> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to create plugin config profiles".to_string(),
+        ));
+    }
+
+    if plugins.exists(id).await {
+        if configs.exists(doc! {"name": conf.name.clone()}).await {
+            return Err(ApiError::MethodNotAllowed("A configuration profile with this name already exists.".to_string()));
+        }
+
+        let config = PluginConfiguration {
+            id: Id::default(),
+            plugin: id.to_string(),
+            icon: conf.icon.clone(),
+            name: conf.name.clone(),
+            options: conf.options.clone()
+        };
+
+        if let Ok(_) = configs.save(config.clone()).await {
+            Ok(Json(config))
+        } else {
+            Err(ApiError::Internal("Failed to save config to database".to_string()))
+        }
+    } else {
+        Err(ApiError::NotFound("Unknown plugin ID".to_string()))
+    }
+}
+
+#[get("/<id>/configs")]
+async fn get_plugin_configs(user: AuthUser, id: &str, plugins: PluginRegistry, configs: Docs<PluginConfiguration>) -> ApiResult<Vec<PluginConfiguration>> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to get plugin configs".to_string(),
+        ));
+    }
+
+    if plugins.exists(id).await {
+        if let Ok(cursor) = configs.find(doc! {}).await {
+            if let Ok(results) = cursor.try_collect::<Vec<PluginConfiguration>>().await {
+                Ok(Json(results))
+            } else {
+                Err(ApiError::Internal("Failed to list configs".to_string()))
+            }
+        } else {
+            Err(ApiError::Internal("Failed to list configs".to_string()))
+        }
+    } else {
+        Err(ApiError::NotFound("Unknown plugin ID".to_string()))
+    }
+}
+
 pub fn routes() -> Vec<Route> {
     return routes![
         add_plugin_file,
@@ -216,6 +280,8 @@ pub fn routes() -> Vec<Route> {
         delete_plugin,
         enable_plugin,
         disable_plugin,
-        get_plugin
+        get_plugin,
+        create_plugin_config,
+        get_plugin_configs
     ];
 }

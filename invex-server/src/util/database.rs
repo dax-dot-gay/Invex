@@ -90,6 +90,10 @@ impl<T: Document> Docs<T> {
         }
     }
 
+    pub async fn exists(&self, query: bson::Document) -> bool {
+        self.query_one(query).await.is_some()
+    }
+
     pub async fn paginate(
         &self,
         query: bson::Document,
