@@ -1,4 +1,4 @@
-import { Plugin, PluginMeta } from "../../../types/plugin";
+import { Plugin, PluginConfig, PluginMeta } from "../../../types/plugin";
 import { Response } from "../types";
 import { ApiMixinConstructor } from "./base";
 
@@ -78,6 +78,74 @@ export function PluginsMixin<TBase extends ApiMixinConstructor>(base: TBase) {
             await this.request<void>(`/plugins/${id}/disable`, {
                 method: "post",
             });
+        }
+
+        public async plugin_config_create(
+            plugin: string,
+            name: string,
+            options: { [key: string]: any },
+            icon?: string
+        ): Promise<Response<PluginConfig>> {
+            return await this.request<PluginConfig>(
+                `/plugins/${plugin}/configs`,
+                {
+                    method: "post",
+                    data: {
+                        name,
+                        icon: icon ?? undefined,
+                        options,
+                    },
+                }
+            );
+        }
+
+        public async plugin_config_list(
+            plugin: string
+        ): Promise<PluginConfig[]> {
+            return (
+                await this.request<PluginConfig[]>(`/plugins/${plugin}/configs`)
+            ).or_default([]);
+        }
+
+        public async plugin_config_get(
+            plugin: string,
+            config_id: string
+        ): Promise<PluginConfig | null> {
+            return (
+                await this.request<PluginConfig>(
+                    `/plugins/${plugin}/configs/${config_id}`
+                )
+            ).or_default(null);
+        }
+
+        public async plugin_config_edit(
+            plugin: string,
+            config_id: string,
+            name: string,
+            options: { [key: string]: any },
+            icon?: string
+        ): Promise<Response<PluginConfig>> {
+            return await this.request<PluginConfig>(
+                `/plugins/${plugin}/configs/${config_id}`,
+                {
+                    method: "post",
+                    data: {
+                        name,
+                        icon: icon ?? undefined,
+                        options,
+                    },
+                }
+            );
+        }
+
+        public async plugin_config_delete(
+            plugin: string,
+            config_id: string
+        ): Promise<void> {
+            await this.request<PluginConfig>(
+                `/plugins/${plugin}/configs/${config_id}`,
+                { method: "delete" }
+            );
         }
     };
 }

@@ -65,3 +65,11 @@ export type Plugin = {
     url: string | null;
     enabled: boolean;
 };
+
+export type PluginConfig = {
+    _id: string;
+    plugin: string;
+    icon: string | null;
+    name: string;
+    options: { [key: string]: any };
+};

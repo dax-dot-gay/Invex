@@ -261,7 +261,7 @@ async fn get_plugin_configs(
     }
 
     if plugins.exists(id).await {
-        if let Ok(cursor) = configs.find(doc! {}).await {
+        if let Ok(cursor) = configs.find(doc! {"plugin": id}).await {
             if let Ok(results) = cursor.try_collect::<Vec<PluginConfiguration>>().await {
                 Ok(Json(results))
             } else {
