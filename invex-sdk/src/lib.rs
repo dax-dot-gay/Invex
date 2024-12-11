@@ -12,6 +12,14 @@ pub enum FieldSelectOption {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum PluginDefinedMethodContext {
+    Plugin,
+    Service,
+    Invite,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FieldType {
     Text {
@@ -46,8 +54,9 @@ pub enum FieldType {
         lines: Option<u64>,
     },
     PluginDefined {
-        method: String
-    }
+        method: String,
+        context: PluginDefinedMethodContext,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Builder)]
@@ -91,7 +100,7 @@ pub struct GrantAction {
 
     #[serde(default)]
     #[builder(default = "None")]
-    pub revoke_method: Option<String>
+    pub revoke_method: Option<String>,
 }
 
 impl GrantActionBuilder {
@@ -117,6 +126,24 @@ impl GrantActionBuilder {
         args.dedup_by(|a, b| a.key.eq_ignore_ascii_case(&b.key));
         self.options(args);
         self
+    }
+
+    pub fn validate(&self) -> Result<(), String> {
+        for entry in self.options.clone().unwrap_or_default() {
+            if let FieldType::PluginDefined { context, method } = entry.field {
+                if !matches!(context, PluginDefinedMethodContext::Service) {
+                    return Err(format!("Plugin-defined method {method} used in incorrect context (must be in Service context)"));
+                }
+            }
+        }
+        for entry in self.arguments.clone().unwrap_or_default() {
+            if let FieldType::PluginDefined { context, method } = entry.field {
+                if !matches!(context, PluginDefinedMethodContext::Invite) {
+                    return Err(format!("Plugin-defined method {method} used in incorrect context (must be in Invite context)"));
+                }
+            }
+        }
+        Ok(())
     }
 }
 
@@ -189,8 +216,8 @@ pub enum GrantResource {
         description: Option<String>,
 
         #[serde(default)]
-        icon: Option<String>
-    }
+        icon: Option<String>,
+    },
 }
 
 impl GrantResource {
@@ -200,7 +227,7 @@ impl GrantResource {
             Self::File { id, .. } => id,
             Self::Url { id, .. } => id,
             Self::Generic { id, .. } => id,
-            Self::Action {id, ..} => id
+            Self::Action { id, .. } => id,
         }
         .clone()
     }
@@ -253,7 +280,7 @@ pub struct PluginMetadata {
 
     #[serde(default)]
     #[builder(default)]
-    pub config: Vec<PluginArgument>
+    pub config: Vec<PluginArgument>,
 }
 
 impl PluginMetadataBuilder {
@@ -278,5 +305,16 @@ impl PluginMetadataBuilder {
         conf.dedup_by(|a, b| a.key.eq_ignore_ascii_case(&b.key));
         self.config(conf);
         self
+    }
+
+    pub fn validate(&self) -> Result<(), String> {
+        for entry in self.config.clone().unwrap_or_default() {
+            if let FieldType::PluginDefined { context, method } = entry.field {
+                if !matches!(context, PluginDefinedMethodContext::Plugin) {
+                    return Err(format!("Plugin-defined method {method} used in incorrect context (must be in Plugin context)"));
+                }
+            }
+        }
+        Ok(())
     }
 }

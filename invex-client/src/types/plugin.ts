@@ -48,6 +48,7 @@ export type FieldParams =
     | {
           type: "plugin_defined";
           method: string;
+          context: "plugin" | "service" | "invite";
       };
 
 export type PluginField = {
