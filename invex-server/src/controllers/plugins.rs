@@ -2,9 +2,7 @@ use std::collections::HashMap;
 
 use bson::doc;
 use invex_sdk::PluginMetadata;
-use rocket::{
-    form::Form, fs::TempFile, futures::TryStreamExt, serde::json::Json, Route
-};
+use rocket::{form::Form, fs::TempFile, futures::TryStreamExt, serde::json::Json, Route};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -24,7 +22,7 @@ use crate::{
 async fn add_plugin_file(
     plugin: Form<File>,
     user: AuthUser,
-    plugins: PluginRegistry
+    plugins: PluginRegistry,
 ) -> ApiResult<PluginInfo> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
@@ -42,7 +40,7 @@ async fn add_plugin_file(
 async fn preview_plugin_file(
     plugin: Form<TempFile<'_>>,
     user: AuthUser,
-    plugins: PluginRegistry
+    plugins: PluginRegistry,
 ) -> ApiResult<PluginMetadata> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
@@ -75,7 +73,7 @@ struct PluginURL {
 async fn add_plugin_url(
     plugin: Json<PluginURL>,
     user: AuthUser,
-    plugins: PluginRegistry
+    plugins: PluginRegistry,
 ) -> ApiResult<PluginInfo> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
@@ -90,7 +88,11 @@ async fn add_plugin_url(
 }
 
 #[post("/preview/url", data = "<plugin>")]
-async fn preview_plugin_url(plugin: Json<PluginURL>, user: AuthUser, plugins: PluginRegistry) -> ApiResult<PluginMetadata> {
+async fn preview_plugin_url(
+    plugin: Json<PluginURL>,
+    user: AuthUser,
+    plugins: PluginRegistry,
+) -> ApiResult<PluginMetadata> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
             "Must be an admin to upload plugins".to_string(),
@@ -104,10 +106,7 @@ async fn preview_plugin_url(plugin: Json<PluginURL>, user: AuthUser, plugins: Pl
 }
 
 #[get("/")]
-async fn list_plugins(
-    user: AuthUser,
-    plugins: PluginRegistry
-) -> ApiResult<Vec<PluginInfo>> {
+async fn list_plugins(user: AuthUser, plugins: PluginRegistry) -> ApiResult<Vec<PluginInfo>> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
             "Must be an admin to list plugins".to_string(),
@@ -122,11 +121,7 @@ async fn list_plugins(
 }
 
 #[delete("/<id>")]
-async fn delete_plugin(
-    user: AuthUser,
-    id: &str,
-    plugins: PluginRegistry
-) -> ApiResult<()> {
+async fn delete_plugin(user: AuthUser, id: &str, plugins: PluginRegistry) -> ApiResult<()> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
             "Must be an admin to delete plugins".to_string(),
@@ -142,11 +137,7 @@ async fn delete_plugin(
 }
 
 #[post("/<id>/enable")]
-async fn enable_plugin(
-    user: AuthUser,
-    id: &str,
-    plugins: PluginRegistry,
-) -> ApiResult<()> {
+async fn enable_plugin(user: AuthUser, id: &str, plugins: PluginRegistry) -> ApiResult<()> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
             "Must be an admin to delete plugins".to_string(),
@@ -168,11 +159,7 @@ async fn enable_plugin(
 }
 
 #[post("/<id>/disable")]
-async fn disable_plugin(
-    user: AuthUser,
-    id: &str,
-    plugins: PluginRegistry
-) -> ApiResult<()> {
+async fn disable_plugin(user: AuthUser, id: &str, plugins: PluginRegistry) -> ApiResult<()> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
             "Must be an admin to delete plugins".to_string(),
@@ -213,11 +200,17 @@ struct PluginConfigModel {
     #[serde(default)]
     pub icon: Option<String>,
     pub name: String,
-    pub options: HashMap<String, Value>
+    pub options: HashMap<String, Value>,
 }
 
 #[post("/<id>/configs", data = "<conf>")]
-async fn create_plugin_config(user: AuthUser, id: &str, plugins: PluginRegistry, configs: Docs<PluginConfiguration>, conf: Json<PluginConfigModel>) -> ApiResult<PluginConfiguration> {
+async fn create_plugin_config(
+    user: AuthUser,
+    id: &str,
+    plugins: PluginRegistry,
+    configs: Docs<PluginConfiguration>,
+    conf: Json<PluginConfigModel>,
+) -> ApiResult<PluginConfiguration> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
             "Must be an admin to create plugin config profiles".to_string(),
@@ -225,8 +218,13 @@ async fn create_plugin_config(user: AuthUser, id: &str, plugins: PluginRegistry,
     }
 
     if plugins.exists(id).await {
-        if configs.exists(doc! {"name": conf.name.clone()}).await {
-            return Err(ApiError::MethodNotAllowed("A configuration profile with this name already exists.".to_string()));
+        if configs
+            .exists(doc! {"name": conf.name.clone(), "plugin": id})
+            .await
+        {
+            return Err(ApiError::MethodNotAllowed(
+                "A configuration profile with this name already exists.".to_string(),
+            ));
         }
 
         let config = PluginConfiguration {
@@ -234,13 +232,15 @@ async fn create_plugin_config(user: AuthUser, id: &str, plugins: PluginRegistry,
             plugin: id.to_string(),
             icon: conf.icon.clone(),
             name: conf.name.clone(),
-            options: conf.options.clone()
+            options: conf.options.clone(),
         };
 
         if let Ok(_) = configs.save(config.clone()).await {
             Ok(Json(config))
         } else {
-            Err(ApiError::Internal("Failed to save config to database".to_string()))
+            Err(ApiError::Internal(
+                "Failed to save config to database".to_string(),
+            ))
         }
     } else {
         Err(ApiError::NotFound("Unknown plugin ID".to_string()))
@@ -248,7 +248,12 @@ async fn create_plugin_config(user: AuthUser, id: &str, plugins: PluginRegistry,
 }
 
 #[get("/<id>/configs")]
-async fn get_plugin_configs(user: AuthUser, id: &str, plugins: PluginRegistry, configs: Docs<PluginConfiguration>) -> ApiResult<Vec<PluginConfiguration>> {
+async fn get_plugin_configs(
+    user: AuthUser,
+    id: &str,
+    plugins: PluginRegistry,
+    configs: Docs<PluginConfiguration>,
+) -> ApiResult<Vec<PluginConfiguration>> {
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden(
             "Must be an admin to get plugin configs".to_string(),
@@ -270,6 +275,118 @@ async fn get_plugin_configs(user: AuthUser, id: &str, plugins: PluginRegistry, c
     }
 }
 
+#[get("/<id>/configs/<config_id>")]
+async fn get_plugin_config_by_id(
+    user: AuthUser,
+    id: &str,
+    plugins: PluginRegistry,
+    configs: Docs<PluginConfiguration>,
+    config_id: &str,
+) -> ApiResult<PluginConfiguration> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to get plugin configs".to_string(),
+        ));
+    }
+
+    if plugins.exists(id).await {
+        if let Some(result) = configs.get(config_id).await {
+            if result.plugin == id.to_string() {
+                Ok(Json(result))
+            } else {
+                Err(ApiError::NotFound("Unknown plugin config ID".to_string()))
+            }
+        } else {
+            Err(ApiError::NotFound("Unknown plugin config ID".to_string()))
+        }
+    } else {
+        Err(ApiError::NotFound("Unknown plugin ID".to_string()))
+    }
+}
+
+#[post("/<id>/configs/<config_id>", data = "<update>")]
+async fn update_plugin_config(
+    user: AuthUser,
+    id: &str,
+    plugins: PluginRegistry,
+    configs: Docs<PluginConfiguration>,
+    config_id: &str,
+    update: Json<PluginConfigModel>,
+) -> ApiResult<PluginConfiguration> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to modify plugin configs".to_string(),
+        ));
+    }
+
+    if plugins.exists(id).await {
+        if configs
+            .exists(doc! {"name": update.name.clone(), "plugin": id})
+            .await
+        {
+            return Err(ApiError::MethodNotAllowed(
+                "A configuration profile with this name already exists.".to_string(),
+            ));
+        }
+
+        if let Some(mut result) = configs.get(config_id).await {
+            if result.plugin == id.to_string() {
+                result.icon = update.icon.clone();
+                result.name = update.name.clone();
+                result.options = update.options.clone();
+                if let Ok(_) = configs.save(result.clone()).await {
+                    Ok(Json(result))
+                } else {
+                    Err(ApiError::Internal(
+                        "Failed to save config to database".to_string(),
+                    ))
+                }
+            } else {
+                Err(ApiError::NotFound("Unknown plugin config ID".to_string()))
+            }
+        } else {
+            Err(ApiError::NotFound("Unknown plugin config ID".to_string()))
+        }
+    } else {
+        Err(ApiError::NotFound("Unknown plugin ID".to_string()))
+    }
+}
+
+#[delete("/<id>/configs/<config_id>")]
+async fn delete_plugin_config(
+    user: AuthUser,
+    id: &str,
+    plugins: PluginRegistry,
+    configs: Docs<PluginConfiguration>,
+    config_id: &str
+) -> ApiResult<()> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to modify plugin configs".to_string(),
+        ));
+    }
+
+    if plugins.exists(id).await {
+        if let Some(result) = configs.get(config_id).await {
+            if result.plugin == id.to_string() {
+                if let Ok(_) = configs.delete_one(doc! {"_id": id}).await {
+                    Ok(Json(()))
+                } else {
+                    Err(ApiError::Internal(
+                        "Failed to save config to database".to_string(),
+                    ))
+                }
+            } else {
+                Err(ApiError::NotFound("Unknown plugin config ID".to_string()))
+            }
+        } else {
+            Err(ApiError::NotFound("Unknown plugin config ID".to_string()))
+        }
+    } else {
+        Err(ApiError::NotFound("Unknown plugin ID".to_string()))
+    }
+}
+
 pub fn routes() -> Vec<Route> {
     return routes![
         add_plugin_file,
@@ -282,6 +399,9 @@ pub fn routes() -> Vec<Route> {
         disable_plugin,
         get_plugin,
         create_plugin_config,
-        get_plugin_configs
+        get_plugin_configs,
+        get_plugin_config_by_id,
+        update_plugin_config,
+        delete_plugin_config
     ];
 }
