@@ -200,10 +200,10 @@ impl PluginRegistry {
         } else {
             let plugin = RegisteredPlugin {
                 id: Id::default(),
-                metadata,
+                metadata: metadata.clone(),
                 source,
                 url,
-                enabled: true,
+                enabled: metadata.config.len() == 0,
             };
             self.documents.save(plugin.clone()).await?;
             Ok(plugin)

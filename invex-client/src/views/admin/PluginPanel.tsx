@@ -21,6 +21,7 @@ import {
     IconFolderCode,
     IconLink,
     IconPuzzle,
+    IconSettings,
     IconTrashFilled,
     IconUpload,
     IconUserEdit,
@@ -36,7 +37,7 @@ import {
     useRef,
     useState,
 } from "react";
-import { Plugin } from "../../types/plugin";
+import { Plugin, PluginConfig } from "../../types/plugin";
 import { DynamicAvatar } from "../../components/icon";
 import { useDebouncedValue } from "@mantine/hooks";
 import { selectFile } from "../../util/selectFile";
@@ -67,6 +68,11 @@ function PluginItem({
         }
     }, [debouncedEnabled]);
     const { success, error } = useNotifications();
+    const [profiles, setProfiles] = useState<PluginConfig[]>([]);
+
+    useEffect(() => {
+        api.plugin_config_list(plugin.id).then(setProfiles);
+    }, [api.plugin_config_list, setProfiles, plugin.id]);
 
     return (
         <Paper
@@ -264,6 +270,37 @@ function PluginItem({
                                 }}
                             >
                                 <IconCloudUp size={20} />
+                            </ActionIcon>
+                        </Tooltip>
+                        <Tooltip
+                            label={t("views.admin.plugins.item.profiles")}
+                            position="left"
+                            withArrow
+                            color="var(--mantine-color-body)"
+                        >
+                            <ActionIcon
+                                variant="light"
+                                size="lg"
+                                radius="xl"
+                                onClick={() =>
+                                    modals.openContextModal({
+                                        modal: "pluginProfiles",
+                                        title: (
+                                            <ModalTitle
+                                                icon={IconSettings}
+                                                name={t(
+                                                    "modals.pluginProfiles.title"
+                                                )}
+                                            />
+                                        ),
+                                        innerProps: {
+                                            plugin,
+                                        },
+                                        size: "xl",
+                                    })
+                                }
+                            >
+                                <IconSettings size={20} />
                             </ActionIcon>
                         </Tooltip>
                     </Stack>

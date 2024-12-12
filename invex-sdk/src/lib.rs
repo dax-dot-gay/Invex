@@ -75,6 +75,18 @@ pub struct PluginArgument {
     pub required: bool,
 }
 
+impl FieldBuilder {
+    pub fn minimal<Key: AsRef<str>, Label: AsRef<str>>(key: Key, label: Label, field: FieldType) -> Self {
+        Self {
+            key: Some(key.as_ref().to_string()),
+            label: Some(label.as_ref().to_string()),
+            field: Some(field),
+            icon: None,
+            required: Some(false)
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, Builder)]
 #[builder(setter(into, strip_option))]
 pub struct GrantAction {
@@ -104,6 +116,19 @@ pub struct GrantAction {
 }
 
 impl GrantActionBuilder {
+    pub fn minimal<Key: AsRef<str>, Method: AsRef<str>, Label: AsRef<str>>(key: Key, method: Method, label: Label) -> Self {
+        Self {
+            key: Some(key.as_ref().to_string()),
+            method: Some(method.as_ref().to_string()),
+            label: Some(label.as_ref().to_string()),
+            options: None,
+            arguments: None,
+            description: None,
+            icon: None,
+            revoke_method: None
+        }
+    }
+
     pub fn with_argument(&mut self, field: PluginArgument) -> &mut Self {
         if self.arguments.is_none() {
             self.arguments(Vec::new());
@@ -284,6 +309,20 @@ pub struct PluginMetadata {
 }
 
 impl PluginMetadataBuilder {
+    pub fn minimal<Id: AsRef<str>, Name: AsRef<str>, Version: AsRef<str>>(id: Id, name: Name, version: Version) -> Self {
+        Self {
+            id: Some(id.as_ref().to_string()),
+            name: Some(name.as_ref().to_string()),
+            version: Some(version.as_ref().to_string()),
+            grants: None,
+            author: None,
+            url: None,
+            description: None,
+            icon: None,
+            config: None
+        }
+    }
+
     pub fn with_grant(&mut self, grant: GrantAction) -> &mut Self {
         if self.grants.is_none() {
             self.grants(Vec::new());

@@ -5,6 +5,7 @@ import { LoginModal } from "./LoginModal";
 import { Group, Title } from "@mantine/core";
 import { UpdateServiceModal } from "./UpdateServiceModal";
 import { AddServiceGrantModal } from "./AddServiceGrantModal";
+import { PluginProfilesModal } from "./PluginProfilesModal";
 
 export const modals = {
     login: LoginModal,
@@ -13,6 +14,7 @@ export const modals = {
     addService: AddServiceModal,
     updateService: UpdateServiceModal,
     addGrant: AddServiceGrantModal,
+    pluginProfiles: PluginProfilesModal,
 };
 
 declare module "@mantine/modals" {

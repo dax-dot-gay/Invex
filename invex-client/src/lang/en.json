@@ -107,7 +107,8 @@
           "state": {
             "on": "Enabled",
             "off": "Disabled"
-          }
+          },
+          "profiles": "Settings Profiles"
         },
         "noUrl": "Source not provided",
         "update": {
@@ -188,6 +189,9 @@
         "success": "Added grant to current service!",
         "error": "Failed to add grant: {{reason}}"
       }
+    },
+    "pluginProfiles": {
+      "title": "Manage Settings Profiles"
     }
   },
   "actions": {
