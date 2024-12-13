@@ -979,6 +979,11 @@
     "@lezer/highlight" "^1.0.0"
     "@lezer/lr" "^1.4.0"
 
+"@mantine/carousel@^7.15.1":
+  version "7.15.1"
+  resolved "https://registry.yarnpkg.com/@mantine/carousel/-/carousel-7.15.1.tgz#7cdb0128a77bb04c4dd1a58f46c316132231dc15"
+  integrity sha512-FQaxESq+uydaat4r3NC7x1/XKKGlr8PIawGEqkZXmzPLagOI6D+K3vSDzYK0n1fC6eIVPmd5bSiexBRVxXMm4Q==
+
 "@mantine/core@^7.14.2":
   version "7.14.2"
   resolved "https://registry.yarnpkg.com/@mantine/core/-/core-7.14.2.tgz#e72b39d2ee87479f913a58d8a3fdd03cc23c5eb4"
@@ -2299,6 +2304,18 @@ downshift@^7.6.0:
     prop-types "^15.7.2"
     react-is "^17.0.2"
     tslib "^2.3.0"
+
+embla-carousel-react@^7.1.0:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/embla-carousel-react/-/embla-carousel-react-7.1.0.tgz#e716f4df7fd31f7ca3e59a3e011158167bc3c468"
+  integrity sha512-tbYRPRZSDNd2QLNqYDcArAakGIxtUbhS7tkP0dGXktXHGgcX+3ji3VrOUTOftBiujZrMV8kRxtrRUe/1soloIQ==
+  dependencies:
+    embla-carousel "7.1.0"
+
+embla-carousel@7.1.0:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/embla-carousel/-/embla-carousel-7.1.0.tgz#c770dd3ade9285a97f5e3b6bbf705bc35ec0f9b5"
+  integrity sha512-Bh8Pa8NWzgugLkf8sAGexQlBCNDFaej5BXiKgQdRJ1mUC9NWBrw9Z23YVPVGkguWoz5LMjZXXFVGCobl3UPt/Q==
 
 es-module-lexer@^1.5.4:
   version "1.5.4"

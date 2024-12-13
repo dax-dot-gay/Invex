@@ -1,7 +1,5 @@
 use extism_pdk::*;
-use invex_sdk::{
-    FieldBuilder, PluginMetadata, PluginMetadataBuilder, FieldType
-};
+use invex_sdk::{FieldBuilder, FieldType, PluginMetadata, PluginMetadataBuilder};
 
 #[plugin_fn]
 pub fn metadata() -> FnResult<Json<PluginMetadata>> {

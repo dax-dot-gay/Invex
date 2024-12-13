@@ -51,13 +51,15 @@ export type FieldParams =
           context: "plugin" | "service" | "invite";
       };
 
+export type FieldValue = number | string | boolean | string[];
+
 export type PluginField = {
     key: string;
     label: string;
     field: FieldParams;
     icon: string | null;
     required: boolean;
-    default: any | null;
+    default: FieldValue | null;
 };
 
 export type Plugin = {
@@ -72,5 +74,17 @@ export type PluginConfig = {
     plugin: string;
     icon: string | null;
     name: string;
-    options: { [key: string]: any };
+    options: { [key: string]: FieldValue };
+};
+
+export type ValidatedArgument = {
+    argument: PluginField;
+    valid: boolean;
+    value: FieldValue | null;
+    previous: FieldValue | null;
+};
+
+export type ValidatedForm = {
+    valid: boolean;
+    arguments: { [key: string]: ValidatedArgument };
 };

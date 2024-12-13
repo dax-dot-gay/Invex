@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{collections::HashMap, fmt::Debug};
 
 use derive_builder::Builder;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -22,6 +22,31 @@ pub enum PluginDefinedMethodContext {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum ExpectedType {
+    String,
+    Integer,
+    Float,
+    Unsigned,
+    Boolean,
+    StringArray
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum NumberType {
+    Integer,
+    Float,
+    Unsigned
+}
+
+impl Default for NumberType {
+    fn default() -> Self {
+        NumberType::Float
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum FieldType {
     Text {
@@ -39,10 +64,13 @@ pub enum FieldType {
         placeholder: Option<String>,
 
         #[serde(default)]
-        min: Option<i64>,
+        kind: NumberType,
 
         #[serde(default)]
-        max: Option<i64>,
+        min: Option<f64>,
+
+        #[serde(default)]
+        max: Option<f64>,
     },
     Switch {},
     Select {
@@ -58,6 +86,7 @@ pub enum FieldType {
     PluginDefined {
         method: String,
         context: PluginDefinedMethodContext,
+        expected_type: ExpectedType
     },
 }
 
@@ -79,6 +108,138 @@ pub struct PluginArgument {
     #[serde(default)]
     #[builder(default = "None")]
     pub default: Option<Value>
+}
+
+impl PluginArgument {
+    pub fn validate(&self, value: Value) -> bool {
+        match self.field.clone() {
+            FieldType::Text {..} => value.as_str().map_or(false, |_| true),
+            FieldType::Number {kind, min, max, ..} => {
+                match kind {
+                    NumberType::Integer => {
+                        if let Some(val) = value.as_i64() {
+                            min.is_none_or(|m| m <= val as f64) && max.is_none_or(|m| m >= val as f64)
+                        } else {
+                            false
+                        }
+                    },
+                    NumberType::Float => {
+                        if let Some(val) = value.as_f64() {
+                            min.is_none_or(|m| m <= val) && max.is_none_or(|m| m >= val)
+                        } else {
+                            false
+                        }
+                    },
+                    NumberType::Unsigned => {
+                        if let Some(val) = value.as_u64() {
+                            min.is_none_or(|m| m <= val as f64) && max.is_none_or(|m| m >= val as f64)
+                        } else {
+                            false
+                        }
+                    }
+                }
+            },
+            FieldType::Select {options, multiple} => {
+                let keys = options.iter().map(|field| match field {
+                    FieldSelectOption::Exact(v) => v.to_string(),
+                    FieldSelectOption::Alias { value, .. } => value.to_string()
+                }).collect::<Vec<String>>();
+                if multiple {
+                    if let Some(vals) = value.as_array() {
+                        for val in vals {
+                            if let Some(s) = val.as_str() {
+                                if !keys.contains(&s.to_string()) {
+                                    return false;
+                                }
+                            } else {
+                                return false;
+                            }
+                        }
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    if let Some(val) = value.as_str() {
+                        keys.contains(&val.to_string())
+                    } else {
+                        false
+                    }
+                }
+            },
+            FieldType::Switch {} => value.as_bool().is_some(),
+            FieldType::TextArea { .. } => value.as_str().is_some(),
+            FieldType::PluginDefined { expected_type, .. } => match expected_type {
+                ExpectedType::Boolean => value.as_bool().is_some(),
+                ExpectedType::Float => value.as_f64().is_some(),
+                ExpectedType::Integer => value.as_i64().is_some(),
+                ExpectedType::Unsigned => value.as_u64().is_some(),
+                ExpectedType::String => value.as_str().is_some(),
+                ExpectedType::StringArray => value.as_array().is_some_and(|arr| arr.iter().all(|v| v.as_str().is_some()))
+            }
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ValidatedArgument {
+    pub argument: PluginArgument,
+    pub valid: bool,
+    pub value: Option<Value>,
+    pub previous: Option<Value>
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ValidationResult {
+    pub valid: bool,
+    pub arguments: HashMap<String, ValidatedArgument>
+}
+
+pub trait ArgValidator {
+    fn validate(&self, fields: HashMap<String, Value>) -> ValidationResult;
+}
+
+impl ArgValidator for Vec<PluginArgument> {
+    fn validate(&self, fields: HashMap<String, Value>) -> ValidationResult {
+        let mut results: HashMap<String, ValidatedArgument> = HashMap::new();
+        let mut is_valid = true;
+        for arg in self {
+            if let Some(val) = fields.get(&arg.key) {
+                if arg.validate(val.clone()) {
+                    results.insert(arg.key.clone(), ValidatedArgument {
+                        argument: arg.clone(),
+                        valid: true,
+                        value: Some(val.clone()),
+                        previous: None
+                    });
+                } else {
+                    results.insert(arg.key.clone(), ValidatedArgument {
+                        argument: arg.clone(),
+                        valid: false,
+                        value: arg.default.clone(),
+                        previous: Some(val.clone())
+                    });
+                    is_valid = false;
+                }
+            } else {
+                results.insert(arg.key.clone(), ValidatedArgument {
+                    argument: arg.clone(),
+                    valid: !arg.required,
+                    value: arg.default.clone(),
+                    previous: None
+                });
+                if arg.required {
+                    is_valid = false;
+                }
+            }
+        }
+
+        ValidationResult {
+            valid: is_valid,
+            arguments: results
+        }
+        
+    }
 }
 
 impl FieldBuilder {
@@ -162,14 +323,14 @@ impl GrantActionBuilder {
 
     pub fn validate(&self) -> Result<(), String> {
         for entry in self.options.clone().unwrap_or_default() {
-            if let FieldType::PluginDefined { context, method } = entry.field {
+            if let FieldType::PluginDefined { context, method, .. } = entry.field {
                 if !matches!(context, PluginDefinedMethodContext::Service) {
                     return Err(format!("Plugin-defined method {method} used in incorrect context (must be in Service context)"));
                 }
             }
         }
         for entry in self.arguments.clone().unwrap_or_default() {
-            if let FieldType::PluginDefined { context, method } = entry.field {
+            if let FieldType::PluginDefined { context, method, .. } = entry.field {
                 if !matches!(context, PluginDefinedMethodContext::Invite) {
                     return Err(format!("Plugin-defined method {method} used in incorrect context (must be in Invite context)"));
                 }
@@ -355,7 +516,7 @@ impl PluginMetadataBuilder {
 
     pub fn validate(&self) -> Result<(), String> {
         for entry in self.config.clone().unwrap_or_default() {
-            if let FieldType::PluginDefined { context, method } = entry.field {
+            if let FieldType::PluginDefined { context, method, .. } = entry.field {
                 if !matches!(context, PluginDefinedMethodContext::Plugin) {
                     return Err(format!("Plugin-defined method {method} used in incorrect context (must be in Plugin context)"));
                 }

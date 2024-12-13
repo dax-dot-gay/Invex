@@ -3,6 +3,7 @@ import { PluginsMixin, useApi } from "../../context/net";
 import {
     ActionIcon,
     Anchor,
+    Badge,
     Button,
     Divider,
     Group,
@@ -18,10 +19,12 @@ import {
 import {
     IconBoltFilled,
     IconCloudUp,
+    IconExclamationMark,
     IconFolderCode,
     IconLink,
     IconPuzzle,
     IconSettings,
+    IconSettingsExclamation,
     IconTrashFilled,
     IconUpload,
     IconUserEdit,
@@ -34,11 +37,10 @@ import {
     MutableRefObject,
     useCallback,
     useEffect,
-    useMemo,
     useRef,
     useState,
 } from "react";
-import { Plugin, PluginConfig } from "../../types/plugin";
+import { Plugin, PluginConfig, ValidatedForm } from "../../types/plugin";
 import { DynamicAvatar } from "../../components/icon";
 import { useDebouncedValue } from "@mantine/hooks";
 import { selectFile } from "../../util/selectFile";
@@ -69,11 +71,22 @@ function PluginItem({
         }
     }, [debouncedEnabled]);
     const { success, error } = useNotifications();
-    const [profiles, setProfiles] = useState<PluginConfig[]>([]);
+    const [profiles, setProfiles] = useState<{
+        [key: string]: [PluginConfig, ValidatedForm];
+    }>({});
 
     useEffect(() => {
-        api.plugin_config_list(plugin.id).then(setProfiles);
-    }, [api.plugin_config_list, setProfiles, plugin.id]);
+        api.plugin_config_list_validated(plugin.id).then(setProfiles);
+    }, [
+        api.plugin_config_list_validated,
+        setProfiles,
+        plugin.id,
+        plugin.metadata.config,
+    ]);
+
+    const invalidProfiles = Object.values(profiles).filter(
+        (v) => !v[1].valid
+    ).length;
 
     return (
         <Paper
@@ -108,6 +121,37 @@ function PluginItem({
                                 </Text>
                             </Stack>
                         </Group>
+                        {invalidProfiles > 0 ? (
+                            <Badge
+                                leftSection={<IconExclamationMark size={16} />}
+                                pl={4}
+                                color="yellow"
+                                variant="light"
+                            >
+                                {t(
+                                    "views.admin.plugins.item.status.invalidProfiles",
+                                    {
+                                        profileCount: `${invalidProfiles}/${
+                                            Object.values(profiles).length
+                                        }`,
+                                    }
+                                )}
+                            </Badge>
+                        ) : Object.values(profiles).length === 0 &&
+                          plugin.metadata.config.length > 0 ? (
+                            <Badge
+                                leftSection={<IconExclamationMark size={16} />}
+                                color="yellow"
+                                variant="light"
+                                pl={4}
+                            >
+                                {t(
+                                    "views.admin.plugins.item.status.noProfiles"
+                                )}
+                            </Badge>
+                        ) : (
+                            <></>
+                        )}
                     </Group>
                     <Paper bg="var(--mantine-color-default)" p="xs">
                         {plugin.metadata.description ? (
@@ -281,6 +325,13 @@ function PluginItem({
                         >
                             <ActionIcon
                                 variant="light"
+                                color={
+                                    invalidProfiles > 0 ||
+                                    (Object.values(profiles).length === 0 &&
+                                        plugin.metadata.config.length > 0)
+                                        ? "yellow"
+                                        : "primary"
+                                }
                                 size="lg"
                                 radius="xl"
                                 onClick={() =>
@@ -301,7 +352,13 @@ function PluginItem({
                                     })
                                 }
                             >
-                                <IconSettings size={20} />
+                                {invalidProfiles > 0 ||
+                                (Object.values(profiles).length === 0 &&
+                                    plugin.metadata.config.length > 0) ? (
+                                    <IconSettingsExclamation size={20} />
+                                ) : (
+                                    <IconSettings size={20} />
+                                )}
                             </ActionIcon>
                         </Tooltip>
                     </Stack>

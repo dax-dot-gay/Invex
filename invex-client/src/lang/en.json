@@ -108,7 +108,11 @@
             "on": "Enabled",
             "off": "Disabled"
           },
-          "profiles": "Settings Profiles"
+          "profiles": "Settings Profiles",
+          "status": {
+            "invalidProfiles": "{{profileCount}} profiles are invalid",
+            "noProfiles": "No settings profiles"
+          }
         },
         "noUrl": "Source not provided",
         "update": {
@@ -191,7 +195,11 @@
       }
     },
     "pluginProfiles": {
-      "title": "Manage Settings Profiles"
+      "title": "Manage Settings Profiles",
+      "create": {
+        "button": "Create Profile",
+        "name": "Profile Name"
+      }
     }
   },
   "actions": {

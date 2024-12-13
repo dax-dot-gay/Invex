@@ -6,6 +6,7 @@ import "@mantine/dates/styles.layer.css";
 import "@mantine/dropzone/styles.layer.css";
 import "@mantine/notifications/styles.layer.css";
 import "mantine-datatable/styles.layer.css";
+import "@mantine/carousel/styles.css";
 import "@mdxeditor/editor/style.css";
 import "./styles/index.scss";
 

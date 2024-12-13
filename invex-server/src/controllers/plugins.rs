@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use bson::doc;
-use invex_sdk::PluginMetadata;
+use invex_sdk::{ArgValidator, PluginMetadata, ValidationResult};
 use rocket::{form::Form, fs::TempFile, futures::TryStreamExt, serde::json::Json, Route};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -275,7 +275,7 @@ async fn get_plugin_configs(
     }
 }
 
-#[get("/<id>/configs/<config_id>")]
+#[get("/<id>/configs/<config_id>", rank = 2)]
 async fn get_plugin_config_by_id(
     user: AuthUser,
     id: &str,
@@ -321,7 +321,7 @@ async fn update_plugin_config(
 
     if plugins.exists(id).await {
         if configs
-            .exists(doc! {"name": update.name.clone(), "plugin": id})
+            .exists(doc! {"name": update.name.clone(), "plugin": id, "_id": {"$ne": config_id}})
             .await
         {
             return Err(ApiError::MethodNotAllowed(
@@ -387,6 +387,43 @@ async fn delete_plugin_config(
     }
 }
 
+#[get("/<id>/configs/validated")]
+async fn get_validated_configs(
+    user: AuthUser,
+    id: &str,
+    plugins: PluginRegistry,
+    configs: Docs<PluginConfiguration>,
+) -> ApiResult<HashMap<String, (PluginConfiguration, ValidationResult)>> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to validate plugin configs".to_string(),
+        ));
+    }
+
+    if let Some(plugin) = plugins.get(id).await {
+        if let Ok(cursor) = configs.find(doc! {"plugin": id}).await {
+            if let Ok(plugin_configs) = cursor.try_collect::<Vec<PluginConfiguration>>().await {
+                let mut result: HashMap<String, (PluginConfiguration, ValidationResult)> = HashMap::new();
+                for conf in plugin_configs {
+                    result.insert(conf.id.to_string(), (
+                        conf.clone(),
+                        plugin.metadata().config.validate(conf.options)
+                    ));
+                }
+
+                Ok(Json(result))
+            } else {
+                Err(ApiError::Internal("Failed to list configs".to_string()))
+            }
+        } else {
+            Err(ApiError::Internal("Failed to list configs".to_string()))
+        }
+    } else {
+        Err(ApiError::NotFound("Unknown plugin ID".to_string()))
+    }
+}
+
+
 pub fn routes() -> Vec<Route> {
     return routes![
         add_plugin_file,
@@ -402,6 +439,7 @@ pub fn routes() -> Vec<Route> {
         get_plugin_configs,
         get_plugin_config_by_id,
         update_plugin_config,
-        delete_plugin_config
+        delete_plugin_config,
+        get_validated_configs
     ];
 }

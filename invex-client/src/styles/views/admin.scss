@@ -11,7 +11,7 @@
 
         .admin-panel {
             flex-grow: 1;
-            max-height: calc(100vh - 120px - ( 2 * var(--mantine-spacing-sm)));
+            max-height: calc(100vh - 120px - (2 * var(--mantine-spacing-sm)));
 
             &.users {
                 .admin-list {
@@ -54,7 +54,9 @@
                                     cursor: pointer;
 
                                     &:hover {
-                                        background-color: var(--mantine-color-default) !important;
+                                        background-color: var(
+                                            --mantine-color-default
+                                        ) !important;
                                     }
                                 }
                             }
@@ -99,15 +101,21 @@
                                     transition: background-color 0.1s;
 
                                     &:hover {
-                                        background-color: var(--mantine-color-default);
+                                        background-color: var(
+                                            --mantine-color-default
+                                        );
                                     }
 
                                     &.selected {
-                                        background-color: var(--mantine-color-default-hover);
+                                        background-color: var(
+                                            --mantine-color-default-hover
+                                        );
                                     }
 
                                     &.selected:hover {
-                                        background-color: var(--mantine-color-default-border);
+                                        background-color: var(
+                                            --mantine-color-default-border
+                                        );
                                     }
                                 }
                             }
@@ -134,6 +142,60 @@
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+.plugin-profile-carousel {
+    .carousel-controls {
+        height: 128px;
+        top: 50%;
+        transform: translate(0, -50%);
+        .carousel-control {
+            height: 100%;
+            opacity: 1;
+
+            &:hover {
+                background-color: var(--mantine-color-primary-light-hover);
+            }
+            background-color: var(--mantine-color-primary-light);
+            border: none;
+            svg {
+                stroke: var(--mantine-color-white);
+            }
+            &[data-inactive] {
+                background-color: var(--mantine-color-default);
+                cursor: default;
+
+                svg {
+                    stroke: var(--mantine-color-dimmed);
+                }
+            }
+        }
+    }
+
+    .profile-item {
+        height: calc(100% - 36px);
+        margin-left: 54px;
+        margin-right: 54px;
+
+        &.create {
+            position: relative;
+            &.closed {
+                border: 2px dashed var(--mantine-color-default-hover);
+                background-color: var(--mantine-color-default);
+                cursor: pointer;
+                transition: background-color 0.1s, border 0.1s;
+
+                .label-stack {
+                    height: 100%;
+                }
+
+                &:hover {
+                    background-color: var(--mantine-color-default-hover);
+                    border-color: var(--mantine-color-default-border)
                 }
             }
         }

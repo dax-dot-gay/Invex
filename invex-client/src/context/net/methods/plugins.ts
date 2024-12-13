@@ -1,4 +1,9 @@
-import { Plugin, PluginConfig, PluginMeta } from "../../../types/plugin";
+import {
+    Plugin,
+    PluginConfig,
+    PluginMeta,
+    ValidatedForm,
+} from "../../../types/plugin";
 import { Response } from "../types";
 import { ApiMixinConstructor } from "./base";
 
@@ -146,6 +151,16 @@ export function PluginsMixin<TBase extends ApiMixinConstructor>(base: TBase) {
                 `/plugins/${plugin}/configs/${config_id}`,
                 { method: "delete" }
             );
+        }
+
+        public async plugin_config_list_validated(
+            plugin: string
+        ): Promise<{ [key: string]: [PluginConfig, ValidatedForm] }> {
+            return (
+                await this.request<{
+                    [key: string]: [PluginConfig, ValidatedForm];
+                }>(`/plugins/${plugin}/configs/validated`)
+            ).or_default({});
         }
     };
 }
