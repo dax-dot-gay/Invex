@@ -209,7 +209,8 @@
   "errors": {
     "form": {
       "empty": "Field must not be empty",
-      "invalidEmail": "Invalid email"
+      "invalidEmail": "Invalid email",
+      "invalid": "Invalid input"
     },
     "network": {
       "unknown": "An unknown server error occurred.",

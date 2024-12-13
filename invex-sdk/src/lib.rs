@@ -82,6 +82,9 @@ pub enum FieldType {
     TextArea {
         #[serde(default)]
         lines: Option<u64>,
+
+        #[serde(default)]
+        placeholder: Option<String>,
     },
     PluginDefined {
         method: String,
@@ -96,6 +99,10 @@ pub struct PluginArgument {
     pub key: String,
     pub label: String,
     pub field: FieldType,
+
+    #[serde(default)]
+    #[builder(default = "None")]
+    pub description: Option<String>,
 
     #[serde(default)]
     #[builder(default = "None")]
@@ -250,7 +257,8 @@ impl FieldBuilder {
             field: Some(field),
             icon: None,
             required: Some(false),
-            default: None
+            default: None,
+            description: None
         }
     }
 }

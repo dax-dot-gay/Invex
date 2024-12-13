@@ -8,13 +8,22 @@ import {
 import { Carousel } from "@mantine/carousel";
 import { PluginsMixin, useApi } from "../context/net";
 import { useAsynchronous } from "../util/hooks";
-import { Divider, Group, Paper, Stack, Text, TextInput } from "@mantine/core";
+import {
+    Divider,
+    Group,
+    Paper,
+    ScrollAreaAutosize,
+    Stack,
+    Text,
+    TextInput,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useState } from "react";
 import { IconPencil, IconSettingsPlus } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { IconPicker } from "../components/iconPicker";
 import { AvatarSource } from "../components/icon";
+import { PluginFieldForm } from "../components/pluginFields";
 
 function ProfileItem({
     id,
@@ -44,7 +53,9 @@ export function PluginProfilesModal({
     const creationForm = useForm<{
         icon: AvatarSource | null;
         name: string;
-        options: { [key: string]: FieldValue | null };
+        options: {
+            [key: string]: { value: FieldValue | null; valid: boolean };
+        };
     }>({
         initialValues: {
             icon: null,
@@ -115,6 +126,22 @@ export function PluginProfilesModal({
                                         {...creationForm.getInputProps("name")}
                                     />
                                 </Group>
+                                <Divider />
+                                <ScrollAreaAutosize
+                                    mah="calc(60vh - 256px)"
+                                    offsetScrollbars
+                                >
+                                    <PluginFieldForm
+                                        plugin={plugin}
+                                        value={creationForm.values.options}
+                                        onChange={(v) =>
+                                            creationForm.setFieldValue(
+                                                "options",
+                                                v
+                                            )
+                                        }
+                                    />
+                                </ScrollAreaAutosize>
                                 <Divider />
                             </Stack>
                         </form>

@@ -32,6 +32,7 @@ export type FieldParams =
           placeholder: string | null;
           min: number | null;
           max: number | null;
+          kind: "integer" | "float" | "unsigned";
       }
     | {
           type: "switch";
@@ -44,11 +45,19 @@ export type FieldParams =
     | {
           type: "text_area";
           lines: number | null;
+          placeholder: string | null;
       }
     | {
           type: "plugin_defined";
           method: string;
           context: "plugin" | "service" | "invite";
+          expected_type:
+              | "string"
+              | "integer"
+              | "float"
+              | "unsigned"
+              | "boolean"
+              | "string_array";
       };
 
 export type FieldValue = number | string | boolean | string[];
@@ -56,6 +65,7 @@ export type FieldValue = number | string | boolean | string[];
 export type PluginField = {
     key: string;
     label: string;
+    description: string | null;
     field: FieldParams;
     icon: string | null;
     required: boolean;
