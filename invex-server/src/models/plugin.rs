@@ -48,7 +48,7 @@ pub struct PluginConfiguration {
     pub name: String,
 
     #[reflect(ignore)]
-    pub options: HashMap<String, Value>
+    pub options: HashMap<String, Value>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -128,7 +128,7 @@ impl Plugin {
 pub struct PluginRegistry {
     backend: PluginRegistryMap,
     documents: Docs<RegisteredPlugin>,
-    fs: Fs
+    fs: Fs,
 }
 
 #[rocket::async_trait]
@@ -138,16 +138,14 @@ impl<'r> FromRequest<'r> for PluginRegistry {
     async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
         if let Some(backend) = req.rocket().state::<PluginRegistryMap>() {
             match req.guard::<Docs<RegisteredPlugin>>().await {
-                request::Outcome::Success(docs) => {
-                    match req.guard::<Fs>().await {
-                        request::Outcome::Success(fs) => request::Outcome::Success(Self {
-                            backend: backend.clone(),
-                            documents: docs,
-                            fs: fs.clone()
-                        }),
-                        request::Outcome::Error(e) => request::Outcome::Error(e),
-                        request::Outcome::Forward(_) => panic!("Unreachable!"),
-                    }
+                request::Outcome::Success(docs) => match req.guard::<Fs>().await {
+                    request::Outcome::Success(fs) => request::Outcome::Success(Self {
+                        backend: backend.clone(),
+                        documents: docs,
+                        fs: fs.clone(),
+                    }),
+                    request::Outcome::Error(e) => request::Outcome::Error(e),
+                    request::Outcome::Forward(_) => panic!("Unreachable!"),
                 },
                 request::Outcome::Error(e) => request::Outcome::Error(e),
                 request::Outcome::Forward(_) => panic!("Unreachable!"),
@@ -163,7 +161,11 @@ impl<'r> FromRequest<'r> for PluginRegistry {
 
 impl PluginRegistry {
     pub fn new(registry: PluginRegistryMap, documents: Docs<RegisteredPlugin>, fs: Fs) -> Self {
-        PluginRegistry { backend: registry, documents, fs }
+        PluginRegistry {
+            backend: registry,
+            documents,
+            fs,
+        }
     }
 
     async fn resolve(file: File) -> InResult<(ExtismPlugin, PluginMetadata)> {
@@ -242,7 +244,8 @@ impl PluginRegistry {
         let req = reqwest::get(url.clone()).await?.error_for_status()?;
         let headers = req.headers().clone();
         let content = req.bytes().await?;
-        let (file, mut uploader) = self.fs
+        let (file, mut uploader) = self
+            .fs
             .get_uploader(
                 headers
                     .get("Content-Type")
@@ -350,7 +353,11 @@ impl PluginRegistry {
     }
 
     pub async fn exists<T: AsRef<str>>(&self, id: T) -> bool {
-        if let Ok(count) = self.documents.count_documents(doc! {"metadata.id": id.as_ref().to_string()}).await {
+        if let Ok(count) = self
+            .documents
+            .count_documents(doc! {"metadata.id": id.as_ref().to_string()})
+            .await
+        {
             count > 0
         } else {
             false

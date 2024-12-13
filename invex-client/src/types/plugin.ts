@@ -57,6 +57,7 @@ export type PluginField = {
     field: FieldParams;
     icon: string | null;
     required: boolean;
+    default: any | null;
 };
 
 export type Plugin = {

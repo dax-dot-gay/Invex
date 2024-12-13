@@ -4,6 +4,8 @@ use derive_builder::Builder;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 
+pub mod params;
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(untagged)]
 pub enum FieldSelectOption {
@@ -73,6 +75,10 @@ pub struct PluginArgument {
     #[serde(default)]
     #[builder(default = "false")]
     pub required: bool,
+
+    #[serde(default)]
+    #[builder(default = "None")]
+    pub default: Option<Value>
 }
 
 impl FieldBuilder {
@@ -82,7 +88,8 @@ impl FieldBuilder {
             label: Some(label.as_ref().to_string()),
             field: Some(field),
             icon: None,
-            required: Some(false)
+            required: Some(false),
+            default: None
         }
     }
 }
