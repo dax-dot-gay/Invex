@@ -1,6 +1,5 @@
 import { MantineSize, px, useMantineTheme } from "@mantine/core";
 import { useMediaQuery, useViewportSize } from "@mantine/hooks";
-import { useEffect, useState } from "react";
 
 export function useMobile() {
     return useMediaQuery("(max-width: 768px)", false);
@@ -19,19 +18,4 @@ export function useBreakpoint(): MantineSize {
     }
 
     return "xl";
-}
-
-export function useAsynchronous<T, TArgs extends any[]>(
-    callable: (...args: TArgs) => Promise<T>,
-    args: TArgs,
-    defaultValue?: T | null
-): T | null {
-    const [result, setResult] = useState<T | null>(defaultValue ?? null);
-
-    useEffect(() => {
-        callable(...args)
-            .then(setResult)
-            .catch(() => setResult(defaultValue ?? null));
-    }, [callable, `${args}`, setResult, `${defaultValue}`]);
-    return result;
 }

@@ -7,8 +7,9 @@ import {
 } from "../types/plugin";
 import { Carousel } from "@mantine/carousel";
 import { PluginsMixin, useApi } from "../context/net";
-import { useAsynchronous } from "../util/hooks";
 import {
+    ActionIcon,
+    Button,
     Divider,
     Group,
     Paper,
@@ -18,37 +19,156 @@ import {
     TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useState } from "react";
-import { IconPencil, IconSettingsPlus } from "@tabler/icons-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+    IconDeviceFloppy,
+    IconPencil,
+    IconPlus,
+    IconSettingsPlus,
+    IconTrashFilled,
+    IconX,
+} from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { IconPicker } from "../components/iconPicker";
 import { AvatarSource } from "../components/icon";
 import { PluginFieldForm } from "../components/pluginFields";
+import { useNotifications } from "../util/notifications";
+import { isEqual } from "lodash";
 
 function ProfileItem({
     id,
     config,
     validated,
     plugin,
+    refresh,
 }: {
     id: string;
     config: PluginConfig;
     validated: ValidatedForm;
     plugin: Plugin;
+    refresh: () => void;
 }) {
-    return <Paper className="profile-item paper-light" p="sm"></Paper>;
+    const strArgs = JSON.stringify(validated.arguments);
+    const initial = useMemo(
+        () => ({
+            icon: config.icon as any,
+            name: config.name,
+            options: Object.entries(validated.arguments).reduce(
+                (prev, curr) => ({
+                    ...prev,
+                    [curr[0]]: {
+                        value: curr[1].valid ? curr[1].value : curr[1].previous,
+                        valid: curr[1].valid,
+                    },
+                }),
+                {}
+            ),
+        }),
+        [config.icon, config.name, strArgs]
+    );
+
+    const { t } = useTranslation();
+    const api = useApi(PluginsMixin);
+    const form = useForm<{
+        icon: AvatarSource | null;
+        name: string;
+        options: {
+            [key: string]: { value: FieldValue | null; valid: boolean };
+        };
+    }>({
+        initialValues: initial,
+        validate: {
+            name: (v) => (v.length > 0 ? null : t("errors.form.empty")),
+            options: (v) =>
+                Object.values(v).filter((k) => !k.valid).length === 0
+                    ? null
+                    : t("errors.form.invalid"),
+        },
+    });
+    return (
+        <Paper className="profile-item paper-light" p="sm">
+            <form
+                onSubmit={form.onSubmit((values) => {
+                    console.log(values);
+                })}
+            >
+                <Stack gap="sm">
+                    <Group gap="sm" wrap="nowrap">
+                        <IconPicker
+                            value={form.values.icon}
+                            onChange={(v) => form.setFieldValue("icon", v)}
+                            iconSize={32}
+                            size={42}
+                            variant="filled"
+                            bg="var(--mantine-color-default)"
+                            style={{ borderWidth: "0px" }}
+                            defaultValue={"icon:IconSettings"}
+                        />
+                        <TextInput
+                            placeholder={t("modals.pluginProfiles.create.name")}
+                            leftSection={<IconPencil size={20} />}
+                            size="md"
+                            style={{ flexGrow: 1 }}
+                            {...form.getInputProps("name")}
+                        />
+                        <ActionIcon
+                            variant="light"
+                            disabled={isEqual(initial, form.values)}
+                            size="42"
+                        >
+                            <IconDeviceFloppy />
+                        </ActionIcon>
+                        <ActionIcon
+                            variant="light"
+                            color="red"
+                            size="42"
+                            onClick={() => {
+                                api.plugin_config_delete(plugin.id, id).then(
+                                    () => refresh()
+                                );
+                            }}
+                        >
+                            <IconTrashFilled />
+                        </ActionIcon>
+                    </Group>
+                    <Divider />
+                    <ScrollAreaAutosize
+                        mah="calc(60vh - 128px)"
+                        offsetScrollbars
+                    >
+                        <PluginFieldForm
+                            plugin={plugin}
+                            value={form.values.options}
+                            onChange={(v) => form.setFieldValue("options", v)}
+                        />
+                    </ScrollAreaAutosize>
+                </Stack>
+            </form>
+        </Paper>
+    );
 }
 
 export function PluginProfilesModal({
-    context,
-    id,
-    innerProps: { plugin },
-}: ContextModalProps<{ plugin: Plugin }>) {
+    innerProps: { plugin, getConfigs },
+}: ContextModalProps<{
+    plugin: Plugin;
+    getConfigs: () => Promise<{
+        [key: string]: [PluginConfig, ValidatedForm];
+    }>;
+}>) {
     const { t } = useTranslation();
     const api = useApi(PluginsMixin);
-    const configs: { [key: string]: [PluginConfig, ValidatedForm] } =
-        useAsynchronous(api.plugin_config_list_validated, [plugin.id], {}) ??
-        {};
+    const [configs, setConfigs] = useState<{
+        [key: string]: [PluginConfig, ValidatedForm];
+    }>({});
+
+    const refreshConfigs = useCallback(() => {
+        getConfigs().then(setConfigs);
+    }, [setConfigs, getConfigs]);
+
+    useEffect(() => {
+        refreshConfigs();
+    }, [refreshConfigs]);
 
     const creationForm = useForm<{
         icon: AvatarSource | null;
@@ -62,8 +182,16 @@ export function PluginProfilesModal({
             name: "",
             options: {},
         },
+        validate: {
+            name: (v) => (v.length > 0 ? null : t("errors.form.empty")),
+            options: (v) =>
+                Object.values(v).filter((k) => !k.valid).length === 0
+                    ? null
+                    : t("errors.form.invalid"),
+        },
     });
     const [creating, setCreating] = useState(false);
+    const { error, success } = useNotifications();
 
     return (
         <Carousel
@@ -77,16 +205,17 @@ export function PluginProfilesModal({
             loop
             slideGap="sm"
             slidesToScroll={1}
+            draggable={false}
         >
             {Object.entries(configs).map(([id, [config, validated]]) => (
                 <Carousel.Slide>
-                    {" "}
                     <ProfileItem
                         key={id}
                         id={id}
                         plugin={plugin}
                         config={config}
                         validated={validated}
+                        refresh={refreshConfigs}
                     />
                 </Carousel.Slide>
             ))}
@@ -98,7 +227,38 @@ export function PluginProfilesModal({
                     >
                         <form
                             onSubmit={creationForm.onSubmit((values) => {
-                                console.log(values);
+                                api.plugin_config_create(
+                                    plugin.id,
+                                    values.name,
+                                    Object.entries(values.options).reduce(
+                                        (prev, current) => ({
+                                            ...prev,
+                                            [current[0]]: current[1].value,
+                                        }),
+                                        {}
+                                    ),
+                                    values.icon ?? "icon:IconSettings"
+                                ).then((response) =>
+                                    response
+                                        .and_then(() => {
+                                            success(
+                                                t(
+                                                    "modals.pluginProfiles.create.success"
+                                                )
+                                            );
+                                            refreshConfigs();
+                                            setCreating(false);
+                                            creationForm.reset();
+                                        })
+                                        .or_else((_, reason) =>
+                                            error(
+                                                t(
+                                                    "modals.pluginProfiles.create.error",
+                                                    { errorReason: reason }
+                                                )
+                                            )
+                                        )
+                                );
                             })}
                         >
                             <Stack gap="sm">
@@ -115,6 +275,7 @@ export function PluginProfilesModal({
                                         size={42}
                                         variant="transparent"
                                         style={{ borderWidth: "0px" }}
+                                        defaultValue={"icon:IconSettings"}
                                     />
                                     <TextInput
                                         placeholder={t(
@@ -128,7 +289,7 @@ export function PluginProfilesModal({
                                 </Group>
                                 <Divider />
                                 <ScrollAreaAutosize
-                                    mah="calc(60vh - 256px)"
+                                    mah="calc(60vh - 190px)"
                                     offsetScrollbars
                                 >
                                     <PluginFieldForm
@@ -143,6 +304,28 @@ export function PluginProfilesModal({
                                     />
                                 </ScrollAreaAutosize>
                                 <Divider />
+                                <Group
+                                    gap="sm"
+                                    justify="space-between"
+                                    wrap="nowrap"
+                                >
+                                    <Button
+                                        leftSection={<IconX size={20} />}
+                                        variant="light"
+                                        onClick={() => {
+                                            setCreating(false);
+                                            creationForm.reset();
+                                        }}
+                                    >
+                                        {t("actions.cancel")}
+                                    </Button>
+                                    <Button
+                                        leftSection={<IconPlus size={20} />}
+                                        type="submit"
+                                    >
+                                        {t("actions.create")}
+                                    </Button>
+                                </Group>
                             </Stack>
                         </form>
                     </Paper>

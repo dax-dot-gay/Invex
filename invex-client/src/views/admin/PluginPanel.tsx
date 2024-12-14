@@ -75,14 +75,15 @@ function PluginItem({
         [key: string]: [PluginConfig, ValidatedForm];
     }>({});
 
+    const getConfigs = useCallback(async () => {
+        const result = await api.plugin_config_list_validated(plugin.id);
+        setProfiles(result);
+        return result;
+    }, [api.plugin_config_list_validated, setProfiles, plugin.id]);
+
     useEffect(() => {
-        api.plugin_config_list_validated(plugin.id).then(setProfiles);
-    }, [
-        api.plugin_config_list_validated,
-        setProfiles,
-        plugin.id,
-        plugin.metadata.config,
-    ]);
+        getConfigs();
+    }, [getConfigs]);
 
     const invalidProfiles = Object.values(profiles).filter(
         (v) => !v[1].valid
@@ -347,6 +348,7 @@ function PluginItem({
                                         ),
                                         innerProps: {
                                             plugin,
+                                            getConfigs,
                                         },
                                         size: "xl",
                                     })

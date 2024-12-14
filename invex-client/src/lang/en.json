@@ -198,7 +198,9 @@
       "title": "Manage Settings Profiles",
       "create": {
         "button": "Create Profile",
-        "name": "Profile Name"
+        "name": "Profile Name",
+        "success": "Profile created successfully!",
+        "error": "Failed to create profile: {{errorReason}}"
       }
     }
   },

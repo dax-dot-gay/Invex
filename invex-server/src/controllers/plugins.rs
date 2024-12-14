@@ -369,7 +369,7 @@ async fn delete_plugin_config(
     if plugins.exists(id).await {
         if let Some(result) = configs.get(config_id).await {
             if result.plugin == id.to_string() {
-                if let Ok(_) = configs.delete_one(doc! {"_id": id}).await {
+                if let Ok(_) = configs.delete_one(doc! {"_id": config_id}).await {
                     Ok(Json(()))
                 } else {
                     Err(ApiError::Internal(
