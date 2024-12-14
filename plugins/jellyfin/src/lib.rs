@@ -1,9 +1,7 @@
 use extism_pdk::*;
 use invex_sdk::{
     FieldBuilder,
-    FieldSelectOption,
     FieldType,
-    NumberType,
     PluginMetadata,
     PluginMetadataBuilder,
 };
@@ -39,44 +37,14 @@ pub fn metadata() -> FnResult<Json<PluginMetadata>> {
                         .required(true)
                         .icon("icon:IconKeyFilled")
                         .build()?
-                )
-                .with_config(
-                    FieldBuilder::minimal("test_number", "Test Number", FieldType::Number {
-                        placeholder: Some(String::from("Test number")),
-                        kind: NumberType::Float,
-                        min: Some(-10.0),
-                        max: Some(5.5),
+                ).with_config(FieldBuilder::minimal("hs_name", "Jellyfin Instance Display Name", FieldType::Text {
+                        placeholder: Some("My Homeserver".to_string()),
+                        password: false,
+                        validation: None,
                     })
-                        .icon("icon:IconTestPipe")
-                        .build()?
-                )
-                .with_config(
-                    FieldBuilder::minimal("test_switch", "Test Switch", FieldType::Switch {})
-                        .icon("icon:IconTestPipe")
-                        .build()?
-                )
-                .with_config(
-                    FieldBuilder::minimal("test_select", "Test Select", FieldType::Select {
-                        options: vec![
-                            FieldSelectOption::Exact(String::from("item")),
-                            FieldSelectOption::Alias {
-                                value: String::from("aliased_item"),
-                                label: String::from("Aliased Item"),
-                            }
-                        ],
-                        multiple: true,
-                    })
-                        .icon("icon:IconTestPipe")
-                        .build()?
-                )
-                .with_config(
-                    FieldBuilder::minimal("test_textarea", "Test Textarea", FieldType::TextArea {
-                        lines: Some(4),
-                        placeholder: Some(String::from("Put text here :)"))
-                    })
-                        .icon("icon:IconTestPipe")
-                        .build()?
-                )
+                        .required(true)
+                        .icon("icon:IconLabelFilled")
+                        .build()?)
                 .build()?
         )
     )

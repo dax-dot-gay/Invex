@@ -10,7 +10,6 @@ import {
     ScrollAreaAutosize,
     SimpleGrid,
     Stack,
-    Text,
     TextInput,
     Tooltip,
     useMantineTheme,
@@ -194,6 +193,14 @@ export function IconPicker({
                                                               )}`
                                                           )
                                                 }
+                                                onDoubleClick={() => {
+                                                    _onChange(
+                                                        `icon:Icon${pascalCase(
+                                                            icon[0]
+                                                        )}`
+                                                    );
+                                                    close();
+                                                }}
                                             >
                                                 <AspectRatio ratio={1}>
                                                     <Stack

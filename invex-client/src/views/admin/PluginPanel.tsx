@@ -266,6 +266,7 @@ function PluginItem({
                                             response
                                                 .and_then(() => {
                                                     refresh();
+                                                    getConfigs();
                                                     success(
                                                         t(
                                                             "views.admin.plugins.update.success"
@@ -291,6 +292,7 @@ function PluginItem({
                                                         response
                                                             .and_then(() => {
                                                                 refresh();
+                                                                getConfigs();
                                                                 success(
                                                                     t(
                                                                         "views.admin.plugins.update.success"

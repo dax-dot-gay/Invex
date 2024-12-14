@@ -201,6 +201,18 @@
         "name": "Profile Name",
         "success": "Profile created successfully!",
         "error": "Failed to create profile: {{errorReason}}"
+      },
+      "valid": {
+        "title": "Valid Profile",
+        "subtitle": "This profile is valid and can be activated on services."
+      },
+      "invalid": {
+        "title": "Invalid Profile",
+        "subtitle": "This profile contains invalid fields and must be corrected before use."
+      },
+      "update": {
+        "success": "Plugin profile saved!",
+        "error": "Failed to save profile: {{errorReason}}"
       }
     }
   },

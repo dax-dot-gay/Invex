@@ -12,6 +12,7 @@ import {
     Button,
     Divider,
     Group,
+    Notification,
     Paper,
     ScrollAreaAutosize,
     Stack,
@@ -21,6 +22,7 @@ import {
 import { useForm } from "@mantine/form";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+    IconCheck,
     IconDeviceFloppy,
     IconPencil,
     IconPlus,
@@ -85,11 +87,39 @@ function ProfileItem({
                     : t("errors.form.invalid"),
         },
     });
+    const { success, error } = useNotifications();
     return (
         <Paper className="profile-item paper-light" p="sm">
             <form
                 onSubmit={form.onSubmit((values) => {
-                    console.log(values);
+                    api.plugin_config_edit(
+                        plugin.id,
+                        id,
+                        values.name,
+                        Object.entries(values.options).reduce(
+                            (prev, current) => ({
+                                ...prev,
+                                [current[0]]: current[1].value,
+                            }),
+                            {}
+                        ),
+                        values.icon ?? undefined
+                    ).then((response) =>
+                        response
+                            .and_then(() => {
+                                success(
+                                    t("modals.pluginProfiles.update.success")
+                                );
+                                refresh();
+                            })
+                            .or_else((_, reason) =>
+                                error(
+                                    t("modals.pluginProfiles.update.error", {
+                                        errorReason: reason,
+                                    })
+                                )
+                            )
+                    );
                 })}
             >
                 <Stack gap="sm">
@@ -115,6 +145,7 @@ function ProfileItem({
                             variant="light"
                             disabled={isEqual(initial, form.values)}
                             size="42"
+                            type="submit"
                         >
                             <IconDeviceFloppy />
                         </ActionIcon>
@@ -132,16 +163,32 @@ function ProfileItem({
                         </ActionIcon>
                     </Group>
                     <Divider />
-                    <ScrollAreaAutosize
-                        mah="calc(60vh - 128px)"
-                        offsetScrollbars
-                    >
+                    <ScrollAreaAutosize h="calc(60vh - 200px)" offsetScrollbars>
                         <PluginFieldForm
                             plugin={plugin}
                             value={form.values.options}
                             onChange={(v) => form.setFieldValue("options", v)}
                         />
                     </ScrollAreaAutosize>
+                    {validated.valid ? (
+                        <Notification
+                            color="green"
+                            icon={<IconCheck size={20} />}
+                            title={t("modals.pluginProfiles.valid.title")}
+                            withCloseButton={false}
+                        >
+                            {t("modals.pluginProfiles.valid.subtitle")}
+                        </Notification>
+                    ) : (
+                        <Notification
+                            color="red"
+                            icon={<IconX size={20} />}
+                            title={t("modals.pluginProfiles.invalid.title")}
+                            withCloseButton={false}
+                        >
+                            {t("modals.pluginProfiles.invalid.subtitle")}
+                        </Notification>
+                    )}
                 </Stack>
             </form>
         </Paper>
@@ -208,9 +255,8 @@ export function PluginProfilesModal({
             draggable={false}
         >
             {Object.entries(configs).map(([id, [config, validated]]) => (
-                <Carousel.Slide>
+                <Carousel.Slide key={id}>
                     <ProfileItem
-                        key={id}
                         id={id}
                         plugin={plugin}
                         config={config}
@@ -289,7 +335,7 @@ export function PluginProfilesModal({
                                 </Group>
                                 <Divider />
                                 <ScrollAreaAutosize
-                                    mah="calc(60vh - 190px)"
+                                    h="calc(60vh - 190px)"
                                     offsetScrollbars
                                 >
                                     <PluginFieldForm

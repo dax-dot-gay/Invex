@@ -1,4 +1,4 @@
-import { createTheme, Input, Tooltip } from "@mantine/core";
+import { createTheme, Input, Notification, Tooltip } from "@mantine/core";
 
 export const theme = createTheme({
     colors: {
@@ -25,6 +25,11 @@ export const theme = createTheme({
         Tooltip: Tooltip.extend({
             defaultProps: {
                 zIndex: 600,
+            },
+        }),
+        Notification: Notification.extend({
+            defaultProps: {
+                bg: "var(--mantine-color-default)",
             },
         }),
     },
