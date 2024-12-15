@@ -3,9 +3,11 @@ import { Service, ServiceGrant } from "../types/service";
 import {
     ActionIcon,
     Button,
+    Center,
     Group,
     Paper,
     rem,
+    Select,
     Stack,
     Text,
     Textarea,
@@ -21,13 +23,26 @@ import {
     IconPlus,
     IconLabelFilled,
     IconLabel,
+    IconPuzzle,
+    IconCheck,
+    IconSettings,
+    IconScript,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileIcon } from "../components/fileIcon";
 import { filesize } from "filesize";
-import { FilesMixin, ServiceMixin, useApi } from "../context/net";
+import { FilesMixin, PluginsMixin, ServiceMixin, useApi } from "../context/net";
 import { useNotifications } from "../util/notifications";
+import {
+    FieldValue,
+    GrantAction,
+    Plugin,
+    PluginConfig,
+    ValidatedForm,
+} from "../types/plugin";
+import { DynamicAvatar } from "../components/icon";
+import { PluginFieldForm } from "../components/pluginFields";
 
 function AddGrant({
     service,
@@ -38,7 +53,280 @@ function AddGrant({
     refresh: () => void;
     close: () => void;
 }) {
-    return <Stack gap="sm" className="grant-add grant"></Stack>;
+    const { t } = useTranslation();
+    const api = useApi(PluginsMixin, ServiceMixin);
+
+    const form = useForm<{
+        plugin: string | null;
+        config: string | null;
+        grant: string | null;
+        values: { [key: string]: { value: FieldValue | null; valid: boolean } };
+    }>({
+        initialValues: {
+            plugin: null,
+            config: null,
+            grant: null,
+            values: {},
+        },
+    });
+
+    const [plugins, setPlugins] = useState<{ [key: string]: Plugin }>({});
+    const [configs, setConfigs] = useState<{
+        [key: string]: [PluginConfig, ValidatedForm];
+    }>({});
+
+    useEffect(() => {
+        api.list_plugins().then((resp) =>
+            setPlugins(
+                resp
+                    .or_default([])
+                    .reduce((prev, cur) => ({ ...prev, [cur.id]: cur }), {})
+            )
+        );
+    }, [api.list_plugins, setPlugins]);
+
+    useEffect(() => {
+        if (form.values.plugin) {
+            api.plugin_config_list_validated(form.values.plugin).then(
+                setConfigs
+            );
+        } else {
+            setConfigs({});
+            form.setFieldValue("config", null);
+            form.setFieldValue("grant", null);
+        }
+    }, [setConfigs, api.plugin_config_list_validated, form.values.plugin]);
+
+    const grants: { [key: string]: GrantAction } = useMemo(() => {
+        if (
+            form.values.plugin &&
+            plugins[form.values.plugin] &&
+            form.values.config &&
+            configs[form.values.config]
+        ) {
+            return plugins[form.values.plugin].metadata.grants.reduce(
+                (prev, cur) => ({ ...prev, [cur.key]: cur }),
+                {}
+            );
+        } else {
+            form.setFieldValue("grant", null);
+            form.setFieldValue("values", {});
+            return {};
+        }
+    }, [
+        form.values.plugin,
+        plugins[form.values.plugin ?? ""],
+        form.values.config,
+        configs[form.values.config ?? ""],
+    ]);
+
+    console.log(grants, form.values);
+
+    return (
+        <Stack gap="sm" className="grant-add grant">
+            <Group gap="sm" wrap="nowrap" grow>
+                <Select
+                    data={Object.entries(plugins)
+                        .filter(([_, { enabled }]) => enabled)
+                        .map(([id, plug]) => ({
+                            value: id,
+                            label: plug.metadata.name,
+                        }))}
+                    {...form.getInputProps("plugin")}
+                    leftSection={
+                        form.values.plugin ? (
+                            plugins[form.values.plugin]?.metadata.icon ? (
+                                <DynamicAvatar
+                                    source={
+                                        plugins[form.values.plugin].metadata
+                                            .icon as any
+                                    }
+                                    fallback={IconPuzzle}
+                                    size={20}
+                                />
+                            ) : (
+                                <IconPuzzle size={20} />
+                            )
+                        ) : (
+                            <IconPuzzle size={20} />
+                        )
+                    }
+                    nothingFoundMessage={t("common.feedback.noResults")}
+                    renderOption={(option) => (
+                        <Group gap="sm" justify="space-between">
+                            {option.checked ? (
+                                <IconCheck size={20} />
+                            ) : option.option.value ? (
+                                plugins[option.option.value]?.metadata.icon ? (
+                                    <DynamicAvatar
+                                        source={
+                                            plugins[option.option.value]
+                                                .metadata.icon as any
+                                        }
+                                        fallback={IconPuzzle}
+                                        size={20}
+                                    />
+                                ) : (
+                                    <IconPuzzle size={20} />
+                                )
+                            ) : (
+                                <IconPuzzle size={20} />
+                            )}
+                            <Text>
+                                {plugins[option.option.value]?.metadata.name}
+                            </Text>
+                        </Group>
+                    )}
+                    searchable
+                    clearable
+                    label={t("modals.addGrant.grant.field.plugin")}
+                />
+                <Select
+                    data={Object.entries(configs)
+                        .filter(([_, [__, { valid }]]) => valid)
+                        .map(([id, [config]]) => ({
+                            value: id,
+                            label: config.name,
+                        }))}
+                    {...form.getInputProps("config")}
+                    leftSection={
+                        form.values.config ? (
+                            configs[form.values.config] ? (
+                                <DynamicAvatar
+                                    source={
+                                        (configs[form.values.config][0]
+                                            .icon as any) ?? null
+                                    }
+                                    fallback={IconSettings}
+                                    size={20}
+                                />
+                            ) : (
+                                <IconSettings size={20} />
+                            )
+                        ) : (
+                            <IconSettings size={20} />
+                        )
+                    }
+                    nothingFoundMessage={t("common.feedback.noResults")}
+                    renderOption={(option) => (
+                        <Group gap="sm" justify="space-between">
+                            {option.checked ? (
+                                <IconCheck size={20} />
+                            ) : option.option.value ? (
+                                configs[option.option.value] ? (
+                                    <DynamicAvatar
+                                        source={
+                                            (configs[option.option.value][0]
+                                                .icon as any) ?? null
+                                        }
+                                        fallback={IconSettings}
+                                        size={20}
+                                    />
+                                ) : (
+                                    <IconSettings size={20} />
+                                )
+                            ) : (
+                                <IconSettings size={20} />
+                            )}
+                            <Text>{configs[option.option.value][0].name}</Text>
+                        </Group>
+                    )}
+                    searchable
+                    clearable
+                    label={t("modals.addGrant.grant.field.config")}
+                    disabled={form.values.plugin === null}
+                />
+            </Group>
+            {form.values.config && form.values.plugin ? (
+                <>
+                    <Select
+                        data={Object.entries(grants).map(([key, grant]) => ({
+                            value: key,
+                            label: grant.label,
+                        }))}
+                        {...form.getInputProps("grant")}
+                        leftSection={
+                            form.values.grant ? (
+                                grants[form.values.grant] ? (
+                                    <DynamicAvatar
+                                        source={
+                                            (grants[form.values.grant]
+                                                .icon as any) ?? null
+                                        }
+                                        fallback={IconScript}
+                                        size={20}
+                                    />
+                                ) : (
+                                    <IconScript size={20} />
+                                )
+                            ) : (
+                                <IconScript size={20} />
+                            )
+                        }
+                        nothingFoundMessage={t("common.feedback.noResults")}
+                        renderOption={(option) => (
+                            <Group gap="sm" justify="space-between">
+                                {option.checked ? (
+                                    <IconCheck size={20} />
+                                ) : option.option.value ? (
+                                    grants[option.option.value] ? (
+                                        <DynamicAvatar
+                                            source={
+                                                (grants[option.option.value]
+                                                    .icon as any) ?? null
+                                            }
+                                            fallback={IconScript}
+                                            size={20}
+                                            variant="transparent"
+                                        />
+                                    ) : (
+                                        <IconScript size={20} />
+                                    )
+                                ) : (
+                                    <IconScript size={20} />
+                                )}
+                                <Text>{grants[option.option.value].label}</Text>
+                            </Group>
+                        )}
+                        searchable
+                        clearable
+                        label={t("modals.addGrant.grant.field.grant")}
+                        disabled={form.values.plugin === null}
+                    />
+                    {form.values.grant &&
+                    form.values.config &&
+                    form.values.plugin ? (
+                        <PluginFieldForm
+                            plugin={plugins[form.values.plugin]}
+                            fields={grants[form.values.grant].options}
+                            context="service"
+                            pluginConfig={
+                                configs[form.values.config][0].options
+                            }
+                            value={form.values.values}
+                            onChange={(v) => form.setFieldValue("values", v)}
+                        />
+                    ) : (
+                        <Paper className="paper-light" p="md">
+                            <Center>
+                                <Text c="dimmed">
+                                    {t("modals.addGrant.grant.selectGrant")}
+                                </Text>
+                            </Center>
+                        </Paper>
+                    )}
+                </>
+            ) : (
+                <Paper className="paper-light" p="md">
+                    <Center>
+                        <Text c="dimmed">
+                            {t("modals.addGrant.grant.selectPlugin")}
+                        </Text>
+                    </Center>
+                </Paper>
+            )}
+        </Stack>
+    );
 }
 
 function AddAttachment({

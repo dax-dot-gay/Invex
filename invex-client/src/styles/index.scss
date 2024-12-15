@@ -95,3 +95,14 @@ body {
 .mantine-ScrollArea-thumb {
     z-index: 1000;
 }
+
+.mantine-Popover-dropdown {
+    background-color: var(--mantine-color-default-hover) !important;
+    --popover-border-color: var(--mantine-color-default-border) !important;
+}
+
+.mantine-Select-option {
+    &:hover {
+        background-color: var(--mantine-color-default-border) !important;
+    }
+}

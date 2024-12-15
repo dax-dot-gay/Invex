@@ -80,7 +80,7 @@ export function ServicePanel() {
                                                 fallback={IconServer}
                                             />
                                             <Stack gap={0}>
-                                                <Text size="lg">
+                                                <Text size="md">
                                                     {service.name}
                                                 </Text>
                                                 {service.description && (

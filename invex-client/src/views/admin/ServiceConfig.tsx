@@ -351,7 +351,7 @@ export function ServiceConfig({
                                 size="lg"
                                 onClick={() => addGrant("grant")}
                             >
-                                {t("views.admin.services.config.addAccount")}
+                                {t("views.admin.services.config.addGrant")}
                             </Button>
                             <Button
                                 leftSection={<IconFilePlus />}

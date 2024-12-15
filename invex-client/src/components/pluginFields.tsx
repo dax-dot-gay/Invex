@@ -26,6 +26,10 @@ export function PluginFieldElement({
     value: FieldValue | null;
     onChange: (value: FieldValue | null, valid: boolean) => void;
     error: string | null;
+    context: "plugin" | "service" | "invite";
+    plugin: Plugin;
+    pluginConfig?: { [key: string]: FieldValue };
+    serviceConfig?: { [key: string]: FieldValue };
 }) {
     switch (field.field.type) {
         case "text":
@@ -245,25 +249,33 @@ export function PluginFieldElement({
                 />
             );
         case "plugin_defined":
-            return <></>;
+            return <>plugin_defined</>;
     }
 }
 
 export function PluginFieldForm({
-    plugin,
     value,
     onChange,
+    fields,
+    plugin,
+    pluginConfig,
+    serviceConfig,
+    context,
 }: {
     plugin: Plugin;
+    fields: PluginField[];
+    context: "plugin" | "service" | "invite";
     value: { [key: string]: { value: FieldValue | null; valid: boolean } };
     onChange: (values: {
         [key: string]: { value: FieldValue | null; valid: boolean };
     }) => void;
+    pluginConfig?: { [key: string]: FieldValue };
+    serviceConfig?: { [key: string]: FieldValue };
 }) {
     const { t } = useTranslation();
     return (
         <Stack gap="sm" className="plugin-field-form">
-            {plugin.metadata.config.map((field) => {
+            {fields.map((field) => {
                 const resolvedValue =
                     (value[field.key]?.value ?? null) === ""
                         ? null
@@ -284,6 +296,10 @@ export function PluginFieldForm({
                                 ? t("errors.form.invalid")
                                 : null
                         }
+                        plugin={plugin}
+                        context={context}
+                        pluginConfig={pluginConfig}
+                        serviceConfig={serviceConfig}
                     />
                 );
             })}

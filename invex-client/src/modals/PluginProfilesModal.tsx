@@ -166,6 +166,8 @@ function ProfileItem({
                     <ScrollAreaAutosize h="calc(60vh - 200px)" offsetScrollbars>
                         <PluginFieldForm
                             plugin={plugin}
+                            context="plugin"
+                            fields={plugin.metadata.config}
                             value={form.values.options}
                             onChange={(v) => form.setFieldValue("options", v)}
                         />
@@ -340,6 +342,8 @@ export function PluginProfilesModal({
                                 >
                                     <PluginFieldForm
                                         plugin={plugin}
+                                        context="plugin"
+                                        fields={plugin.metadata.config}
                                         value={creationForm.values.options}
                                         onChange={(v) =>
                                             creationForm.setFieldValue(

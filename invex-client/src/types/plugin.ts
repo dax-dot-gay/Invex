@@ -2,7 +2,8 @@ export type GrantAction = {
     key: string;
     method: string;
     label: string;
-    arguments: FieldParams[];
+    options: PluginField[];
+    arguments: PluginField[];
     description: string | null;
     icon: string | null;
     revoke_method: string | null;

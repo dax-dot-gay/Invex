@@ -12,6 +12,9 @@
     "actions": {
       "create": "Create",
       "update": "Update"
+    },
+    "feedback": {
+      "noResults": "No results"
     }
   },
   "views": {
@@ -55,7 +58,7 @@
         "addTitle": "New Service",
         "noService": "No Service Selected",
         "config": {
-          "addAccount": "Add Account Creation",
+          "addGrant": "Add Plugin Grant",
           "addAttachment": "Add Attachment",
           "addMessage": "Add Message",
           "noGrants": "No Service Grants Created",
@@ -169,7 +172,14 @@
     },
     "addGrant": {
       "grant": {
-        "title": "Add Plugin Grant"
+        "title": "Add Plugin Grant",
+        "field": {
+          "plugin": "Select plugin",
+          "config": "Select settings profile",
+          "grant": "Pick a resource to grant"
+        },
+        "selectPlugin": "Select a plugin & a settings profile",
+        "selectGrant": "Select a resource to grant"
       },
       "attachment": {
         "title": "Attach File",
