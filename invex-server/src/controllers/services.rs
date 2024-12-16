@@ -1,12 +1,11 @@
 use bson::doc;
+use invex_sdk::{ArgValidator, ValidationResult};
 use rocket::{futures::TryStreamExt, serde::json::Json, Route};
 use serde::Deserialize;
 
 use crate::{
     models::{
-        auth::{AuthUser, UserType},
-        error::ApiError,
-        service::{Service, ServiceGrant},
+        auth::{AuthUser, UserType}, error::ApiError, plugin::PluginRegistry, service::{Service, ServiceGrant}
     },
     util::{database::Docs, ApiResult},
 };
@@ -225,6 +224,44 @@ async fn delete_service_grant(
     }
 }
 
+#[get("/<id>/grants/<grant_id>/validated")]
+async fn validate_plugin_grant(
+    user: AuthUser,
+    services: Docs<Service>,
+    plugins: PluginRegistry,
+    id: &str,
+    grant_id: &str
+) -> ApiResult<(ServiceGrant, ValidationResult)> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden(
+            "Must be an admin to validate services".to_string(),
+        ));
+    }
+
+    if let Some(result) = services.get(id).await {
+        if let Some(grant) = result.get_grant(grant_id) {
+            if let ServiceGrant::Grant { plugin_id, grant_id: grant_key, options, .. } = grant.clone() {
+                if let Some(plugin) = plugins.get(plugin_id.to_string()).await {
+                    if let Some(grant_params) = plugin.get_grant(grant_key) {
+                        let valid = grant_params.options.validate(options);
+                        Ok(Json((grant, valid)))
+                    } else {
+                        Err(ApiError::NotFound("Grant contains unknown grant key".to_string()))
+                    }
+                } else {
+                    Err(ApiError::NotFound("Grant contains unknown plugin ID".to_string()))
+                }
+            } else {
+                Err(ApiError::MethodNotAllowed("Cannot validate non-plugin grants".to_string()))
+            }
+        } else {
+            Err(ApiError::NotFound("Unknown grant ID".to_string()))
+        }
+    } else {
+        Err(ApiError::NotFound("Unknown service ID".to_string()))
+    }
+}
+
 pub fn routes() -> Vec<Route> {
     return routes![
         create_service,
@@ -235,6 +272,7 @@ pub fn routes() -> Vec<Route> {
         create_service_grant,
         update_service_grant,
         delete_service_grant,
-        get_service_grant
+        get_service_grant,
+        validate_plugin_grant
     ];
 }

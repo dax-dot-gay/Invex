@@ -91,7 +91,10 @@ export class Response<T> {
 
     public resolve<R>(
         success: ((data: T) => R) | R,
-        error: ((error: AxiosError) => R) | R
+        error:
+            | ((error: AxiosError) => R)
+            | ((error: AxiosError, reason: string | null) => R)
+            | R
     ): R {
         if (this.response !== null) {
             if (isFunction(success)) {
@@ -102,7 +105,7 @@ export class Response<T> {
         } else {
             const err = this.error as AxiosError;
             if (isFunction(error)) {
-                return error(err);
+                return error(err, this.reason);
             } else {
                 return error;
             }

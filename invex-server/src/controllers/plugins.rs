@@ -398,6 +398,29 @@ async fn get_validated_configs(
     }
 }
 
+#[get("/<id>/configs/<config>/validated")]
+async fn get_one_validated_config(
+    user: AuthUser,
+    id: &str,
+    config: &str,
+    plugins: PluginRegistry,
+    configs: Docs<PluginConfiguration>
+) -> ApiResult<(PluginConfiguration, ValidationResult)> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden("Must be an admin to validate plugin configs".to_string()));
+    }
+
+    if let Some(plugin) = plugins.get(id).await {
+        if let Some(conf) = configs.query_one(doc! {"_id": config, "plugin": id}).await {
+            Ok(Json((conf.clone(), plugin.metadata().config.validate(conf.options))))
+        } else {
+            Err(ApiError::NotFound("Unknown config ID".to_string()))
+        }
+    } else {
+        Err(ApiError::NotFound("Unknown plugin ID".to_string()))
+    }
+}
+
 #[allow(unused_variables)]
 #[post("/<id>/call", data = "<parameters>")]
 async fn call_plugin_method(
@@ -498,6 +521,7 @@ pub fn routes() -> Vec<Route> {
         update_plugin_config,
         delete_plugin_config,
         get_validated_configs,
-        call_plugin_method
+        call_plugin_method,
+        get_one_validated_config
     ];
 }

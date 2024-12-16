@@ -7,7 +7,6 @@ import {
     Loader,
     Paper,
     ScrollArea,
-    ScrollAreaAutosize,
     Stack,
     Text,
 } from "@mantine/core";
@@ -22,6 +21,7 @@ import { ServiceMixin, useApi } from "../../../context/net";
 import { isEqual } from "lodash";
 import { MessageGrantEditor } from "./MessageGrantEditor";
 import { capitalCase } from "change-case";
+import { PluginGrantEditor } from "./PluginGrantEditor";
 
 function GrantEditorInner(props: {
     id: string;
@@ -33,7 +33,7 @@ function GrantEditorInner(props: {
         case "attachment":
             return <AttachmentGrantEditor {...(props as any)} />;
         case "grant":
-            return <></>;
+            return <PluginGrantEditor {...(props as any)} />;
         case "message":
             return <MessageGrantEditor {...(props as any)} />;
     }

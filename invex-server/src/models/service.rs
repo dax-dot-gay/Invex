@@ -15,7 +15,7 @@ pub enum ServiceGrant {
         grant_id: String,
 
         #[reflect(ignore)]
-        options: Value,
+        options: HashMap<String, Value>,
         url: Option<String>,
         help: Option<String>
     },

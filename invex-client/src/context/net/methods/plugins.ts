@@ -109,6 +109,19 @@ export function PluginsMixin<TBase extends ApiMixinConstructor>(base: TBase) {
             );
         }
 
+        public async get_plugin(plugin: string): Promise<Response<Plugin>> {
+            return await this.request<Plugin>(`/plugins/${plugin}`);
+        }
+
+        public async get_plugin_config_with_response(
+            plugin: string,
+            config: string
+        ): Promise<Response<PluginConfig>> {
+            return await this.request<PluginConfig>(
+                `/plugins/${plugin}/configs/${config}`
+            );
+        }
+
         public async plugin_config_list(
             plugin: string
         ): Promise<PluginConfig[]> {
@@ -186,10 +199,9 @@ export function PluginsMixin<TBase extends ApiMixinConstructor>(base: TBase) {
 
             return result.resolve(
                 (data) => {
-                    console.log(data);
                     return new MethodResponse(data);
                 },
-                (error: AxiosError) => {
+                (error: AxiosError, _) => {
                     if (error.response) {
                         return new MethodResponse({
                             type: "failure",
@@ -212,6 +224,15 @@ export function PluginsMixin<TBase extends ApiMixinConstructor>(base: TBase) {
                         });
                     }
                 }
+            );
+        }
+
+        public async plugin_config_validate(
+            plugin: string,
+            config: string
+        ): Promise<Response<[PluginConfig, ValidatedForm]>> {
+            return await this.request<[PluginConfig, ValidatedForm]>(
+                `/plugins/${plugin}/configs/${config}/validated`
             );
         }
     };

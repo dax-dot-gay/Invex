@@ -138,6 +138,20 @@
                                                 min-height: 100%;
                                             }
                                         }
+
+                                        .grant-status {
+                                            position: relative;
+                                            padding-top: 28px !important;
+                                            overflow: hidden;
+
+                                            .status-mark {
+                                                position: absolute;
+                                                top: 0px;
+                                                left: 0px;
+                                                border-radius: 0px;
+                                                border-end-end-radius: var(--mantine-radius-sm) !important;
+                                            }
+                                        }
                                     }
                                 }
                             }

@@ -3,7 +3,9 @@
     "appName": "Invex",
     "words": {
       "or": "or",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "valid": "Valid",
+      "invalid": "Invalid"
     },
     "notif": {
       "success": "Success!",
@@ -77,7 +79,21 @@
               "uploadFailed": "Failed to upload image."
             },
             "grant": {
-              "title": "Plugin Grant"
+              "title": "Plugin Grant",
+              "field": {
+                "url": "Attached URL",
+                "help": "Help Text"
+              },
+              "errorStatus": {
+                "plugin": "Unable to load plugin:",
+                "config": "Unable to load settings profile:",
+                "grant": "Unable to load validated grant"
+              },
+              "status": {
+                "plugin": "Plugin",
+                "config": "Profile",
+                "grant": "Grant"
+              }
             }
           }
         }

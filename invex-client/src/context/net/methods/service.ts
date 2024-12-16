@@ -1,3 +1,4 @@
+import { ValidatedForm } from "../../../types/plugin";
 import { Service, ServiceGrant } from "../../../types/service";
 import { Response } from "../types";
 import { ApiMixinConstructor } from "./base";
@@ -85,6 +86,15 @@ export function ServiceMixin<TBase extends ApiMixinConstructor>(base: TBase) {
             await this.request<void>(`/services/${service}/grants/${grant}`, {
                 method: "delete",
             });
+        }
+
+        public async validateServiceGrant(
+            service: string,
+            grant: string
+        ): Promise<Response<[ServiceGrant, ValidatedForm]>> {
+            return await this.request<[ServiceGrant, ValidatedForm]>(
+                `/services/${service}/grants/${grant}/validated`
+            );
         }
     };
 }
