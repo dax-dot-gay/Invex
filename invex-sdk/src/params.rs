@@ -28,7 +28,7 @@ impl From<HashMap<String, Value>> for ParameterMap {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(untagged)]
+#[serde(untagged, deny_unknown_fields)]
 pub enum PluginFieldParams {
     PluginConfig {},
     ServiceConfig {plugin_config: ParameterMap},

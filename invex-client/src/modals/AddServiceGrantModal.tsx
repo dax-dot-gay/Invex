@@ -120,8 +120,6 @@ function AddGrant({
         configs[form.values.config ?? ""],
     ]);
 
-    console.log(grants, form.values);
-
     return (
         <Stack gap="sm" className="grant-add grant">
             <Group gap="sm" wrap="nowrap" grow>
@@ -300,9 +298,10 @@ function AddGrant({
                             plugin={plugins[form.values.plugin]}
                             fields={grants[form.values.grant].options}
                             context="service"
-                            pluginConfig={
-                                configs[form.values.config][0].options
-                            }
+                            selector={{
+                                config: form.values.config,
+                                grant: form.values.grant,
+                            }}
                             value={form.values.values}
                             onChange={(v) => form.setFieldValue("values", v)}
                         />

@@ -1,4 +1,8 @@
+import { AxiosError } from "axios";
 import {
+    MethodCall,
+    MethodResponse,
+    MethodResult,
     Plugin,
     PluginConfig,
     PluginMeta,
@@ -6,6 +10,7 @@ import {
 } from "../../../types/plugin";
 import { Response } from "../types";
 import { ApiMixinConstructor } from "./base";
+import { isString } from "lodash";
 
 export function PluginsMixin<TBase extends ApiMixinConstructor>(base: TBase) {
     return class PluginsMixin extends base {
@@ -161,6 +166,50 @@ export function PluginsMixin<TBase extends ApiMixinConstructor>(base: TBase) {
                     [key: string]: [PluginConfig, ValidatedForm];
                 }>(`/plugins/${plugin}/configs/validated`)
             ).or_default({});
+        }
+
+        public async call_plugin_method<T extends MethodCall["method"]>(
+            plugin: string,
+            method: T,
+            options: Omit<Extract<MethodCall, { method: T }>, "method">
+        ): Promise<MethodResponse<T>> {
+            const result = await this.request<MethodResult<T>>(
+                `/plugins/${plugin}/call`,
+                {
+                    method: "post",
+                    data: {
+                        method,
+                        ...options,
+                    },
+                }
+            );
+
+            return result.resolve(
+                (data) => new MethodResponse(data),
+                (error: AxiosError) => {
+                    if (error.response) {
+                        return new MethodResponse({
+                            type: "failure",
+                            code: error.response.status,
+                            reason: isString(error.response.data)
+                                ? error.response.data
+                                : error.response.statusText,
+                        });
+                    } else if (error.request) {
+                        return new MethodResponse({
+                            type: "failure",
+                            code: -1,
+                            reason: error.message,
+                        });
+                    } else {
+                        return new MethodResponse({
+                            type: "failure",
+                            code: -2,
+                            reason: error.message,
+                        });
+                    }
+                }
+            );
         }
     };
 }

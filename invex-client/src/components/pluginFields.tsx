@@ -1,11 +1,13 @@
 import { IconQuestionMark } from "@tabler/icons-react";
-import { FieldValue, Plugin, PluginField } from "../types/plugin";
+import { FieldParams, FieldValue, Plugin, PluginField } from "../types/plugin";
 import { PasswordField } from "./fields";
 import { DynamicAvatar } from "./icon";
 import { isArray, isBoolean, isNumber, isString } from "lodash";
 import {
+    Center,
     Checkbox,
     Group,
+    Loader,
     MultiSelect,
     NumberInput,
     Select,
@@ -15,12 +17,90 @@ import {
     TextInput,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
+import { PluginsMixin, useApi } from "../context/net";
+import { useEffect, useState } from "react";
+
+export type FieldSelector = Partial<{
+    config: string;
+    grant: string;
+    invite: string;
+    service: string;
+}>;
+
+function PluginDefinedField(props: {
+    field: PluginField;
+    pluginDefined: Extract<FieldParams, { type: "plugin_defined" }>;
+    value: FieldValue | null;
+    onChange: (value: FieldValue | null, valid: boolean) => void;
+    error: string | null;
+    context: "plugin" | "service" | "invite";
+    plugin: Plugin;
+    selector?: FieldSelector;
+}) {
+    const api = useApi(PluginsMixin);
+    const [result, setResult] = useState<FieldParams | null>(null);
+
+    useEffect(() => {
+        switch (props.context) {
+            case "plugin":
+                api.call_plugin_method(
+                    props.plugin.id,
+                    "plugin_defined_field",
+                    { field_key: props.field.key }
+                ).then((r) => setResult(r.or_default(null)));
+                break;
+            case "service":
+                api.call_plugin_method(
+                    props.plugin.id,
+                    "service_defined_field",
+                    {
+                        field_key: props.field.key,
+                        config_id: props.selector?.config ?? "",
+                        grant_id: props.selector?.grant ?? "",
+                    }
+                ).then((r) => setResult(r.or_default(null)));
+                break;
+            case "invite":
+                api.call_plugin_method(
+                    props.plugin.id,
+                    "invite_defined_field",
+                    {
+                        field_key: props.field.key,
+                        invite_id: props.selector?.invite ?? "",
+                        service_id: props.selector?.service ?? "",
+                        grant_id: props.selector?.service ?? "",
+                    }
+                ).then((r) => setResult(r.or_default(null)));
+                break;
+        }
+    }, [
+        props.pluginDefined.context,
+        props.pluginDefined.expected_type,
+        props.pluginDefined.method,
+        setResult,
+        api.call_plugin_method,
+    ]);
+
+    return result ? (
+        <PluginFieldElement
+            {...props}
+            field={{ ...props.field, field: result }}
+        />
+    ) : (
+        <Center>
+            <Loader />
+        </Center>
+    );
+}
 
 export function PluginFieldElement({
     field,
     value,
     onChange,
     error,
+    context,
+    plugin,
+    selector,
 }: {
     field: PluginField;
     value: FieldValue | null;
@@ -28,8 +108,7 @@ export function PluginFieldElement({
     error: string | null;
     context: "plugin" | "service" | "invite";
     plugin: Plugin;
-    pluginConfig?: { [key: string]: FieldValue };
-    serviceConfig?: { [key: string]: FieldValue };
+    selector?: FieldSelector;
 }) {
     switch (field.field.type) {
         case "text":
@@ -249,7 +328,18 @@ export function PluginFieldElement({
                 />
             );
         case "plugin_defined":
-            return <>plugin_defined</>;
+            return (
+                <PluginDefinedField
+                    value={value}
+                    field={field}
+                    pluginDefined={field.field}
+                    onChange={onChange}
+                    error={error}
+                    context={context}
+                    plugin={plugin}
+                    selector={selector}
+                />
+            );
     }
 }
 
@@ -258,9 +348,8 @@ export function PluginFieldForm({
     onChange,
     fields,
     plugin,
-    pluginConfig,
-    serviceConfig,
     context,
+    selector,
 }: {
     plugin: Plugin;
     fields: PluginField[];
@@ -269,8 +358,7 @@ export function PluginFieldForm({
     onChange: (values: {
         [key: string]: { value: FieldValue | null; valid: boolean };
     }) => void;
-    pluginConfig?: { [key: string]: FieldValue };
-    serviceConfig?: { [key: string]: FieldValue };
+    selector?: FieldSelector;
 }) {
     const { t } = useTranslation();
     return (
@@ -298,8 +386,7 @@ export function PluginFieldForm({
                         }
                         plugin={plugin}
                         context={context}
-                        pluginConfig={pluginConfig}
-                        serviceConfig={serviceConfig}
+                        selector={selector}
                     />
                 );
             })}

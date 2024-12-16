@@ -112,7 +112,8 @@ pub fn metadata() -> FnResult<Json<PluginMetadata>> {
 
 #[plugin_fn]
 pub fn util_get_libraries(params: Json<PluginFieldParams>) -> FnResult<Json<FieldType>> {
-    if let PluginFieldParams::ServiceConfig { plugin_config } = params.into_inner() {
+    let param_item = params.into_inner();
+    if let PluginFieldParams::ServiceConfig { plugin_config } = param_item.clone() {
         if let Ok(config) = plugin_config.resolve::<JellyfinPluginConfig>() {
             let connection: Connection = config.into();
             match connection.get("/Library/VirtualFolders") {
@@ -148,6 +149,6 @@ pub fn util_get_libraries(params: Json<PluginFieldParams>) -> FnResult<Json<Fiel
             Err(WithReturnCode(Error::msg("Invalid plugin config"), 422))
         }
     } else {
-        Err(WithReturnCode(Error::msg("Field used in inappropriate context"), 405))
+        Err(WithReturnCode(Error::msg(format!("Field used in inappropriate context: {param_item:?}")), 405))
     }
 }

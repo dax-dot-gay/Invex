@@ -202,7 +202,7 @@ impl PluginRegistry {
     async fn resolve(file: File) -> InResult<(ExtismPlugin, PluginMetadata)> {
         let temp = file.clone().read_to_temp().await?;
         let wasm = Wasm::file(temp.path());
-        let manifest = Manifest::new([wasm]);
+        let manifest = Manifest::new([wasm]).with_allowed_host("*");
         let mut plugin = ExtismPlugin::new(&manifest, [], true)?;
         let metadata = plugin
             .call::<(), Json<PluginMetadata>>("metadata", ())?

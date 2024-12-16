@@ -2,6 +2,7 @@ export type ServiceGrant =
     | {
           type: "grant";
           plugin_id: string;
+          config_id: string;
           key: string;
           options: any;
           url: string | null;

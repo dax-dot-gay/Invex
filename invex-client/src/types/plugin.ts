@@ -99,3 +99,78 @@ export type ValidatedForm = {
     valid: boolean;
     arguments: { [key: string]: ValidatedArgument };
 };
+
+export type MethodCall =
+    | {
+          method: "plugin_defined_field";
+          field_key: string;
+      }
+    | {
+          method: "service_defined_field";
+          field_key: string;
+          config_id: string;
+          grant_id: string;
+      }
+    | {
+          method: "invite_defined_field";
+          field_key: string;
+          invite_id: string;
+          service_id: string;
+          grant_id: string;
+      };
+
+export type MethodReply = {
+    plugin_defined_field: FieldParams;
+    service_defined_field: FieldParams;
+    invite_defined_field: FieldParams;
+};
+
+export type MethodResult<T extends MethodCall["method"]> =
+    | {
+          type: "success";
+          data: MethodReply[T];
+      }
+    | {
+          type: "failure";
+          code: number;
+          reason: string;
+      };
+
+export class MethodResponse<T extends MethodCall["method"]> {
+    public constructor(private reply: MethodResult<T>) {}
+
+    public then(call: (value: MethodReply[T]) => void): MethodResponse<T> {
+        if (this.reply.type === "success") {
+            call(this.reply.data);
+        }
+        return this;
+    }
+
+    public catch(
+        call: (code: number, reason: string) => void
+    ): MethodResponse<T> {
+        if (this.reply.type === "failure") {
+            call(this.reply.code, this.reply.reason);
+        }
+        return this;
+    }
+
+    public or_default<D = MethodReply[T]>(def: D): MethodReply[T] | D {
+        return this.reply.type === "success" ? this.reply.data : def;
+    }
+
+    public resolve<S = MethodReply[T], E = MethodReply[T]>(
+        success: (value: MethodReply[T]) => S,
+        failure: (code: number, reason: string) => E
+    ): S | E {
+        if (this.reply.type === "success") {
+            return success(this.reply.data);
+        } else {
+            return failure(this.reply.code, this.reply.reason);
+        }
+    }
+
+    public get successful(): boolean {
+        return this.reply.type === "success";
+    }
+}

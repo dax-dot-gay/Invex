@@ -11,6 +11,7 @@ use crate::util::database::Id;
 pub enum ServiceGrant {
     Grant {
         plugin_id: Id,
+        config_id: Id,
         key: String,
 
         #[reflect(ignore)]
