@@ -1,4 +1,4 @@
-use extism_pdk::{http::request, Error, HttpRequest, HttpResponse, ToMemory};
+use extism_pdk::{http::request, info, Error, HttpRequest, HttpResponse, ToMemory};
 
 use crate::models::JellyfinPluginConfig;
 
@@ -21,7 +21,9 @@ impl Connection {
     }
 
     pub fn get(&self, endpoint: impl AsRef<str>) -> Result<HttpResponse, Error> {
-        request::<()>(&HttpRequest::new(self.url(endpoint)).with_method("GET").with_header("Authorization", self.auth()), None)
+        let req = HttpRequest::new(self.url(endpoint)).with_method("GET").with_header("Authorization", self.auth());
+        info!("{}", serde_json::to_string_pretty(&req).unwrap_or_default().to_string());
+        request::<()>(&req, None)
     }
 
     pub fn delete(&self, endpoint: impl AsRef<str>) -> Result<HttpResponse, Error> {

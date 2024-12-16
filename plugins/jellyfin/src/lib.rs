@@ -134,7 +134,7 @@ pub fn util_get_libraries(params: Json<PluginFieldParams>) -> FnResult<Json<Fiel
                     } else {
                         Err(
                             WithReturnCode(
-                                Error::msg(format!("Failed to decode library list: {} {}", String::from_utf8(response.body()).unwrap_or_default(), response.status_code())),
+                                Error::msg(format!("Failed to decode library list: {}", response.status_code())),
                                 422
                             )
                         )
