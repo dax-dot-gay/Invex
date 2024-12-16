@@ -1,13 +1,19 @@
 use extism_pdk::*;
 use invex_sdk::{
+    params::PluginFieldParams,
     ExpectedType,
     FieldBuilder,
+    FieldSelectOption,
     FieldType,
     GrantActionBuilder,
     PluginDefinedMethodContext,
     PluginMetadata,
     PluginMetadataBuilder,
 };
+use models::{ JellyfinPluginConfig, LibraryReference };
+use net::Connection;
+mod net;
+mod models;
 
 #[plugin_fn]
 pub fn metadata() -> FnResult<Json<PluginMetadata>> {
@@ -42,7 +48,7 @@ pub fn metadata() -> FnResult<Json<PluginMetadata>> {
                 )
                 .with_config(
                     FieldBuilder::minimal(
-                        "hs_name",
+                        "server_name",
                         "Jellyfin Instance Display Name",
                         FieldType::Text {
                             placeholder: Some("My Homeserver".to_string()),
@@ -102,4 +108,46 @@ pub fn metadata() -> FnResult<Json<PluginMetadata>> {
                 .build()?
         )
     )
+}
+
+#[plugin_fn]
+pub fn util_get_libraries(params: Json<PluginFieldParams>) -> FnResult<Json<FieldType>> {
+    if let PluginFieldParams::ServiceConfig { plugin_config } = params.into_inner() {
+        if let Ok(config) = plugin_config.resolve::<JellyfinPluginConfig>() {
+            let connection: Connection = config.into();
+            match connection.get("/Library/VirtualFolders") {
+                Ok(response) => {
+                    if let Ok(libraries) = response.json::<Vec<LibraryReference>>() {
+                        Ok(
+                            Json(FieldType::Select {
+                                options: libraries
+                                    .iter()
+                                    .map(|l| FieldSelectOption::Alias {
+                                        value: l.id.clone(),
+                                        label: l.name.clone(),
+                                    })
+                                    .collect(),
+                                multiple: true,
+                            })
+                        )
+                    } else {
+                        Err(
+                            WithReturnCode(
+                                Error::msg(format!("Failed to decode library list")),
+                                422
+                            )
+                        )
+                    }
+                }
+                Err(e) =>
+                    Err(
+                        WithReturnCode(Error::msg(format!("Failed to list libraries: {e:?}")), 500)
+                    ),
+            }
+        } else {
+            Err(WithReturnCode(Error::msg("Invalid plugin config"), 422))
+        }
+    } else {
+        Err(WithReturnCode(Error::msg("Field used in inappropriate context"), 405))
+    }
 }
