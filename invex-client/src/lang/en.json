@@ -13,10 +13,13 @@
     },
     "actions": {
       "create": "Create",
-      "update": "Update"
+      "update": "Update",
+      "reset": "Reset",
+      "save": "Save Changes"
     },
     "feedback": {
-      "noResults": "No results"
+      "noResults": "No results",
+      "noFields": "No form fields."
     }
   },
   "views": {
@@ -93,7 +96,9 @@
                 "plugin": "Plugin",
                 "config": "Profile",
                 "grant": "Grant"
-              }
+              },
+              "config": "Grant Configuration",
+              "unknownGrant": "Unknown grant key"
             }
           }
         }
