@@ -21,6 +21,7 @@ import {
 import { ServiceMixin, useApi } from "../../../context/net";
 import { isEqual } from "lodash";
 import { MessageGrantEditor } from "./MessageGrantEditor";
+import { capitalCase } from "change-case";
 
 function GrantEditorInner(props: {
     id: string;
@@ -53,7 +54,9 @@ export function GrantEditor(props: {
             case "grant":
                 return [
                     IconScriptPlus,
-                    `${props.grant.plugin_id}.${props.grant.key}`,
+                    `${capitalCase(props.grant.plugin_id)} :: ${capitalCase(
+                        props.grant.grant_id
+                    )}`,
                 ];
             case "message":
                 return [IconTextPlus, props.grant.title];

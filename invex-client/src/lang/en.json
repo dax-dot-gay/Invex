@@ -176,10 +176,16 @@
         "field": {
           "plugin": "Select plugin",
           "config": "Select settings profile",
-          "grant": "Pick a resource to grant"
+          "grant": "Pick a resource to grant",
+          "url": "Attach URL",
+          "help": "Short help text"
         },
         "selectPlugin": "Select a plugin & a settings profile",
-        "selectGrant": "Select a resource to grant"
+        "selectGrant": "Select a resource to grant",
+        "feedback": {
+          "success": "Added plugin grant!",
+          "error": "Failed to create grant: {{reason}}"
+        }
       },
       "attachment": {
         "title": "Attach File",
@@ -234,7 +240,8 @@
     "form": {
       "empty": "Field must not be empty",
       "invalidEmail": "Invalid email",
-      "invalid": "Invalid input"
+      "invalid": "Invalid input",
+      "invalidUrl": "Invalid URL"
     },
     "network": {
       "unknown": "An unknown server error occurred.",

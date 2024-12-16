@@ -4,6 +4,7 @@ import {
     ActionIcon,
     Button,
     Center,
+    Divider,
     Group,
     Paper,
     rem,
@@ -27,6 +28,7 @@ import {
     IconCheck,
     IconSettings,
     IconScript,
+    IconLink,
 } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { useEffect, useMemo, useState } from "react";
@@ -42,6 +44,7 @@ import {
     ValidatedForm,
 } from "../types/plugin";
 import { DynamicAvatar } from "../components/icon";
+import { isURL } from "validator";
 import { PluginFieldForm } from "../components/pluginFields";
 
 function AddGrant({
@@ -61,12 +64,46 @@ function AddGrant({
         config: string | null;
         grant: string | null;
         values: { [key: string]: { value: FieldValue | null; valid: boolean } };
+        help: string | null;
+        url: string | null;
     }>({
         initialValues: {
             plugin: null,
             config: null,
             grant: null,
             values: {},
+            help: "",
+            url: "",
+        },
+        transformValues(values) {
+            return {
+                ...values,
+                values: Object.entries(values.values).reduce(
+                    (prev, cur) => ({
+                        ...prev,
+                        [cur[0]]: cur[1].value,
+                    }),
+                    {}
+                ),
+                help:
+                    values.help && values.help.length > 0 ? values.help : null,
+                url: values.url && values.url.length > 0 ? values.url : null,
+            };
+        },
+        validate: {
+            plugin: (v) => (v ? null : t("errors.form.empty")),
+            config: (v) => (v ? null : t("errors.form.empty")),
+            grant: (v) => (v ? null : t("errors.form.empty")),
+            values: (v) =>
+                Object.values(v).every((x) => x.valid)
+                    ? null
+                    : t("errors.form.invalid"),
+            url: (v) =>
+                v && v.length > 0
+                    ? isURL(v)
+                        ? null
+                        : t("errors.form.invalidUrl")
+                    : null,
         },
     });
 
@@ -120,46 +157,65 @@ function AddGrant({
         configs[form.values.config ?? ""],
     ]);
 
+    const { success, error } = useNotifications();
+
     return (
-        <Stack gap="sm" className="grant-add grant">
-            <Group gap="sm" wrap="nowrap" grow>
-                <Select
-                    data={Object.entries(plugins)
-                        .filter(([_, { enabled }]) => enabled)
-                        .map(([id, plug]) => ({
-                            value: id,
-                            label: plug.metadata.name,
-                        }))}
-                    {...form.getInputProps("plugin")}
-                    leftSection={
-                        form.values.plugin ? (
-                            plugins[form.values.plugin]?.metadata.icon ? (
-                                <DynamicAvatar
-                                    source={
-                                        plugins[form.values.plugin].metadata
-                                            .icon as any
-                                    }
-                                    fallback={IconPuzzle}
-                                    size={20}
-                                />
-                            ) : (
-                                <IconPuzzle size={20} />
+        <form
+            onSubmit={form.onSubmit((values) => {
+                api.createServiceGrant(service._id, {
+                    type: "grant",
+                    url: values.url,
+                    help: values.help,
+                    plugin_id: values.plugin as string,
+                    config_id: values.config as string,
+                    grant_id: values.grant as string,
+                    options: values.values as any,
+                }).then((response) => {
+                    response
+                        .and_then((_) => {
+                            success(
+                                t("modals.addGrant.grant.feedback.success")
+                            );
+                            refresh();
+                            close();
+                        })
+                        .or_else((_, reason) =>
+                            error(
+                                t("modals.addGrant.grant.feedback.error", {
+                                    reason,
+                                })
                             )
-                        ) : (
-                            <IconPuzzle size={20} />
-                        )
-                    }
-                    nothingFoundMessage={t("common.feedback.noResults")}
-                    renderOption={(option) => (
-                        <Group gap="sm" justify="space-between">
-                            {option.checked ? (
-                                <IconCheck size={20} />
-                            ) : option.option.value ? (
-                                plugins[option.option.value]?.metadata.icon ? (
+                        );
+                });
+            })}
+        >
+            <Stack gap="sm" className="grant-add grant">
+                <TextInput
+                    leftSection={<IconLink size={20} />}
+                    label={t("modals.addGrant.grant.field.url")}
+                    {...form.getInputProps("url")}
+                />
+                <Textarea
+                    label={t("modals.addGrant.grant.field.help")}
+                    {...form.getInputProps("help")}
+                />
+                <Divider variant="dotted" />
+                <Group gap="sm" wrap="nowrap" grow>
+                    <Select
+                        data={Object.entries(plugins)
+                            .filter(([_, { enabled }]) => enabled)
+                            .map(([id, plug]) => ({
+                                value: id,
+                                label: plug.metadata.name,
+                            }))}
+                        {...form.getInputProps("plugin")}
+                        leftSection={
+                            form.values.plugin ? (
+                                plugins[form.values.plugin]?.metadata.icon ? (
                                     <DynamicAvatar
                                         source={
-                                            plugins[option.option.value]
-                                                .metadata.icon as any
+                                            plugins[form.values.plugin].metadata
+                                                .icon as any
                                         }
                                         fallback={IconPuzzle}
                                         size={20}
@@ -169,52 +225,56 @@ function AddGrant({
                                 )
                             ) : (
                                 <IconPuzzle size={20} />
-                            )}
-                            <Text>
-                                {plugins[option.option.value]?.metadata.name}
-                            </Text>
-                        </Group>
-                    )}
-                    searchable
-                    clearable
-                    label={t("modals.addGrant.grant.field.plugin")}
-                />
-                <Select
-                    data={Object.entries(configs)
-                        .filter(([_, [__, { valid }]]) => valid)
-                        .map(([id, [config]]) => ({
-                            value: id,
-                            label: config.name,
-                        }))}
-                    {...form.getInputProps("config")}
-                    leftSection={
-                        form.values.config ? (
-                            configs[form.values.config] ? (
-                                <DynamicAvatar
-                                    source={
-                                        (configs[form.values.config][0]
-                                            .icon as any) ?? null
-                                    }
-                                    fallback={IconSettings}
-                                    size={20}
-                                />
-                            ) : (
-                                <IconSettings size={20} />
                             )
-                        ) : (
-                            <IconSettings size={20} />
-                        )
-                    }
-                    nothingFoundMessage={t("common.feedback.noResults")}
-                    renderOption={(option) => (
-                        <Group gap="sm" justify="space-between">
-                            {option.checked ? (
-                                <IconCheck size={20} />
-                            ) : option.option.value ? (
-                                configs[option.option.value] ? (
+                        }
+                        nothingFoundMessage={t("common.feedback.noResults")}
+                        renderOption={(option) => (
+                            <Group gap="sm" justify="space-between">
+                                {option.checked ? (
+                                    <IconCheck size={20} />
+                                ) : option.option.value ? (
+                                    plugins[option.option.value]?.metadata
+                                        .icon ? (
+                                        <DynamicAvatar
+                                            source={
+                                                plugins[option.option.value]
+                                                    .metadata.icon as any
+                                            }
+                                            fallback={IconPuzzle}
+                                            size={20}
+                                        />
+                                    ) : (
+                                        <IconPuzzle size={20} />
+                                    )
+                                ) : (
+                                    <IconPuzzle size={20} />
+                                )}
+                                <Text>
+                                    {
+                                        plugins[option.option.value]?.metadata
+                                            .name
+                                    }
+                                </Text>
+                            </Group>
+                        )}
+                        searchable
+                        clearable
+                        label={t("modals.addGrant.grant.field.plugin")}
+                    />
+                    <Select
+                        data={Object.entries(configs)
+                            .filter(([_, [__, { valid }]]) => valid)
+                            .map(([id, [config]]) => ({
+                                value: id,
+                                label: config.name,
+                            }))}
+                        {...form.getInputProps("config")}
+                        leftSection={
+                            form.values.config ? (
+                                configs[form.values.config] ? (
                                     <DynamicAvatar
                                         source={
-                                            (configs[option.option.value][0]
+                                            (configs[form.values.config][0]
                                                 .icon as any) ?? null
                                         }
                                         fallback={IconSettings}
@@ -225,40 +285,6 @@ function AddGrant({
                                 )
                             ) : (
                                 <IconSettings size={20} />
-                            )}
-                            <Text>{configs[option.option.value][0].name}</Text>
-                        </Group>
-                    )}
-                    searchable
-                    clearable
-                    label={t("modals.addGrant.grant.field.config")}
-                    disabled={form.values.plugin === null}
-                />
-            </Group>
-            {form.values.config && form.values.plugin ? (
-                <>
-                    <Select
-                        data={Object.entries(grants).map(([key, grant]) => ({
-                            value: key,
-                            label: grant.label,
-                        }))}
-                        {...form.getInputProps("grant")}
-                        leftSection={
-                            form.values.grant ? (
-                                grants[form.values.grant] ? (
-                                    <DynamicAvatar
-                                        source={
-                                            (grants[form.values.grant]
-                                                .icon as any) ?? null
-                                        }
-                                        fallback={IconScript}
-                                        size={20}
-                                    />
-                                ) : (
-                                    <IconScript size={20} />
-                                )
-                            ) : (
-                                <IconScript size={20} />
                             )
                         }
                         nothingFoundMessage={t("common.feedback.noResults")}
@@ -267,64 +293,156 @@ function AddGrant({
                                 {option.checked ? (
                                     <IconCheck size={20} />
                                 ) : option.option.value ? (
-                                    grants[option.option.value] ? (
+                                    configs[option.option.value] ? (
                                         <DynamicAvatar
                                             source={
-                                                (grants[option.option.value]
+                                                (configs[option.option.value][0]
+                                                    .icon as any) ?? null
+                                            }
+                                            fallback={IconSettings}
+                                            size={20}
+                                        />
+                                    ) : (
+                                        <IconSettings size={20} />
+                                    )
+                                ) : (
+                                    <IconSettings size={20} />
+                                )}
+                                <Text>
+                                    {configs[option.option.value][0].name}
+                                </Text>
+                            </Group>
+                        )}
+                        searchable
+                        clearable
+                        label={t("modals.addGrant.grant.field.config")}
+                        disabled={form.values.plugin === null}
+                    />
+                </Group>
+                {form.values.config && form.values.plugin ? (
+                    <>
+                        <Select
+                            data={Object.entries(grants).map(
+                                ([key, grant]) => ({
+                                    value: key,
+                                    label: grant.label,
+                                })
+                            )}
+                            {...form.getInputProps("grant")}
+                            leftSection={
+                                form.values.grant ? (
+                                    grants[form.values.grant] ? (
+                                        <DynamicAvatar
+                                            source={
+                                                (grants[form.values.grant]
                                                     .icon as any) ?? null
                                             }
                                             fallback={IconScript}
                                             size={20}
-                                            variant="transparent"
                                         />
                                     ) : (
                                         <IconScript size={20} />
                                     )
                                 ) : (
                                     <IconScript size={20} />
-                                )}
-                                <Text>{grants[option.option.value].label}</Text>
-                            </Group>
-                        )}
-                        searchable
-                        clearable
-                        label={t("modals.addGrant.grant.field.grant")}
-                        disabled={form.values.plugin === null}
-                    />
-                    {form.values.grant &&
-                    form.values.config &&
-                    form.values.plugin ? (
-                        <PluginFieldForm
-                            plugin={plugins[form.values.plugin]}
-                            fields={grants[form.values.grant].options}
-                            context="service"
-                            selector={{
-                                config: form.values.config,
-                                grant: form.values.grant,
-                            }}
-                            value={form.values.values}
-                            onChange={(v) => form.setFieldValue("values", v)}
+                                )
+                            }
+                            nothingFoundMessage={t("common.feedback.noResults")}
+                            renderOption={(option) => (
+                                <Group gap="sm" justify="space-between">
+                                    {option.checked ? (
+                                        <IconCheck size={20} />
+                                    ) : option.option.value ? (
+                                        grants[option.option.value] ? (
+                                            <DynamicAvatar
+                                                source={
+                                                    (grants[option.option.value]
+                                                        .icon as any) ?? null
+                                                }
+                                                fallback={IconScript}
+                                                size={20}
+                                                variant="transparent"
+                                            />
+                                        ) : (
+                                            <IconScript size={20} />
+                                        )
+                                    ) : (
+                                        <IconScript size={20} />
+                                    )}
+                                    <Text>
+                                        {grants[option.option.value].label}
+                                    </Text>
+                                </Group>
+                            )}
+                            searchable
+                            clearable
+                            label={t("modals.addGrant.grant.field.grant")}
+                            disabled={form.values.plugin === null}
                         />
-                    ) : (
-                        <Paper className="paper-light" p="md">
-                            <Center>
-                                <Text c="dimmed">
-                                    {t("modals.addGrant.grant.selectGrant")}
-                                </Text>
-                            </Center>
-                        </Paper>
-                    )}
-                </>
-            ) : (
-                <Paper className="paper-light" p="md">
-                    <Center>
-                        <Text c="dimmed">
-                            {t("modals.addGrant.grant.selectPlugin")}
-                        </Text>
-                    </Center>
-                </Paper>
-            )}
-        </Stack>
+                        {form.values.grant &&
+                        form.values.config &&
+                        form.values.plugin ? (
+                            <PluginFieldForm
+                                plugin={plugins[form.values.plugin]}
+                                fields={grants[form.values.grant].options}
+                                context="service"
+                                selector={{
+                                    config: form.values.config,
+                                    grant: form.values.grant,
+                                }}
+                                value={form.values.values}
+                                onChange={(v) =>
+                                    form.setFieldValue("values", v)
+                                }
+                            />
+                        ) : (
+                            <Paper className="paper-light" p="md">
+                                <Center>
+                                    <Text c="dimmed">
+                                        {t("modals.addGrant.grant.selectGrant")}
+                                    </Text>
+                                </Center>
+                            </Paper>
+                        )}
+                    </>
+                ) : (
+                    <Paper className="paper-light" p="md">
+                        <Center>
+                            <Text c="dimmed">
+                                {t("modals.addGrant.grant.selectPlugin")}
+                            </Text>
+                        </Center>
+                    </Paper>
+                )}
+                <Group gap="sm" justify="space-between">
+                    <Button
+                        leftSection={<IconX size={24} />}
+                        variant="light"
+                        size="md"
+                        onClick={close}
+                    >
+                        {t("actions.cancel")}
+                    </Button>
+                    <Button
+                        leftSection={<IconPlus size={24} />}
+                        size="md"
+                        disabled={
+                            !(
+                                form.values.config &&
+                                form.values.grant &&
+                                form.values.plugin &&
+                                Object.values(form.values.values).every(
+                                    (v) => v.valid
+                                )
+                            )
+                        }
+                        type="submit"
+                    >
+                        {t("actions.create")}
+                    </Button>
+                </Group>
+            </Stack>
+        </form>
     );
 }
 

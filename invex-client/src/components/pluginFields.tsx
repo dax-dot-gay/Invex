@@ -275,7 +275,12 @@ export function PluginFieldElement({
                             )
                         }
                         value={isArray(value) ? value : []}
-                        onChange={(value) => onChange(value, true)}
+                        onChange={(value) =>
+                            onChange(
+                                value,
+                                field.required ? value.length > 0 : true
+                            )
+                        }
                         data={field.field.options}
                     />
                 );

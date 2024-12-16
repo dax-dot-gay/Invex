@@ -139,14 +139,14 @@ export type MethodResult<T extends MethodCall["method"]> =
 export class MethodResponse<T extends MethodCall["method"]> {
     public constructor(private reply: MethodResult<T>) {}
 
-    public then(call: (value: MethodReply[T]) => void): MethodResponse<T> {
+    public ok(call: (value: MethodReply[T]) => void): MethodResponse<T> {
         if (this.reply.type === "success") {
             call(this.reply.data);
         }
         return this;
     }
 
-    public catch(
+    public err(
         call: (code: number, reason: string) => void
     ): MethodResponse<T> {
         if (this.reply.type === "failure") {

@@ -1,4 +1,4 @@
-use extism_pdk::{http::request, info, Error, HttpRequest, HttpResponse, ToMemory};
+use extism_pdk::{debug, http::request, Error, HttpRequest, HttpResponse, ToMemory};
 
 use crate::models::JellyfinPluginConfig;
 
@@ -22,16 +22,20 @@ impl Connection {
 
     pub fn get(&self, endpoint: impl AsRef<str>) -> Result<HttpResponse, Error> {
         let req = HttpRequest::new(self.url(endpoint)).with_method("GET").with_header("Authorization", self.auth());
-        info!("{}", serde_json::to_string_pretty(&req).unwrap_or_default().to_string());
+        debug!("GET: {}", serde_json::to_string_pretty(&req).unwrap_or_default().to_string());
         request::<()>(&req, None)
     }
 
     pub fn delete(&self, endpoint: impl AsRef<str>) -> Result<HttpResponse, Error> {
-        request::<()>(&HttpRequest::new(self.url(endpoint)).with_method("DELETE").with_header("Authorization", self.auth()), None)
+        let req = HttpRequest::new(self.url(endpoint)).with_method("DELETE").with_header("Authorization", self.auth());
+        debug!("DELETE: {}", serde_json::to_string_pretty(&req).unwrap_or_default().to_string());
+        request::<()>(&req, None)
     }
 
     pub fn post<T: ToMemory>(&self, endpoint: impl AsRef<str>, data: Option<T>) -> Result<HttpResponse, Error> {
-        request::<T>(&HttpRequest::new(self.url(endpoint)).with_method("GET").with_header("Authorization", self.auth()), data)
+        let req = HttpRequest::new(self.url(endpoint)).with_method("POST").with_header("Authorization", self.auth());
+        debug!("POST: {}", serde_json::to_string_pretty(&req).unwrap_or_default().to_string());
+        request::<T>(&req, data)
     }
 }
 

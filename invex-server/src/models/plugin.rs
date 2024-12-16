@@ -1,7 +1,7 @@
 use anyhow::Error;
 use bevy_reflect::Reflect;
 use bson::doc;
-use extism::{convert::Json, set_log_callback, Manifest, Plugin as ExtismPlugin, Wasm};
+use extism::{convert::Json, Manifest, Plugin as ExtismPlugin, Wasm};
 use invex_macros::Document;
 use invex_sdk::{GrantAction, PluginArgument, PluginMetadata};
 use reqwest::header::HeaderValue;
@@ -192,7 +192,6 @@ impl<'r> FromRequest<'r> for PluginRegistry {
 
 impl PluginRegistry {
     pub fn new(registry: PluginRegistryMap, documents: Docs<RegisteredPlugin>, fs: Fs) -> Self {
-        let _ = set_log_callback(|l| println!("{l}"), "trace");
         PluginRegistry {
             backend: registry,
             documents,

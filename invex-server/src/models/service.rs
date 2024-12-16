@@ -12,7 +12,7 @@ pub enum ServiceGrant {
     Grant {
         plugin_id: Id,
         config_id: Id,
-        key: String,
+        grant_id: String,
 
         #[reflect(ignore)]
         options: Value,

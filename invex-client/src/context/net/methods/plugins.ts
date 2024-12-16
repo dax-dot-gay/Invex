@@ -185,7 +185,10 @@ export function PluginsMixin<TBase extends ApiMixinConstructor>(base: TBase) {
             );
 
             return result.resolve(
-                (data) => new MethodResponse(data),
+                (data) => {
+                    console.log(data);
+                    return new MethodResponse(data);
+                },
                 (error: AxiosError) => {
                     if (error.response) {
                         return new MethodResponse({

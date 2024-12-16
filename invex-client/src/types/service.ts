@@ -1,10 +1,12 @@
+import { FieldValue } from "./plugin";
+
 export type ServiceGrant =
     | {
           type: "grant";
           plugin_id: string;
           config_id: string;
-          key: string;
-          options: any;
+          grant_id: string;
+          options: { [key: string]: FieldValue | null };
           url: string | null;
           help: string | null;
       }
