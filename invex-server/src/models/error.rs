@@ -31,3 +31,12 @@ impl Display for ApiError {
 }
 
 impl std::error::Error for ApiError {}
+
+impl<T> From<Result<T, ApiError>> for ApiError {
+    fn from(value: Result<T, ApiError>) -> Self {
+        match value {
+            Ok(_) => ApiError::Internal(String::from("Weird usage?")),
+            Err(e) => e
+        }
+    }
+}

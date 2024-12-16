@@ -1,8 +1,9 @@
+use anyhow::Error;
 use bevy_reflect::Reflect;
 use bson::doc;
 use extism::{convert::Json, Manifest, Plugin as ExtismPlugin, Wasm};
 use invex_macros::Document;
-use invex_sdk::PluginMetadata;
+use invex_sdk::{GrantAction, PluginArgument, PluginMetadata};
 use reqwest::header::HeaderValue;
 use rocket::{
     futures::{AsyncWriteExt, TryStreamExt},
@@ -10,7 +11,7 @@ use rocket::{
     request::{self, FromRequest},
     Request,
 };
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 use std::{collections::HashMap, sync::Arc};
 use tokio::{
@@ -122,6 +123,36 @@ impl Plugin {
     pub async fn save(&self) -> InResult<()> {
         self.docs.save(self.metadata.clone()).await?;
         Ok(())
+    }
+
+    pub fn get_field(&self, key: impl AsRef<str>) -> Option<PluginArgument> {
+        self.metadata().config.iter().find(|f| f.key == key.as_ref().to_string()).cloned()
+    }
+
+    pub fn get_grant(&self, key: impl AsRef<str>) -> Option<GrantAction> {
+        self.metadata().grants.iter().find(|f| f.key == key.as_ref().to_string()).cloned()
+    }
+
+    pub async fn call<A: Serialize + DeserializeOwned, R: Serialize + DeserializeOwned>(&self, method: impl AsRef<str>, argument: A) -> Result<R, (Error, i32)> {
+        let _method = method.as_ref().to_string();
+        let _arg = serde_json::to_value(argument).or(Err((Error::msg("Failed to wrap argument"), 500)))?;
+        let plugin = self.plugin.clone();
+        if let Ok(result) = tokio::task::spawn_blocking(move || {
+            let mut plugin = plugin.blocking_lock();
+            let unwrapped_arg = serde_json::from_value::<A>(_arg).or(Err((Error::msg("Failed to unwrap argument"), 500)))?;
+            let raw_result = plugin.call_get_error_code::<_, Json<R>>(_method, Json(unwrapped_arg));
+            match raw_result {
+                Ok(r) => serde_json::to_value(r.into_inner()).and_then(|v| Ok(v)).or(Err((Error::msg("Failed to wrap raw result"), 500))),
+                Err(e) => Err(e)
+            }
+        }).await {
+            match result {
+                Ok(r) => serde_json::from_value::<R>(r).and_then(|v| Ok(v)).or(Err((Error::msg("Failed to unwrap raw result"), 500))),
+                Err(e) => Err(e)
+            }
+        } else {
+            Err((Error::msg("Failed to execute plugin method in an asynchronous context"), 500))
+        }
     }
 }
 

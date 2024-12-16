@@ -5,6 +5,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 
 pub mod params;
+pub mod call;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(untagged)]
@@ -289,6 +290,16 @@ pub struct GrantAction {
     #[serde(default)]
     #[builder(default = "None")]
     pub revoke_method: Option<String>,
+}
+
+impl GrantAction {
+    pub fn get_option(&self, key: impl AsRef<str>) -> Option<PluginArgument> {
+        self.options.iter().find(|f| f.key == key.as_ref().to_string()).cloned()
+    }
+
+    pub fn get_argument(&self, key: impl AsRef<str>) -> Option<PluginArgument> {
+        self.arguments.iter().find(|f| f.key == key.as_ref().to_string()).cloned()
+    }
 }
 
 impl GrantActionBuilder {
