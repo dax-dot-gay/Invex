@@ -6,7 +6,20 @@ export type Expiration =
           uses: number;
       }
     | {
-          datetime: string;
+          datetime: number;
+      };
+
+export type ResolvedExpiration =
+    | {
+          type: "never";
+      }
+    | {
+          type: "uses";
+          value: number;
+      }
+    | {
+          type: "datetime";
+          value: string;
       };
 
 export type DbInvite = {
@@ -35,4 +48,5 @@ export type Invite = {
     invite: DbInvite;
     services: Service[];
     usages: InviteUsage[];
+    expires: ResolvedExpiration;
 };

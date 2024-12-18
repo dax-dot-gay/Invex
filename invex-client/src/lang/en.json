@@ -54,7 +54,9 @@
         }
       },
       "invites": {
-        "title": "Invites"
+        "title": "Invites",
+        "header": "Manage Invites",
+        "create": "Create Invite"
       },
       "services": {
         "title": "Services",

@@ -6,7 +6,7 @@ use crate::{
     models::{
         auth::{ AuthUser, UserType },
         error::ApiError,
-        invite::{ Expiration, Invite, InviteUsage },
+        invite::{ Expiration, Invite, InviteUsage, ResolvedExpiration },
         service::Service,
     },
     util::{ database::{ Docs, Id, PaginationRequest, PaginationResult }, ApiResult, InResult },
@@ -16,6 +16,7 @@ use crate::{
 struct InviteInfo {
     pub id: String,
     pub invite: Invite,
+    pub expires: ResolvedExpiration,
     pub services: Vec<Service>,
     pub usages: Vec<InviteUsage>,
 }
@@ -51,6 +52,7 @@ impl InviteInfo {
                     }
                 ))
                 .collect(),
+            expires: invite.expires()
         })
     }
 }
@@ -116,6 +118,7 @@ async fn list_invites(
                                     }
                                 ))
                                 .collect(),
+                            expires: invite.expires()
                         }
                     })
                     .collect::<Vec<InviteInfo>>();
@@ -201,7 +204,8 @@ async fn create_invite(
                 id: invite.id.to_string(),
                 invite: invite.clone(),
                 services: service_refs.clone(),
-                usages: Vec::new()
+                usages: Vec::new(),
+                expires: invite.expires()
             }))
         } else {
             Err(ApiError::Internal("Failed to save invite".to_string()))
