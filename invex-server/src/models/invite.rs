@@ -40,7 +40,7 @@ impl Invite {
                     Expiration::Uses(uses) => ResolvedExpiration::Uses(uses.clone()),
                     Expiration::Datetime(timestamp) =>
                         ResolvedExpiration::Datetime(
-                            DateTime::from_timestamp_nanos(timestamp.clone())
+                            DateTime::from_timestamp_millis(timestamp.clone()).unwrap()
                         ),
                 }
             None => ResolvedExpiration::Never,

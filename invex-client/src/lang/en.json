@@ -5,7 +5,8 @@
       "or": "or",
       "saving": "Saving...",
       "valid": "Valid",
-      "invalid": "Invalid"
+      "invalid": "Invalid",
+      "done": "Done"
     },
     "notif": {
       "success": "Success!",
@@ -56,7 +57,11 @@
       "invites": {
         "title": "Invites",
         "header": "Manage Invites",
-        "create": "Create Invite"
+        "create": "Create Invite",
+        "table": {
+          "code": "Invite Code",
+          "usages": "# Uses"
+        }
       },
       "services": {
         "title": "Services",
@@ -252,6 +257,39 @@
       "update": {
         "success": "Plugin profile saved!",
         "error": "Failed to save profile: {{errorReason}}"
+      }
+    },
+    "createInvite": {
+      "title": "Create New Invite",
+      "fields": {
+        "code": {
+          "label": "Invite code",
+          "desc": "Must be at least 6 characters"
+        },
+        "expiration": {
+          "main": "Invite expiration",
+          "mode": {
+            "never": {
+              "tooltip": "Never Expires"
+            },
+            "uses": {
+              "tooltip": "Max. Uses"
+            },
+            "date": {
+              "tooltip": "Expiration Date"
+            }
+          },
+          "neverExpires": "Never Expires"
+        },
+        "services": "Select services to grant"
+      },
+      "errors": {
+        "codeTooShort": "Invite code must be at least 6 characters long",
+        "codeInvalid": "Code must be URL-safe base64",
+        "creation": "Failed to create invite: {{reason}}"
+      },
+      "created": {
+        "title": "Invite Created!"
       }
     }
   },

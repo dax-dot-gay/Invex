@@ -94,7 +94,7 @@ function UserActionButton() {
 export function Layout() {
     const mobile = useMobile();
     const { hovered, ref } = useHover();
-    const rng = useMemo(() => "invex/" + randomBytes(4), [hovered]);
+    const rng = useMemo(() => "invex/" + randomBytes(8), [hovered]);
     const { t } = useTranslation();
 
     return (

@@ -101,8 +101,12 @@ body {
     --popover-border-color: var(--mantine-color-default-border) !important;
 }
 
-.mantine-Select-option {
+.mantine-Select-option, .mantine-MultiSelect-option {
     &:hover {
         background-color: var(--mantine-color-default-border) !important;
     }
+}
+
+.readonly-input * {
+    cursor: pointer !important;
 }
