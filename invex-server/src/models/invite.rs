@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::util::database::Id;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "snake_case")]
 pub enum Expiration {
     Uses(u64),
     Datetime(DateTime<Utc>)
@@ -38,7 +39,8 @@ pub struct InviteUsage {
     pub id: Id,
 
     pub user: Id,
-    pub invite: (Id, String),
+    pub invite_id: Id,
+    pub invite_code: String,
 
     #[reflect(ignore)]
     pub grants: Vec<InviteGrant>

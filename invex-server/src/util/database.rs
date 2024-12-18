@@ -90,6 +90,11 @@ impl<T: Document> Docs<T> {
         }
     }
 
+    pub async fn query_many(&self, query: bson::Document) -> InResult<Vec<T>> {
+        let cursor = self.inner.find(query).await?;
+        Ok(cursor.try_collect().await?)
+    }
+
     pub async fn exists(&self, query: bson::Document) -> bool {
         self.query_one(query).await.is_some()
     }
