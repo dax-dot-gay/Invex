@@ -382,7 +382,8 @@ pub enum GrantResource {
     },
     File {
         id: String,
-        data: Vec<u8>,
+
+        file_id: String,
 
         #[serde(default)]
         filename: Option<String>,
@@ -408,6 +409,7 @@ pub enum GrantResource {
     },
     Generic {
         id: String,
+        name: String,
 
         #[serde(default = "Default::default")]
         metadata: Option<Value>,

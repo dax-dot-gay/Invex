@@ -174,3 +174,56 @@ export class MethodResponse<T extends MethodCall["method"]> {
         return this.reply.type === "success";
     }
 }
+
+export type GrantResource_Account = {
+    type: "account";
+    id: string;
+    user_id: string | null;
+    username: string | null;
+    email: string | null;
+    password: string | null;
+    metadata: any | null;
+};
+
+export type GrantResource_File = {
+    type: "file";
+    id: string;
+    file_id: string;
+    filename: string | null;
+    content_type: string | null;
+    metadata: any | null;
+};
+
+export type GrantResource_Url = {
+    type: "url";
+    url: string;
+    alias: string | null;
+    label: string | null;
+    metadata: any | null;
+};
+
+export type GrantResource_Generic = {
+    type: "generic";
+    id: string;
+    name: string;
+    metadata: any | null;
+};
+
+export type GrantResource_Action = {
+    type: "action";
+    id: string;
+    metadata: any | null;
+    method: string;
+    label: string;
+    arguments: PluginField[];
+    description: string | null;
+    icon: string | null;
+};
+
+export type GrantResource =
+    | GrantResource_Account
+    | GrantResource_File
+    | GrantResource_Url
+    | GrantResource_Generic
+    | GrantResource_Action;
+    
