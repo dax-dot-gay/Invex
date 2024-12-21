@@ -12,7 +12,7 @@ import {
     Title,
 } from "@mantine/core";
 import { useApi, UsersMixin, useUser } from "../../context/net";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "../../types/auth";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
@@ -28,6 +28,7 @@ import { useTranslation } from "react-i18next";
 import { DataTable } from "mantine-datatable";
 import { modals } from "@mantine/modals";
 import { ModalTitle } from "../../modals";
+import { useRefreshCallback } from "../../context/refresh";
 
 function AdminItem({ user, refresh }: { user: User; refresh: () => void }) {
     const { t } = useTranslation();
@@ -79,7 +80,7 @@ export function UserPanel() {
     const [debouncedSearch] = useDebouncedValue(search, 250);
     const { t } = useTranslation();
 
-    const refresh = useCallback(() => {
+    const refresh = useRefreshCallback(() => {
         api.getUsers({ kind: "admin" }).then((v) => setAdmins(v.results));
         api.getUsers({
             kind: "user",

@@ -25,10 +25,11 @@ import { useTranslation } from "react-i18next";
 import { ModalTitle } from "../../modals";
 import { InviteMixin, useApi } from "../../context/net";
 import { DataTable } from "mantine-datatable";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Invite } from "../../types/invite";
 import { DynamicAvatar } from "../../components/icon";
 import { useClipboard } from "@mantine/hooks";
+import { useRefreshCallback } from "../../context/refresh";
 
 export function InvitePanel() {
     const { t } = useTranslation();
@@ -38,7 +39,7 @@ export function InvitePanel() {
     const [total, setTotal] = useState(0);
     const [invites, setInvites] = useState<Invite[]>([]);
 
-    const refresh = useCallback(() => {
+    const refresh = useRefreshCallback(() => {
         api.paginate_invites(pageNumber, pageSize).then((invs) => {
             setInvites(invs.results);
             setTotal(invs.total);

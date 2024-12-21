@@ -13,18 +13,19 @@ import { modals } from "@mantine/modals";
 import { IconPlus, IconServer, IconX } from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { ModalTitle } from "../../modals";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Service } from "../../types/service";
 import { ServiceMixin, useApi } from "../../context/net";
 import { DynamicAvatar } from "../../components/icon";
 import { ServiceConfig } from "./ServiceConfig";
+import { useRefreshCallback } from "../../context/refresh";
 
 export function ServicePanel() {
     const { t } = useTranslation();
     const api = useApi(ServiceMixin);
     const [services, setServices] = useState<Service[]>([]);
     const [selectedService, setSelectedService] = useState<string | null>(null);
-    const refresh = useCallback(() => {
+    const refresh = useRefreshCallback(() => {
         api.getServices().then((v) =>
             setServices(v.sort((a, b) => a.name.localeCompare(b.name)))
         );

@@ -28,6 +28,7 @@ import {
 import { modals } from "@mantine/modals";
 import { ModalTitle } from "../../modals";
 import { GrantEditor } from "./grants/GrantEditor";
+import { useRefreshCallback } from "../../context/refresh";
 
 function GrantItem({
     grant,
@@ -124,7 +125,7 @@ export function ServiceConfig({
     const [service, setService] = useState<Service | "loading" | null>(
         "loading"
     );
-    const refreshSelf = useCallback(() => {
+    const refreshSelf = useRefreshCallback(() => {
         api.getService(id).then(setService);
     }, [api.getService, setService, id]);
 

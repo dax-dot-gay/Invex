@@ -44,6 +44,7 @@ import { Plugin, PluginConfig, ValidatedForm } from "../../types/plugin";
 import { DynamicAvatar } from "../../components/icon";
 import { useDebouncedValue } from "@mantine/hooks";
 import { selectFile } from "../../util/selectFile";
+import { useRefreshCallback } from "../../context/refresh";
 
 function PluginItem({
     plugin,
@@ -81,8 +82,12 @@ function PluginItem({
         return result;
     }, [api.plugin_config_list_validated, setProfiles, plugin.id]);
 
-    useEffect(() => {
+    const refreshSelf = useRefreshCallback(() => {
         getConfigs();
+    }, [getConfigs]);
+
+    useEffect(() => {
+        refreshSelf();
     }, [getConfigs]);
 
     const invalidProfiles = Object.values(profiles).filter(
@@ -409,7 +414,7 @@ export function PluginPanel() {
     const { t } = useTranslation();
     const [plugins, setPlugins] = useState<Plugin[]>([]);
 
-    const refresh = useCallback(() => {
+    const refresh = useRefreshCallback(() => {
         api.list_plugins().then((r) => {
             setPlugins(r.or_default([]));
         });
