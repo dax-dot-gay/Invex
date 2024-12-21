@@ -60,7 +60,14 @@
         "create": "Create Invite",
         "table": {
           "code": "Invite Code",
-          "usages": "# Uses"
+          "usages": "# Uses",
+          "expires": "Expiration",
+          "expirationTypes": {
+            "never": "Never expires",
+            "uses": "Expires after {{max}} uses ({{remaining}} remaining)",
+            "datetime": "Expires at: {{datetime}}"
+          },
+          "services": "Granted Services"
         }
       },
       "services": {

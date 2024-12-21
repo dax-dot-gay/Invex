@@ -27,32 +27,26 @@ impl InviteInfo {
         services: &Docs<Service>,
         usages: &Docs<InviteUsage>
     ) -> InResult<Self> {
-        let service_refs = services.query_many(doc! { "_id": {"$in": invite.services.iter().map(|s| s.to_string()).collect::<Vec<String>>()} }).await?;
+        let service_refs = services.query_many(
+            doc! { "_id": {"$in": invite.services.iter().map(|s| s.to_string()).collect::<Vec<String>>()} }
+        ).await?;
         let usage_refs = usages.query_many(doc! { "invite_id": invite.id.to_string() }).await?;
         Ok(InviteInfo {
             id: invite.id.to_string(),
             invite: invite.clone(),
             services: service_refs
                 .iter()
-                .filter_map(|s| (
-                    if invite.services.contains(&s.id) {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                ))
+                .filter_map(|s| {
+                    if invite.services.contains(&s.id) { Some(s.clone()) } else { None }
+                })
                 .collect(),
             usages: usage_refs
                 .iter()
-                .filter_map(|u| (
-                    if u.invite_id.clone() == invite.id.clone() {
-                        Some(u.clone())
-                    } else {
-                        None
-                    }
-                ))
+                .filter_map(|u| {
+                    if u.invite_id.clone() == invite.id.clone() { Some(u.clone()) } else { None }
+                })
                 .collect(),
-            expires: invite.expires()
+            expires: invite.expires(),
         })
     }
 }
@@ -94,32 +88,26 @@ async fn list_invites(
             {
                 let result = paginated.results
                     .iter()
-                    .map(|invite| {
-                        InviteInfo {
-                            id: invite.id.to_string(),
-                            invite: invite.clone(),
-                            services: service_refs
-                                .iter()
-                                .filter_map(|s| (
-                                    if invite.services.contains(&s.id) {
-                                        Some(s.clone())
-                                    } else {
-                                        None
-                                    }
-                                ))
-                                .collect(),
-                            usages: usage_refs
-                                .iter()
-                                .filter_map(|u| (
-                                    if u.invite_id.clone() == invite.id.clone() {
-                                        Some(u.clone())
-                                    } else {
-                                        None
-                                    }
-                                ))
-                                .collect(),
-                            expires: invite.expires()
-                        }
+                    .map(|invite| InviteInfo {
+                        id: invite.id.to_string(),
+                        invite: invite.clone(),
+                        services: service_refs
+                            .iter()
+                            .filter_map(|s| {
+                                if invite.services.contains(&s.id) { Some(s.clone()) } else { None }
+                            })
+                            .collect(),
+                        usages: usage_refs
+                            .iter()
+                            .filter_map(|u| {
+                                if u.invite_id.clone() == invite.id.clone() {
+                                    Some(u.clone())
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect(),
+                        expires: invite.expires(),
                     })
                     .collect::<Vec<InviteInfo>>();
                 Ok(
@@ -182,11 +170,15 @@ async fn create_invite(
         return Err(ApiError::Forbidden("Must be an admin to create invites".to_string()));
     }
 
-    if invites.exists(doc! {"code": model.code.clone()}).await {
+    if invites.exists(doc! { "code": model.code.clone() }).await {
         return Err(ApiError::MethodNotAllowed("Requested invite code already exists".to_string()));
     }
 
-    if let Ok(service_refs) = services.query_many(doc! {"_id": {"$in": model.services.clone().iter().map(|s| s.to_string()).collect::<Vec<String>>()}}).await {
+    if
+        let Ok(service_refs) = services.query_many(
+            doc! { "_id": {"$in": model.services.clone().iter().map(|s| s.to_string()).collect::<Vec<String>>()} }
+        ).await
+    {
         if service_refs.len() != model.services.len() {
             return Err(ApiError::BadRequest("Some service IDs were unknown".to_string()));
         }
@@ -196,17 +188,19 @@ async fn create_invite(
             code: model.code.clone(),
             created_by: user.id.clone(),
             expires: model.expires.clone(),
-            services: model.services.clone()
+            services: model.services.clone(),
         };
 
         if let Ok(_) = invites.save(invite.clone()).await {
-            Ok(Json(InviteInfo {
-                id: invite.id.to_string(),
-                invite: invite.clone(),
-                services: service_refs.clone(),
-                usages: Vec::new(),
-                expires: invite.expires()
-            }))
+            Ok(
+                Json(InviteInfo {
+                    id: invite.id.to_string(),
+                    invite: invite.clone(),
+                    services: service_refs.clone(),
+                    usages: Vec::new(),
+                    expires: invite.expires(),
+                })
+            )
         } else {
             Err(ApiError::Internal("Failed to save invite".to_string()))
         }
@@ -215,6 +209,29 @@ async fn create_invite(
     }
 }
 
+#[delete("/<id>")]
+async fn delete_invite(
+    user: AuthUser,
+    invites: Docs<Invite>,
+    id: &str,
+    usages: Docs<InviteUsage>
+) -> ApiResult<()> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden("Must be an admin to delete/revoke invites".to_string()));
+    }
+
+    if let Some(_) = invites.get(id).await {
+        usages.delete_many(doc! {"invite_id": id}).await.map_err(|_| ApiError::Internal("Failed to delete existing usages".to_string()))?;
+        if let Ok(_) = invites.delete_one(doc! {"_id": id}).await {
+            Ok(Json(()))
+        } else {
+            Err(ApiError::Internal("Failed to delete result record".to_string()))
+        }
+    } else {
+        Err(ApiError::NotFound("Requested invite not found".to_string()))
+    }
+}
+
 pub fn routes() -> Vec<Route> {
-    return routes![list_invites, get_invite, create_invite];
+    return routes![list_invites, get_invite, create_invite, delete_invite];
 }

@@ -34,9 +34,13 @@ export function InviteMixin<TBase extends ApiMixinConstructor>(base: TBase) {
                 data: {
                     code,
                     services,
-                    expiration: expiration ?? null,
+                    expires: expiration ?? null,
                 },
             });
+        }
+
+        public async delete_invite(id: string): Promise<void> {
+            await this.request<void>(`/invites/${id}`, { method: "delete" });
         }
     };
 }

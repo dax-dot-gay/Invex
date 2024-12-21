@@ -9,6 +9,7 @@ use serde::{ Deserialize, Serialize };
 use crate::util::database::Id;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect)]
+#[serde(rename_all = "snake_case")]
 pub enum Expiration {
     Uses(u64),
     Datetime(i64),
