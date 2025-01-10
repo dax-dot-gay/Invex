@@ -165,7 +165,14 @@
         "username": "Username",
         "email": "Email",
         "password": "Password",
-        "confirm_password": "Confirm Password"
+        "confirm_password": "Confirm Password",
+        "switch_to": "Create User Instead"
+      },
+      "login": {
+        "switch_to": "Log In Instead",
+        "title": "Log In",
+        "username_or_email": "Username or Email",
+        "password": "Password"
       }
     }
   },
@@ -311,14 +318,16 @@
   },
   "actions": {
     "cancel": "Cancel",
-    "create": "Create"
+    "create": "Create",
+    "redeem": "Redeem Invite"
   },
   "errors": {
     "form": {
       "empty": "Field must not be empty",
       "invalidEmail": "Invalid email",
       "invalid": "Invalid input",
-      "invalidUrl": "Invalid URL"
+      "invalidUrl": "Invalid URL",
+      "passwordMatch": "Passwords must match"
     },
     "network": {
       "unknown": "An unknown server error occurred.",

@@ -11,7 +11,7 @@ use crate::{
         auth::AuthUser,
         error::ApiError,
         invite::{ Invite, InviteUsage, ResolvedExpiration },
-        plugin::PluginRegistry,
+        plugin::{PluginRegistry, RegisteredPlugin},
         service::{ Service, ServiceGrant },
     },
     util::{ database::{ Collections, Docs, Document, Id }, ApiResult },
@@ -80,7 +80,7 @@ impl<'r> FromRequest<'r> for UsingInvite {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct RedeemingGrant {
-    pub plugin: String,
+    pub plugin: RegisteredPlugin,
     pub key: String,
     pub label: String,
     pub description: Option<String>,
@@ -102,7 +102,7 @@ impl RedeemingGrant {
         if let Some(plugin) = plugins.get(plugin_id).await {
             if let Some(grant) = plugin.get_grant(grant_id) {
                 Ok(Self {
-                    plugin: plugin.id(),
+                    plugin: plugin.info(),
                     key: grant.key.clone(),
                     label: grant.label.clone(),
                     description: grant.description.clone(),

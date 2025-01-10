@@ -1,8 +1,8 @@
 import { Invite } from "./invite";
-import { PluginField } from "./plugin";
+import { Plugin, PluginField } from "./plugin";
 
 export type RedeemingGrant = {
-    plugin: string;
+    plugin: Plugin;
     key: string;
     label: string;
     description: string | null;

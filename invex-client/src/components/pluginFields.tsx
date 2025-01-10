@@ -171,6 +171,13 @@ export function PluginFieldElement({
                         value={isString(value) ? value : ""}
                         onChange={(event) => {
                             if (
+                                field.required &&
+                                event.target.value.length === 0
+                            ) {
+                                onChange(event.target.value, false);
+                                return;
+                            }
+                            if (
                                 field.field.type === "text" &&
                                 field.field.validation
                             ) {
