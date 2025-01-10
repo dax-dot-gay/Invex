@@ -40,3 +40,29 @@ impl<T> From<Result<T, ApiError>> for ApiError {
         }
     }
 }
+
+impl ApiError {
+    pub fn internal(v: impl AsRef<str>) -> Self {
+        Self::Internal(v.as_ref().to_string())
+    }
+
+    pub fn bad_request(v: impl AsRef<str>) -> Self {
+        Self::BadRequest(v.as_ref().to_string())
+    }
+
+    pub fn authentication_required(v: impl AsRef<str>) -> Self {
+        Self::AuthenticationRequired(v.as_ref().to_string())
+    }
+
+    pub fn method_not_allowed(v: impl AsRef<str>) -> Self {
+        Self::MethodNotAllowed(v.as_ref().to_string())
+    }
+
+    pub fn not_found(v: impl AsRef<str>) -> Self {
+        Self::NotFound(v.as_ref().to_string())
+    }
+
+    pub fn forbidden(v: impl AsRef<str>) -> Self {
+        Self::Forbidden(v.as_ref().to_string())
+    }
+}

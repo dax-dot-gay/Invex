@@ -1,5 +1,5 @@
 use std::{
-    io::Write, ops::{Deref, DerefMut}
+    fmt::Display, io::Write, ops::{Deref, DerefMut}
 };
 
 use bevy_reflect::{Reflect, TypeRegistration, Typed};
@@ -186,9 +186,15 @@ impl Into<Bson> for Id {
     }
 }
 
-impl ToString for Id {
-    fn to_string(&self) -> String {
+impl Into<String> for Id {
+    fn into(self) -> String {
         self.0.clone()
+    }
+}
+
+impl Display for Id {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.0.clone().as_str())
     }
 }
 
@@ -392,3 +398,33 @@ impl From<File> for FileInfo {
         }
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct Collections(Database);
+
+impl Collections {
+    fn new(db: &Database) -> Self {
+        Self(db.clone())
+    }
+
+    pub fn get<T: Document>(&self) -> Docs<T> {
+        Docs::<T>::new(self.0.clone())
+    }
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for Collections {
+    type Error = ApiError;
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        if let Some(db) = req.rocket().state::<Database>() {
+            Outcome::Success(Collections::new(db))
+        } else {
+            Outcome::Error((
+                Status::InternalServerError,
+                ApiError::Internal(String::from("Client not in state.")),
+            ))
+        }
+    }
+}
+
