@@ -2,7 +2,7 @@ import { MantineSize, px, useMantineTheme } from "@mantine/core";
 import { useMediaQuery, useViewportSize } from "@mantine/hooks";
 
 export function useMobile() {
-    return useMediaQuery("(max-width: 768px)", false);
+    return useMediaQuery("(max-width: 768px)", false) ?? false;
 }
 
 export function useBreakpoint(): MantineSize {

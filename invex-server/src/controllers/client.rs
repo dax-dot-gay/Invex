@@ -198,7 +198,7 @@ impl RedeemingInvite {
 
 #[get("/info/<code>")]
 async fn get_invite_info(invites: Docs<Invite>, usages: Docs<InviteUsage>, collections: Collections, plugins: PluginRegistry, code: &str) -> ApiResult<RedeemingInvite> {
-    if let Some(invite) = invites.get(code).await {
+    if let Some(invite) = invites.query_one(doc! {"code": code}).await {
         if let Ok(inv_usages) = usages.query_many(doc! {"invite_id": invite.id()}).await {
             let expired = match invite.expires() {
                 ResolvedExpiration::Never => false,

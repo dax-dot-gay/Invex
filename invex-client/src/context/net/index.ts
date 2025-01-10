@@ -32,6 +32,7 @@ import { PluginsMixin } from "./methods/plugins";
 import { ServiceMixin } from "./methods/service";
 import { FilesMixin } from "./methods/files";
 import { InviteMixin } from "./methods/invites";
+import { ClientMixin } from "./methods/client";
 
 export {
     AuthMixin,
@@ -40,6 +41,7 @@ export {
     ServiceMixin,
     FilesMixin,
     InviteMixin,
+    ClientMixin,
 };
 
 export function useNet(): NetContextType {

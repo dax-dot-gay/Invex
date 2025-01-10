@@ -110,3 +110,12 @@ body {
 .readonly-input * {
     cursor: pointer !important;
 }
+
+.mantine-Accordion-item {
+    background-color: var(--mantine-color-default) !important;
+
+    &[data-active=true] {
+        background-color: var(--mantine-color-default) !important;
+        border-color: var(--mantine-color-default-border) !important;
+    }
+}
