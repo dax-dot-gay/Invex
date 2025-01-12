@@ -3,6 +3,8 @@ use std::{collections::HashMap, error::Error};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::GrantAction;
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ParameterMap(HashMap<String, Value>);
 
@@ -34,3 +36,14 @@ pub enum PluginFieldParams {
     ServiceConfig {plugin_config: ParameterMap},
     InviteConfig {plugin_config: ParameterMap, service_config: ParameterMap}
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct GrantActionParams {
+    #[serde(default)]
+    pub dry_run: bool,
+    pub action: GrantAction,
+    pub plugin_config: ParameterMap,
+    pub service_config: ParameterMap,
+    pub user_arguments: ParameterMap
+}
+

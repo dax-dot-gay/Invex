@@ -1,17 +1,10 @@
 use extism_pdk::*;
 use invex_sdk::{
-    params::PluginFieldParams,
-    ExpectedType,
-    FieldBuilder,
-    FieldSelectOption,
-    FieldType,
-    GrantActionBuilder,
-    PluginDefinedMethodContext,
-    PluginMetadata,
-    PluginMetadataBuilder,
+    params::{GrantActionParams, PluginFieldParams}, ExpectedType, FieldBuilder, FieldSelectOption, FieldType, GrantActionBuilder, GrantResource, PluginDefinedMethodContext, PluginMetadata, PluginMetadataBuilder
 };
-use models::{ JellyfinPluginConfig, LibraryReference };
+use models::{ CreateUserArguments, CreateUserConfig, JellyfinPluginConfig, LibraryReference, UserItem };
 use net::Connection;
+use serde_json::json;
 mod net;
 mod models;
 
@@ -150,5 +143,50 @@ pub fn util_get_libraries(params: Json<PluginFieldParams>) -> FnResult<Json<Fiel
         }
     } else {
         Err(WithReturnCode(Error::msg(format!("Field used in inappropriate context: {param_item:?}")), 405))
+    }
+}
+
+#[plugin_fn]
+pub fn grant_create_user(params: Json<GrantActionParams>) -> FnResult<Json<Vec<GrantResource>>> {
+    let action_params = params.into_inner();
+    let plugin_config = action_params.plugin_config.resolve::<JellyfinPluginConfig>().or(Err(WithReturnCode(Error::msg("Invalid plugin config"), 422)))?;
+    let service_config = action_params.service_config.resolve::<CreateUserConfig>().or(Err(WithReturnCode(Error::msg("Invalid service config"), 422)))?;
+    let user_arguments = action_params.user_arguments.resolve::<CreateUserArguments>().or(Err(WithReturnCode(Error::msg("Invalid user arguments"), 422)))?;
+    let dry_run = action_params.dry_run;
+
+    let connection: Connection = plugin_config.into();
+    match connection.get("/Users") {
+        Ok(response) => {
+            if let Ok(existing) = response.json::<Vec<UserItem>>().and_then(|v| Ok(v.iter().map(|i| i.name.clone()).collect::<Vec<String>>())) {
+                if existing.contains(&user_arguments.username) {
+                    return Err(WithReturnCode(Error::msg("Desired username already exists"), 405));
+                }
+
+                if dry_run {
+                    Ok(Json(vec![GrantResource::Account { id: String::from("dry_run"), user_id: None, username: Some(user_arguments.username.clone()), email: None, password: Some(user_arguments.password.clone()), metadata: None }]))
+                } else {
+                    match connection.post("/Users/New", Some(json!({"Name": user_arguments.username.clone(), "Password": user_arguments.password.clone()}))) {
+                        Ok(response) => {
+                            if let Ok(created) = response.json::<UserItem>() {
+                                match connection.post(format!("/Users/{}/Policy", created.id.clone()), Some(json!({
+                                    "AuthenticationProviderId": created.policy.authentication_provider_id.clone(),
+                                    "PasswordResetProviderId": created.policy.password_reset_provider_id.clone(),
+                                    "EnabledFolders": service_config.libraries.clone()
+                                }))) {
+                                    Ok(_) => Ok(Json(vec![GrantResource::Account { id: created.id.clone(), user_id: Some(created.id.clone()), username: Some(created.name.clone()), email: None, password: Some(user_arguments.password.clone()), metadata: None }])),
+                                    Err(e) => Err(WithReturnCode(Error::msg(format!("Failed to add user to libraries: {e:?}")), 500))
+                                }
+                            } else {
+                                Err(WithReturnCode(Error::msg("Failed to parse created user"), 500))
+                            }
+                        }, 
+                        Err(e) => Err(WithReturnCode(Error::msg(format!("Failed to create user: {e:?}")), 500))
+                    }
+                }
+            } else {
+                Err(WithReturnCode(Error::msg("Failed to parse list of existing users."), 500))
+            }
+        },
+        Err(e) => Err(WithReturnCode(Error::msg(format!("Failed to retrieve list of existing users: {e:?}")), 500))
     }
 }
