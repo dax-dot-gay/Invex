@@ -14,6 +14,7 @@ key = "certs/key.pem"
 
 [default.app]
 session_duration = "96h"
+plugin_logging = "debug"
 
 [default.app.admin]
 username = "admin"

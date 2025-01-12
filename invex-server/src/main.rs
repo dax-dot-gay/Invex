@@ -2,9 +2,10 @@ use std::{collections::HashMap, sync::Arc};
 
 use bson::doc;
 use controllers::apply_routes;
+use extism::set_log_callback;
 use models::{auth::{AuthUser, SessionFairing, UserType}, plugin::{PluginRegistry, RegisteredPlugin}};
 use mongodb::{Database, IndexModel};
-use rocket::{fairing::AdHoc, futures::TryStreamExt};
+use rocket::{fairing::AdHoc, futures::TryStreamExt, Config as RocketConfig};
 use tokio::sync::Mutex;
 mod config;
 
@@ -20,8 +21,10 @@ mod util;
 
 #[launch]
 async fn rocket() -> _ {
+    let conf: Config = RocketConfig::figment().extract_inner("app").expect("App config");
+    set_log_callback(|s| println!("{}", s.trim_end()), format!("extism={}", conf.plugin_logging)).expect("Failed to set logging callback.");
     let rocket = apply_routes(rocket::build());
-    let conf: Config = rocket.figment().extract_inner("app").expect("App config");
+    
     rocket
         .manage::<Config>(conf.clone())
         .manage::<Database>(

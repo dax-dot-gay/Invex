@@ -1,6 +1,36 @@
+use std::fmt::Display;
+
 use duration_string::DurationString;
 use mongodb::{options::ClientOptions, Client, Database};
 use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum LogLevel {
+    Trace,
+    Debug,
+    Info,
+    Warn,
+    Error
+}
+
+impl Display for LogLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            LogLevel::Trace => "trace",
+            LogLevel::Debug => "debug",
+            LogLevel::Info => "info",
+            LogLevel::Warn => "warn",
+            LogLevel::Error => "error"
+        })
+    }
+}
+
+impl Default for LogLevel {
+    fn default() -> Self {
+        Self::Info
+    }
+}
 
 #[derive(Deserialize, Clone, Debug)]
 #[serde(untagged)]
@@ -57,6 +87,9 @@ pub struct Config {
     pub database: DatabaseConfig,
     pub admin: AdminConfig,
     pub session_duration: DurationString,
+
+    #[serde(default)]
+    pub plugin_logging: LogLevel,
 
     #[serde(default)]
     pub customization: CustomizationConfig

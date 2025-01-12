@@ -32,7 +32,7 @@ pub struct CreateUserArguments {
 #[serde(rename_all="PascalCase")]
 pub struct UserPolicy {
     pub is_administrator: bool,
-    pub enabled_folders: String,
+    pub enabled_folders: Vec<String>,
     pub authentication_provider_id: String,
     pub password_reset_provider_id: String
 }

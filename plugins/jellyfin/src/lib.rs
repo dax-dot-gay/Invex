@@ -157,7 +157,8 @@ pub fn grant_create_user(params: Json<GrantActionParams>) -> FnResult<Json<Vec<G
     let connection: Connection = plugin_config.into();
     match connection.get("/Users") {
         Ok(response) => {
-            if let Ok(existing) = response.json::<Vec<UserItem>>().and_then(|v| Ok(v.iter().map(|i| i.name.clone()).collect::<Vec<String>>())) {
+            match response.json::<Vec<UserItem>>().and_then(|v| Ok(v.iter().map(|i| i.name.clone()).collect::<Vec<String>>())) {
+                Ok(existing) =>  {
                 if existing.contains(&user_arguments.username) {
                     return Err(WithReturnCode(Error::msg("Desired username already exists"), 405));
                 }
@@ -183,8 +184,8 @@ pub fn grant_create_user(params: Json<GrantActionParams>) -> FnResult<Json<Vec<G
                         Err(e) => Err(WithReturnCode(Error::msg(format!("Failed to create user: {e:?}")), 500))
                     }
                 }
-            } else {
-                Err(WithReturnCode(Error::msg("Failed to parse list of existing users."), 500))
+            },
+            Err(e) => Err(WithReturnCode(Error::msg(format!("Failed to parse list of existing users: {e:?}")), 500))
             }
         },
         Err(e) => Err(WithReturnCode(Error::msg(format!("Failed to retrieve list of existing users: {e:?}")), 500))

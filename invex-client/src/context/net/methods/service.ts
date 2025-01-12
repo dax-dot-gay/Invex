@@ -1,4 +1,8 @@
-import { ValidatedForm } from "../../../types/plugin";
+import {
+    FieldValue,
+    GrantResource,
+    ValidatedForm,
+} from "../../../types/plugin";
 import { Service, ServiceGrant } from "../../../types/service";
 import { Response } from "../types";
 import { ApiMixinConstructor } from "./base";
@@ -94,6 +98,24 @@ export function ServiceMixin<TBase extends ApiMixinConstructor>(base: TBase) {
         ): Promise<Response<[ServiceGrant, ValidatedForm]>> {
             return await this.request<[ServiceGrant, ValidatedForm]>(
                 `/services/${service}/grants/${grant}/validated`
+            );
+        }
+
+        public async testServiceGrant(
+            service: string,
+            grant: string,
+            fields: { [key: string]: FieldValue },
+            dry_run?: boolean
+        ): Promise<Response<GrantResource[]>> {
+            return await this.request<GrantResource[]>(
+                `/services/${service}/grants/${grant}/test`,
+                {
+                    method: "post",
+                    data: {
+                        dry_run: dry_run ?? false,
+                        arguments: fields,
+                    },
+                }
             );
         }
     };

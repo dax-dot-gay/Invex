@@ -46,6 +46,7 @@ import {
 import {
     FieldValue,
     GrantAction,
+    GrantResource,
     Plugin,
     PluginConfig,
     ValidatedForm,
@@ -53,6 +54,8 @@ import {
 import { DynamicAvatar } from "../../../components/icon";
 import { capitalCase } from "change-case";
 import { PluginFieldForm } from "../../../components/pluginFields";
+import { useNotifications } from "../../../util/notifications";
+import _ from "lodash";
 
 function PluginGrantTester({
     id,
@@ -80,6 +83,10 @@ function PluginGrantTester({
     }>({});
     const { t } = useTranslation();
     const jsonArgs = JSON.stringify(action?.arguments ?? {});
+    const api = useApi(ServiceMixin);
+    const [testResult, setTestResult] = useState<GrantResource[] | null>(null);
+    const [loading, setLoading] = useState(false);
+    const { error, success } = useNotifications();
 
     useEffect(() => {
         if (action) {
@@ -129,6 +136,40 @@ function PluginGrantTester({
                     leftSection={<IconFlask size={20} />}
                     variant="light"
                     disabled={!Object.values(testArgs).every((a) => a.valid)}
+                    loading={loading}
+                    onClick={() => {
+                        setLoading(true);
+                        api.testServiceGrant(
+                            service._id,
+                            id,
+                            Object.entries(testArgs).reduce(
+                                (past, [k, v]) => ({ ...past, [k]: v.value }),
+                                {}
+                            ),
+                            true
+                        ).then((response) =>
+                            response
+                                .and_then((resources) => {
+                                    setLoading(false);
+                                    setTestResult(resources);
+                                    success(
+                                        t(
+                                            "views.admin.services.config.grants.grant.test.success"
+                                        )
+                                    );
+                                })
+                                .or_else((_, reason) => {
+                                    setLoading(false);
+                                    setTestResult(null);
+                                    error(
+                                        t(
+                                            "views.admin.services.config.grants.grant.test.error",
+                                            { reason }
+                                        )
+                                    );
+                                })
+                        );
+                    }}
                 >
                     {t("views.admin.services.config.grants.grant.test.dry_run")}
                 </Button>
@@ -136,6 +177,40 @@ function PluginGrantTester({
                     leftSection={<IconFlaskFilled size={20} />}
                     variant="filled"
                     disabled={!Object.values(testArgs).every((a) => a.valid)}
+                    loading={loading}
+                    onClick={() => {
+                        setLoading(true);
+                        api.testServiceGrant(
+                            service._id,
+                            id,
+                            Object.entries(testArgs).reduce(
+                                (past, [k, v]) => ({ ...past, [k]: v.value }),
+                                {}
+                            ),
+                            false
+                        ).then((response) =>
+                            response
+                                .and_then((resources) => {
+                                    setLoading(false);
+                                    setTestResult(resources);
+                                    success(
+                                        t(
+                                            "views.admin.services.config.grants.grant.test.success"
+                                        )
+                                    );
+                                })
+                                .or_else((_, reason) => {
+                                    setLoading(false);
+                                    setTestResult(null);
+                                    error(
+                                        t(
+                                            "views.admin.services.config.grants.grant.test.error",
+                                            { reason }
+                                        )
+                                    );
+                                })
+                        );
+                    }}
                 >
                     {t("views.admin.services.config.grants.grant.test.full")}
                 </Button>

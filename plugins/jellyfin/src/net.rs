@@ -23,19 +23,46 @@ impl Connection {
     pub fn get(&self, endpoint: impl AsRef<str>) -> Result<HttpResponse, Error> {
         let req = HttpRequest::new(self.url(endpoint)).with_method("GET").with_header("Authorization", self.auth());
         debug!("GET: {}", serde_json::to_string_pretty(&req).unwrap_or_default().to_string());
-        request::<()>(&req, None)
+        match request::<()>(&req, None) {
+            Ok(resp) => {
+                debug!("Successful request: {}", String::from_utf8(resp.body()).unwrap_or(String::from("NON-UTF8")));
+                Ok(resp)
+            },
+            Err(e) => {
+                debug!("Failed request: {e:?}");
+                Err(e)
+            }
+        }
     }
 
     pub fn delete(&self, endpoint: impl AsRef<str>) -> Result<HttpResponse, Error> {
         let req = HttpRequest::new(self.url(endpoint)).with_method("DELETE").with_header("Authorization", self.auth());
         debug!("DELETE: {}", serde_json::to_string_pretty(&req).unwrap_or_default().to_string());
-        request::<()>(&req, None)
+        match request::<()>(&req, None) {
+            Ok(resp) => {
+                debug!("Successful request: {}", String::from_utf8(resp.body()).unwrap_or(String::from("NON-UTF8")));
+                Ok(resp)
+            },
+            Err(e) => {
+                debug!("Failed request: {e:?}");
+                Err(e)
+            }
+        }
     }
 
     pub fn post<T: ToMemory>(&self, endpoint: impl AsRef<str>, data: Option<T>) -> Result<HttpResponse, Error> {
-        let req = HttpRequest::new(self.url(endpoint)).with_method("POST").with_header("Authorization", self.auth());
+        let req = HttpRequest::new(self.url(endpoint)).with_method("POST").with_header("Authorization", self.auth()).with_header("Content-Type", "application/json");
         debug!("POST: {}", serde_json::to_string_pretty(&req).unwrap_or_default().to_string());
-        request::<T>(&req, data)
+        match request::<T>(&req, data) {
+            Ok(resp) => {
+                debug!("Successful request: {}", String::from_utf8(resp.body()).unwrap_or(String::from("NON-UTF8")));
+                Ok(resp)
+            },
+            Err(e) => {
+                debug!("Failed request: {e:?}");
+                Err(e)
+            }
+        }
     }
 }
 

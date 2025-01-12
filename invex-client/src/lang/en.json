@@ -116,7 +116,9 @@
               "test": {
                 "title": "Test Service",
                 "dry_run": "Dry Run",
-                "full": "Full Test"
+                "full": "Full Test",
+                "success": "Test executed successfully!",
+                "error": "Test execution failed: {{reason}}"
               }
             }
           }
