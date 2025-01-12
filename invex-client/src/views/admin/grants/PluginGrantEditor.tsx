@@ -1,4 +1,9 @@
 import {
+    Accordion,
+    AccordionControl,
+    AccordionItem,
+    AccordionPanel,
+    ActionIcon,
     Badge,
     Button,
     Center,
@@ -13,6 +18,7 @@ import {
     Textarea,
     TextInput,
     ThemeIcon,
+    Tooltip,
 } from "@mantine/core";
 import { Service, ServiceGrant } from "../../../types/service";
 import { useDebouncedValue, useInputState } from "@mantine/hooks";
@@ -21,8 +27,11 @@ import {
     IconAlertTriangleFilled,
     IconCheck,
     IconDeviceFloppy,
+    IconFlask,
+    IconFlaskFilled,
     IconLink,
     IconPuzzle,
+    IconRestore,
     IconSettings,
     IconX,
 } from "@tabler/icons-react";
@@ -36,6 +45,7 @@ import {
 } from "../../../context/net";
 import {
     FieldValue,
+    GrantAction,
     Plugin,
     PluginConfig,
     ValidatedForm,
@@ -43,6 +53,98 @@ import {
 import { DynamicAvatar } from "../../../components/icon";
 import { capitalCase } from "change-case";
 import { PluginFieldForm } from "../../../components/pluginFields";
+
+function PluginGrantTester({
+    id,
+    service,
+    plugin,
+    action,
+    config: [config, validatedConfig],
+    grant: [grant, validatedGrant],
+}: {
+    id: string;
+    service: Service;
+    action: GrantAction | null;
+    plugin: Plugin | null;
+    config: [PluginConfig | null, ValidatedForm | null];
+    grant: [
+        Extract<ServiceGrant, { type: "grant" }> | null,
+        ValidatedForm | null
+    ];
+}) {
+    const [testArgs, setTestArgs] = useState<{
+        [key: string]: {
+            value: FieldValue | null;
+            valid: boolean;
+        };
+    }>({});
+    const { t } = useTranslation();
+    const jsonArgs = JSON.stringify(action?.arguments ?? {});
+
+    useEffect(() => {
+        if (action) {
+            setTestArgs((current) => {
+                if (Object.keys(current).length === 0) {
+                    for (const field of action.arguments) {
+                        if (field.required) {
+                            current[field.key] = {
+                                value: field.default,
+                                valid: field.default !== null,
+                            };
+                        } else {
+                            current[field.key] = {
+                                value: field.default,
+                                valid: true,
+                            };
+                        }
+                    }
+                }
+                return current;
+            });
+        }
+    }, [jsonArgs, setTestArgs]);
+
+    return plugin &&
+        config &&
+        validatedConfig &&
+        grant &&
+        validatedGrant &&
+        action ? (
+        <Stack gap="sm">
+            <PluginFieldForm
+                plugin={plugin}
+                fields={action.arguments}
+                context="invite"
+                value={testArgs}
+                onChange={setTestArgs}
+                selector={{
+                    config: config._id,
+                    service: service._id,
+                    grant: id,
+                }}
+                gap="4"
+            />
+            <Group gap="sm" justify="end">
+                <Button
+                    leftSection={<IconFlask size={20} />}
+                    variant="light"
+                    disabled={!Object.values(testArgs).every((a) => a.valid)}
+                >
+                    {t("views.admin.services.config.grants.grant.test.dry_run")}
+                </Button>
+                <Button
+                    leftSection={<IconFlaskFilled size={20} />}
+                    variant="filled"
+                    disabled={!Object.values(testArgs).every((a) => a.valid)}
+                >
+                    {t("views.admin.services.config.grants.grant.test.full")}
+                </Button>
+            </Group>
+        </Stack>
+    ) : (
+        <></>
+    );
+}
 
 export function PluginGrantEditor({
     id,
@@ -92,6 +194,13 @@ export function PluginGrantEditor({
         };
     }>({});
 
+    const [initialGrantOptions, setInitialGrantOptions] = useState<{
+        [key: string]: {
+            value: FieldValue | null;
+            valid: boolean;
+        };
+    }>({});
+
     useEffect(() => {
         api.get_plugin(grant.plugin_id).then(setPlugin);
     }, [api.get_plugin, grant.plugin_id, setPlugin]);
@@ -110,7 +219,7 @@ export function PluginGrantEditor({
     useEffect(() => {
         api.validateServiceGrant(service._id, id).then((response) => {
             setValidatedGrant(response as any);
-            response.and_then(([_, validated]) =>
+            response.and_then(([_, validated]) => {
                 setGrantOptions(
                     Object.entries(validated.arguments).reduce(
                         (prev, [key, arg]) => ({
@@ -119,8 +228,17 @@ export function PluginGrantEditor({
                         }),
                         {}
                     )
-                )
-            );
+                );
+                setInitialGrantOptions(
+                    Object.entries(validated.arguments).reduce(
+                        (prev, [key, arg]) => ({
+                            ...prev,
+                            [key]: { value: arg.value, valid: arg.valid },
+                        }),
+                        {}
+                    )
+                );
+            });
         });
     }, [api.validateServiceGrant, service._id, id, setValidatedGrant]);
 
@@ -489,6 +607,31 @@ export function PluginGrantEditor({
                                                 />
                                                 <Group gap="sm" justify="end">
                                                     <Button
+                                                        variant="transparent"
+                                                        leftSection={
+                                                            <IconRestore
+                                                                size={20}
+                                                            />
+                                                        }
+                                                        disabled={
+                                                            JSON.stringify(
+                                                                initialGrantOptions
+                                                            ) ===
+                                                            JSON.stringify(
+                                                                grantOptions
+                                                            )
+                                                        }
+                                                        onClick={() => {
+                                                            setGrantOptions(
+                                                                initialGrantOptions
+                                                            );
+                                                        }}
+                                                    >
+                                                        {t(
+                                                            "common.actions.reset"
+                                                        )}
+                                                    </Button>
+                                                    <Button
                                                         leftSection={
                                                             <IconDeviceFloppy
                                                                 size={20}
@@ -499,7 +642,13 @@ export function PluginGrantEditor({
                                                                 grantOptions
                                                             ).every(
                                                                 (v) => v.valid
-                                                            )
+                                                            ) ||
+                                                            JSON.stringify(
+                                                                initialGrantOptions
+                                                            ) ===
+                                                                JSON.stringify(
+                                                                    grantOptions
+                                                                )
                                                         }
                                                         onClick={() => {
                                                             save({
@@ -583,6 +732,50 @@ export function PluginGrantEditor({
                             </Paper>
                         )
                     )}
+                    <Accordion variant="filled">
+                        <AccordionItem value="_" className="light-accordion">
+                            <AccordionControl
+                                disabled={
+                                    !(
+                                        plugin?.success &&
+                                        config?.success &&
+                                        validatedGrant?.success &&
+                                        Object.values(grantOptions).every(
+                                            (o) => o.valid
+                                        )
+                                    )
+                                }
+                            >
+                                <Group gap="sm">
+                                    <IconFlask />
+                                    <Text fw={600}>
+                                        {t(
+                                            "views.admin.services.config.grants.grant.test.title"
+                                        )}
+                                    </Text>
+                                </Group>
+                            </AccordionControl>
+                            <AccordionPanel>
+                                <PluginGrantTester
+                                    id={id}
+                                    service={service}
+                                    plugin={plugin.or_default(null)}
+                                    config={config.or_default([null, null])}
+                                    grant={validatedGrant.or_default([
+                                        null,
+                                        null,
+                                    ])}
+                                    action={plugin.resolve(
+                                        (plug) =>
+                                            plug.metadata.grants.find(
+                                                (a) => a.key === grant.grant_id
+                                            ) ?? null,
+                                        null
+                                    )}
+                                />
+                            </AccordionPanel>
+                        </AccordionItem>
+                    </Accordion>
                 </Stack>
             ) : (
                 <Center p="xl">

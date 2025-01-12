@@ -112,7 +112,12 @@
                 "grant": "Grant"
               },
               "config": "Grant Configuration",
-              "unknownGrant": "Unknown grant key"
+              "unknownGrant": "Unknown grant key",
+              "test": {
+                "title": "Test Service",
+                "dry_run": "Dry Run",
+                "full": "Full Test"
+              }
             }
           }
         }

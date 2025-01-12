@@ -134,7 +134,12 @@ export function GrantEditor(props: {
                 className="grant-editor-inner"
                 bg={"var(--mantine-color-default)"}
             >
-                <ScrollArea mah="100%" h="100%" className="grant-editor-scroll">
+                <ScrollArea
+                    mah="100%"
+                    h="100%"
+                    className="grant-editor-scroll"
+                    offsetScrollbars
+                >
                     <GrantEditorInner
                         id={props.id}
                         service={props.service}

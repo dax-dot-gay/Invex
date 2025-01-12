@@ -118,4 +118,13 @@ body {
         background-color: var(--mantine-color-default) !important;
         border-color: var(--mantine-color-default-border) !important;
     }
+
+    &.light-accordion {
+        background-color: var(--mantine-color-default-hover) !important;
+
+        &[data-active=true] {
+            background-color: var(--mantine-color-default-hover) !important;
+            border-color: var(--mantine-color-default-border) !important;
+        }
+    }
 }

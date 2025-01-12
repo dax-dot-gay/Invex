@@ -8,6 +8,7 @@ import {
     Checkbox,
     Group,
     Loader,
+    MantineSpacing,
     MultiSelect,
     NumberInput,
     Select,
@@ -362,6 +363,7 @@ export function PluginFieldForm({
     plugin,
     context,
     selector,
+    gap,
 }: {
     plugin: Plugin;
     fields: PluginField[];
@@ -371,10 +373,11 @@ export function PluginFieldForm({
         [key: string]: { value: FieldValue | null; valid: boolean };
     }) => void;
     selector?: FieldSelector;
+    gap?: MantineSpacing;
 }) {
     const { t } = useTranslation();
     return (
-        <Stack gap="sm" className="plugin-field-form">
+        <Stack gap={gap ?? "sm"} className="plugin-field-form">
             {fields.map((field) => {
                 const resolvedValue =
                     (value[field.key]?.value ?? null) === ""
