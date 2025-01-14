@@ -7,7 +7,7 @@ export function ClientMixin<TBase extends ApiMixinConstructor>(base: TBase) {
         public async get_invite_info(
             code: string
         ): Promise<Response<RedeemingInvite>> {
-            return await this.request<RedeemingInvite>(`/client/info/${code}`);
+            return await this.request<RedeemingInvite>(`/client/${code}/info`);
         }
     };
 }

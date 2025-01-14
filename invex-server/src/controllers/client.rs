@@ -3,18 +3,25 @@ use std::collections::HashMap;
 use bson::doc;
 use chrono::Utc;
 use invex_sdk::PluginArgument;
-use rocket::{ request::{ self, FromRequest }, response::Responder, serde::json::Json, Request, Route };
+use rocket::{
+    request::{ self, FromRequest },
+    response::Responder,
+    serde::json::Json,
+    Request,
+    Route,
+};
 use serde::{ Deserialize, Serialize };
+use serde_json::Value;
 
 use crate::{
     models::{
-        auth::AuthUser,
+        auth::{ AuthSession, AuthUser, ClientUser },
         error::ApiError,
         invite::{ Invite, InviteUsage, ResolvedExpiration },
-        plugin::{PluginRegistry, RegisteredPlugin},
+        plugin::{ PluginRegistry, RegisteredPlugin },
         service::{ Service, ServiceGrant },
     },
-    util::{ database::{ Collections, Docs, Document, Id }, ApiResult },
+    util::{ crypto::SecretKey, database::{ Collections, Docs, Document, Id }, ApiResult },
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -196,19 +203,29 @@ impl RedeemingInvite {
     }
 }
 
-#[get("/info/<code>")]
-async fn get_invite_info(invites: Docs<Invite>, usages: Docs<InviteUsage>, collections: Collections, plugins: PluginRegistry, code: &str) -> ApiResult<RedeemingInvite> {
-    if let Some(invite) = invites.query_one(doc! {"code": code}).await {
-        if let Ok(inv_usages) = usages.query_many(doc! {"invite_id": invite.id()}).await {
+#[get("/<code>/info")]
+async fn get_invite_info(
+    invites: Docs<Invite>,
+    usages: Docs<InviteUsage>,
+    collections: Collections,
+    plugins: PluginRegistry,
+    code: &str
+) -> ApiResult<RedeemingInvite> {
+    if let Some(invite) = invites.query_one(doc! { "code": code }).await {
+        if let Ok(inv_usages) = usages.query_many(doc! { "invite_id": invite.id() }).await {
             let expired = match invite.expires() {
                 ResolvedExpiration::Never => false,
                 ResolvedExpiration::Datetime(datetime) => Utc::now() <= datetime,
-                ResolvedExpiration::Uses(max_uses) => (inv_usages.len() as u64) < max_uses
+                ResolvedExpiration::Uses(max_uses) => (inv_usages.len() as u64) < max_uses,
             };
             if expired {
                 Err(ApiError::not_found("Unknown invite code"))
             } else {
-                Ok(Json(RedeemingInvite::from_invite(&invite, collections.clone(), &plugins).await?))
+                Ok(
+                    Json(
+                        RedeemingInvite::from_invite(&invite, collections.clone(), &plugins).await?
+                    )
+                )
             }
         } else {
             Err(ApiError::internal("Failed to retrieve invite usages"))
@@ -216,6 +233,102 @@ async fn get_invite_info(invites: Docs<Invite>, usages: Docs<InviteUsage>, colle
     } else {
         Err(ApiError::not_found("Unknown invite code"))
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "mode", rename_all = "snake_case")]
+pub enum InviteAuthenticator {
+    Create {
+        username: String,
+
+        #[serde(default)]
+        email: Option<String>,
+        password: String,
+        confirm_password: String,
+    },
+    Login {
+        username_or_email: String,
+        password: String,
+    },
+    Inactive {},
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct InviteRedemptionModel {
+    pub user_creation: InviteAuthenticator,
+    pub services: HashMap<String, HashMap<String, HashMap<String, Value>>>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct InviteRedemptionResponse {
+    pub usage: InviteUsage,
+    pub user: ClientUser,
+    pub secret_key: Option<SecretKey>
+}
+
+//#[post("/<code>/redeem", data = "<data>")]
+async fn redeem_invite(
+    invites: Docs<Invite>,
+    usages: Docs<InviteUsage>,
+    users: Docs<AuthUser>,
+    session: &mut AuthSession,
+    code: &str,
+    data: Json<InviteRedemptionModel>,
+    collections: Collections,
+    plugins: PluginRegistry
+) -> ApiResult<InviteRedemptionResponse> {
+    let redeem = if let Some(invite) = invites.query_one(doc! { "code": code }).await {
+        if let Ok(inv_usages) = usages.query_many(doc! { "invite_id": invite.id() }).await {
+            let expired = match invite.expires() {
+                ResolvedExpiration::Never => false,
+                ResolvedExpiration::Datetime(datetime) => Utc::now() <= datetime,
+                ResolvedExpiration::Uses(max_uses) => (inv_usages.len() as u64) < max_uses,
+            };
+            if expired {
+                Err(ApiError::not_found("Unknown invite code"))
+            } else {
+                Ok(RedeemingInvite::from_invite(&invite, collections.clone(), &plugins).await?)
+            }
+        } else {
+            Err(ApiError::internal("Failed to retrieve invite usages"))
+        }
+    } else {
+        Err(ApiError::not_found("Unknown invite code"))
+    }?;
+
+    let user = match data.user_creation {
+        InviteAuthenticator::Create { username, email, password, .. } => {
+            if session.user_id.is_some() {
+                return Err(ApiError::bad_request("Already logged in, cannot redeem as another user."));
+            }
+
+            if users.exists(doc! {"username": username.clone()}).await {
+                return Err(ApiError::method_not_allowed("A user with that username already exists."));
+            }
+
+            let new_user = AuthUser::new_user(username, email, password).or_else(|e| Err(ApiError::internal(format!("Failed to create user: {e:?}"))))?;
+            users.save(new_user.clone()).await.or_else(|e| Err(ApiError::internal("Failed to save new user: {e:?}")))?;
+            if let Some(key) = new_user.verify_and_decrypt(password.clone()) {
+                
+            } else {
+                Err(ApiError::internal("Failed to decrypt user key with used password."))
+            }
+        },
+        InviteAuthenticator::Login { username_or_email, password } => {
+            if session.user_id.is_some() {
+                return Err(ApiError::bad_request("Already logged in, cannot redeem as another user."));
+            }
+        },
+        InviteAuthenticator::Inactive {  } => {
+            if let Some(user_id) = session.user_id {
+
+            } else {
+                Err(ApiError::authentication_required("Must be authenticated to redeem without logging in."))
+            }
+        }
+    };
+
+    Err(ApiError::not_found("Unknown invite code"))
 }
 
 pub fn routes() -> Vec<Route> {
