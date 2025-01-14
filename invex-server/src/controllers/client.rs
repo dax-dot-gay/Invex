@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bson::doc;
 use chrono::Utc;
-use invex_sdk::PluginArgument;
+use invex_sdk::{ params::{GrantActionParams, ParameterMap}, GrantResource, PluginArgument };
 use rocket::{
     request::{ self, FromRequest },
     response::Responder,
@@ -17,8 +17,8 @@ use crate::{
     models::{
         auth::{ AuthSession, AuthUser, ClientUser },
         error::ApiError,
-        invite::{ Invite, InviteUsage, ResolvedExpiration },
-        plugin::{ PluginRegistry, RegisteredPlugin },
+        invite::{ GrantResult, Invite, InviteGrant, InviteUsage, ResolvedExpiration },
+        plugin::{ PluginConfiguration, PluginRegistry, RegisteredPlugin },
         service::{ Service, ServiceGrant },
     },
     util::{ database::{ Collections, Docs, Document, Id }, ApiResult },
@@ -259,25 +259,42 @@ pub struct InviteRedemptionModel {
     pub services: HashMap<String, HashMap<String, HashMap<String, Value>>>,
 }
 
+impl InviteRedemptionModel {
+    pub fn get_parameters(&self, service_id: impl AsRef<str>, grant_id: impl AsRef<str>) -> Result<ParameterMap, ApiError> {
+        if let Some(service) = self.services.get(service_id.as_ref()) {
+            if let Some(grant) = service.get(grant_id.as_ref()) {
+                Ok(grant.clone().into())
+            } else {
+                Err(ApiError::not_found(format!("Missing grant ID {}", grant_id.as_ref())))
+            }
+        } else {
+            Err(ApiError::not_found(format!("Missing service ID {}", service_id.as_ref())))
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InviteRedemptionResponse {
     pub usage: InviteUsage,
-    pub user: ClientUser
+    pub user: ClientUser,
 }
 
-//#[post("/<code>/redeem", data = "<data>")]
+#[post("/<code>/redeem?<dry>", data = "<data>")]
 async fn redeem_invite(
     invites: Docs<Invite>,
     usages: Docs<InviteUsage>,
     users: Docs<AuthUser>,
     sessions: Docs<AuthSession>,
-    session: &mut AuthSession,
+    services: Docs<Service>,
+    configs: Docs<PluginConfiguration>,
+    mut session: AuthSession,
     code: &str,
     data: Json<InviteRedemptionModel>,
     collections: Collections,
-    plugins: PluginRegistry
+    plugins: PluginRegistry,
+    dry: bool
 ) -> ApiResult<InviteRedemptionResponse> {
-    let redeem = if let Some(invite) = invites.query_one(doc! { "code": code }).await {
+    let redeem = (if let Some(invite) = invites.query_one(doc! { "code": code }).await {
         if let Ok(inv_usages) = usages.query_many(doc! { "invite_id": invite.id() }).await {
             let expired = match invite.expires() {
                 ResolvedExpiration::Never => false,
@@ -294,35 +311,61 @@ async fn redeem_invite(
         }
     } else {
         Err(ApiError::not_found("Unknown invite code"))
-    }?;
+    })?;
 
     let data = data.into_inner();
 
-    let user = match data.user_creation {
+    let user = (match data.user_creation.clone() {
         InviteAuthenticator::Create { username, email, password, .. } => {
             if session.user_id.is_some() {
-                return Err(ApiError::bad_request("Already logged in, cannot redeem as another user."));
+                return Err(
+                    ApiError::bad_request("Already logged in, cannot redeem as another user.")
+                );
             }
 
-            if users.exists(doc! {"username": username.clone()}).await {
-                return Err(ApiError::method_not_allowed("A user with that username already exists."));
+            if users.exists(doc! { "username": username.clone() }).await {
+                return Err(
+                    ApiError::method_not_allowed("A user with that username already exists.")
+                );
             }
 
-            let new_user = AuthUser::new_user(username, email, password).or_else(|e| Err(ApiError::internal(format!("Failed to create user: {e:?}"))))?;
-            users.save(new_user.clone()).await.or_else(|e| Err(ApiError::internal("Failed to save new user: {e:?}")))?;
-            session.user_id = Some(new_user.id.clone());
-            sessions.save(session.clone()).await.or_else(|e| Err(ApiError::internal("Failed to save session info: {e:?}")))?;
+            let new_user = AuthUser::new_user(username, email, password).or_else(|e|
+                Err(ApiError::internal(format!("Failed to create user: {e:?}")))
+            )?;
+            if !dry {
+                users
+                    .save(new_user.clone()).await
+                    .or_else(|e| Err(ApiError::internal(format!("Failed to save new user: {e:?}"))))?;
+                session.user_id = Some(new_user.id.clone());
+                sessions
+                    .save(session.clone()).await
+                    .or_else(|e| Err(ApiError::internal(format!("Failed to save session info: {e:?}"))))?;
+            }
+           
             Ok(new_user)
-        },
+        }
         InviteAuthenticator::Login { username_or_email, password } => {
             if session.user_id.is_some() {
-                return Err(ApiError::bad_request("Already logged in, cannot redeem as another user."));
+                return Err(
+                    ApiError::bad_request("Already logged in, cannot redeem as another user.")
+                );
             }
 
-            if let Some(user) = users.query_one(doc! {"$or": [{"username": username_or_email.clone()}, {"email": username_or_email.clone()}]}).await {
+            if
+                let Some(user) = users.query_one(
+                    doc! { "$or": [{"username": username_or_email.clone()}, {"email": username_or_email.clone()}] }
+                ).await
+            {
                 if user.verify(password.clone()) {
-                    session.user_id = Some(user.id.clone());
-                    sessions.save(session.clone()).await.or_else(|e| Err(ApiError::internal("Failed to save session info: {e:?}")))?;
+                    if !dry {
+                        session.user_id = Some(user.id.clone());
+                        sessions
+                            .save(session.clone()).await
+                            .or_else(|e|
+                                Err(ApiError::internal(format!("Failed to save session info: {e:?}")))
+                            )?;
+                    }
+                    
                     Ok(user)
                 } else {
                     Err(ApiError::not_found("Unknown username or password"))
@@ -330,23 +373,100 @@ async fn redeem_invite(
             } else {
                 Err(ApiError::not_found("Unknown username or password"))
             }
-        },
-        InviteAuthenticator::Inactive {  } => {
+        }
+        InviteAuthenticator::Inactive {} => {
             if let Some(user_id) = &session.user_id {
                 if let Some(user) = users.get(user_id.to_string()).await {
                     Ok(user)
                 } else {
-                    Err(ApiError::authentication_required("Must be authenticated to redeem without logging in."))
+                    Err(
+                        ApiError::authentication_required(
+                            "Must be authenticated to redeem without logging in."
+                        )
+                    )
                 }
             } else {
-                Err(ApiError::authentication_required("Must be authenticated to redeem without logging in."))
+                Err(
+                    ApiError::authentication_required(
+                        "Must be authenticated to redeem without logging in."
+                    )
+                )
             }
         }
-    };
+    })?;
 
-    Err(ApiError::not_found("Unknown invite code"))
+    let mut usage = InviteUsage {
+        id: Id::default(),
+        user: user.id.clone(),
+        invite_id: redeem.invite.id.clone(),
+        invite_code: redeem.invite.code.clone(),
+        grants: Vec::new(),
+    };
+    for service_reference in redeem.services {
+        if let Some(service) = services.get(service_reference.id.clone()).await {
+            let mut grants = HashMap::<String, GrantResult<Vec<GrantResource>>>::new();
+
+            for (grant_id, grant) in service.grants.clone() {
+                if
+                    let ServiceGrant::Grant { plugin_id, config_id, grant_id: grant_key, options, .. } =
+                        grant
+                {
+                    grants.insert(
+                        grant_id.clone(),
+                        (
+                            if let Some(plugin) = plugins.get(plugin_id.to_string()).await {
+                                if let Some(config) = configs.get(config_id.to_string()).await {
+                                    if let Some(action) = plugin.get_grant(grant_key.clone()) {
+                                        match data.get_parameters(service.id(), grant_id.clone()) {
+                                            Ok(user_params) => {
+                                                let params = GrantActionParams {
+                                                    dry_run: dry,
+                                                    action: action.clone(),
+                                                    plugin_config: config.options.into(),
+                                                    service_config: options.into(),
+                                                    user_arguments: user_params.clone()
+                                                };
+                                                let result = plugin.call::<_, Vec<GrantResource>>(action.method, params).await;
+                                                match result {
+                                                    Ok(resources) => Ok(resources),
+                                                    Err((error, code)) => Err(ApiError::bad_request(format!("Action execution failed with code {code}: {error:?}")))
+                                                }
+                                            },
+                                            Err(e) => Err(e)
+                                        }
+                                    } else {
+                                        Err(ApiError::not_found("Unknown grant key"))
+                                    }
+                                } else {
+                                    Err(ApiError::not_found("Unknown config ID"))
+                                }
+                            } else {
+                                Err(ApiError::not_found("Unknown plugin ID"))
+                            }
+                        ).into()
+                    );
+                }
+            }
+
+            usage.grants.push(InviteGrant {service: service_reference.id.clone().into(), resources: Ok(grants).into()})
+        } else {
+            usage.grants.push(InviteGrant {
+                service: service_reference.id.clone().into(),
+                resources: Err(ApiError::not_found("Unable to locate service ID.")).into(),
+            });
+        }
+    }
+
+    if !dry {
+        usages.save(usage.clone()).await.or_else(|_| Err(ApiError::internal("Failed to save invite usage")))?;
+    }
+
+    Ok(Json(InviteRedemptionResponse {
+        usage,
+        user: user.into()
+    }))
 }
 
 pub fn routes() -> Vec<Route> {
-    routes![get_invite_info]
+    routes![get_invite_info, redeem_invite]
 }

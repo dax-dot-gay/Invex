@@ -1,4 +1,4 @@
-import { Invite } from "./invite";
+import { DbInvite } from "./invite";
 import { Plugin, PluginField } from "./plugin";
 
 export type RedeemingGrant = {
@@ -23,6 +23,6 @@ export type RedeemingService = {
 };
 
 export type RedeemingInvite = {
-    invite: Invite;
+    invite: DbInvite;
     services: RedeemingService[];
 };

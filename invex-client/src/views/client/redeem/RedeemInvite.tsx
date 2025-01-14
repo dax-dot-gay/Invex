@@ -13,6 +13,7 @@ import {
     Group,
     Indicator,
     Loader,
+    LoadingOverlay,
     Paper,
     ScrollAreaAutosize,
     SimpleGrid,
@@ -27,7 +28,6 @@ import { useMobile } from "../../../util/hooks";
 import {
     IconArrowRight,
     IconAt,
-    IconCheck,
     IconLink,
     IconLock,
     IconLogin2,
@@ -41,7 +41,6 @@ import { FormErrors, useForm, UseFormReturnType } from "@mantine/form";
 import { PasswordField } from "../../../components/fields";
 import { PluginFieldForm } from "../../../components/pluginFields";
 import { DynamicAvatar } from "../../../components/icon";
-import { identity, keyBy } from "lodash";
 import { FieldValue } from "../../../types/plugin";
 import { isEmail } from "validator";
 
@@ -220,6 +219,7 @@ export function RedeemInviteView() {
     const [redeeming, setRedeeming] = useState<RedeemingInvite | null>(null);
     const { error } = useNotifications();
     const { t } = useTranslation();
+    const [loading, setLoading] = useState(false);
 
     const mobile = useMobile();
     const form = useForm<RedemptionForm>({
@@ -332,302 +332,340 @@ export function RedeemInviteView() {
             <Loader size="lg" />
         </Stack>
     ) : (
-        <Stack className="invite-redeem-stack" p="sm" h="100%">
-            <Paper className="paper-light" p="sm">
-                <Group gap="sm" wrap="nowrap">
-                    <ThemeIcon variant="transparent" color="gray" size="lg">
-                        <IconLink />
-                    </ThemeIcon>
-                    <Divider orientation="vertical" />
-                    <Group
-                        gap={0}
-                        justify="end"
-                        style={{ flexGrow: 1 }}
-                        pr="sm"
-                    >
-                        {!mobile && (
-                            <Text size="lg" ff="monospace" c="dimmed" fw="bold">
-                                {window.location.origin}/inv/
+        <Box pos="relative" h="100%">
+            <LoadingOverlay visible={loading} />
+            <Stack className="invite-redeem-stack" p="sm" h="100%">
+                <Paper className="paper-light" p="sm">
+                    <Group gap="sm" wrap="nowrap">
+                        <ThemeIcon variant="transparent" color="gray" size="lg">
+                            <IconLink />
+                        </ThemeIcon>
+                        <Divider orientation="vertical" />
+                        <Group
+                            gap={0}
+                            justify="end"
+                            style={{ flexGrow: 1 }}
+                            pr="sm"
+                        >
+                            {!mobile && (
+                                <Text
+                                    size="lg"
+                                    ff="monospace"
+                                    c="dimmed"
+                                    fw="bold"
+                                >
+                                    {window.location.origin}/inv/
+                                </Text>
+                            )}
+                            <Text size="lg" ff="monospace" fw="bold">
+                                {code}
                             </Text>
-                        )}
-                        <Text size="lg" ff="monospace" fw="bold">
-                            {code}
-                        </Text>
+                        </Group>
                     </Group>
-                </Group>
-            </Paper>
-            <Paper
-                withBorder
-                p={0}
-                className="redemption-form"
-                h="100%"
-                mah="calc(100% - 75px)"
-                style={{ overflow: "hidden" }}
-            >
-                <ScrollAreaAutosize
-                    mah="calc(100% - 60px)"
+                </Paper>
+                <Paper
+                    withBorder
+                    p={0}
+                    className="redemption-form"
                     h="100%"
-                    p="sm"
-                    offsetScrollbars
+                    mah="calc(100% - 75px)"
+                    style={{ overflow: "hidden" }}
                 >
-                    <Accordion variant="separated" multiple>
-                        {form.values.user_creation.mode === "create" && (
-                            <AccordionItem value="user">
-                                <AccordionControl>
-                                    <Group
-                                        gap="md"
-                                        justify="space-between"
-                                        pr="md"
-                                    >
-                                        <Group gap="md">
-                                            <Indicator
-                                                disabled={
-                                                    form.values.user_creation
-                                                        .username.length > 0 &&
-                                                    form.values.user_creation
-                                                        .password.length > 0 &&
-                                                    form.values.user_creation
-                                                        .password ===
+                    <ScrollAreaAutosize
+                        mah="calc(100% - 60px)"
+                        h="100%"
+                        p="sm"
+                        offsetScrollbars
+                    >
+                        <Accordion variant="separated" multiple>
+                            {form.values.user_creation.mode === "create" && (
+                                <AccordionItem value="user">
+                                    <AccordionControl>
+                                        <Group
+                                            gap="md"
+                                            justify="space-between"
+                                            pr="md"
+                                        >
+                                            <Group gap="md">
+                                                <Indicator
+                                                    disabled={
                                                         form.values
                                                             .user_creation
-                                                            .confirm_password
-                                                }
-                                                color="red"
-                                            >
-                                                <ThemeIcon
-                                                    size="xl"
-                                                    variant="light"
-                                                    color="gray"
-                                                >
-                                                    <IconUserPlus />
-                                                </ThemeIcon>
-                                            </Indicator>
-                                            <Text size="xl" fw="600">
-                                                {t(
-                                                    "views.redeem.create_user.title"
-                                                )}
-                                            </Text>
-                                        </Group>
-                                        <Button
-                                            size="md"
-                                            leftSection={
-                                                <IconLogin2 size={24} />
-                                            }
-                                            justify="space-between"
-                                            variant="light"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                form.setFieldValue(
-                                                    "user_creation",
-                                                    {
-                                                        mode: "login",
-                                                        username_or_email: "",
-                                                        password: "",
+                                                            .username.length >
+                                                            0 &&
+                                                        form.values
+                                                            .user_creation
+                                                            .password.length >
+                                                            0 &&
+                                                        form.values
+                                                            .user_creation
+                                                            .password ===
+                                                            form.values
+                                                                .user_creation
+                                                                .confirm_password
                                                     }
-                                                );
-                                            }}
-                                        >
-                                            <Text
-                                                fw={600}
-                                                style={{
-                                                    transform:
-                                                        "translate(0, -2px)",
+                                                    color="red"
+                                                >
+                                                    <ThemeIcon
+                                                        size="xl"
+                                                        variant="light"
+                                                        color="gray"
+                                                    >
+                                                        <IconUserPlus />
+                                                    </ThemeIcon>
+                                                </Indicator>
+                                                <Text size="xl" fw="600">
+                                                    {t(
+                                                        "views.redeem.create_user.title"
+                                                    )}
+                                                </Text>
+                                            </Group>
+                                            <Button
+                                                size="md"
+                                                leftSection={
+                                                    <IconLogin2 size={24} />
+                                                }
+                                                justify="space-between"
+                                                variant="light"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    form.setFieldValue(
+                                                        "user_creation",
+                                                        {
+                                                            mode: "login",
+                                                            username_or_email:
+                                                                "",
+                                                            password: "",
+                                                        }
+                                                    );
                                                 }}
                                             >
-                                                {t(
-                                                    "views.redeem.login.switch_to"
+                                                <Text
+                                                    fw={600}
+                                                    style={{
+                                                        transform:
+                                                            "translate(0, -2px)",
+                                                    }}
+                                                >
+                                                    {t(
+                                                        "views.redeem.login.switch_to"
+                                                    )}
+                                                </Text>
+                                            </Button>
+                                        </Group>
+                                    </AccordionControl>
+                                    <AccordionPanel>
+                                        <Stack gap="sm">
+                                            <SimpleGrid
+                                                spacing="sm"
+                                                verticalSpacing="sm"
+                                                cols={{ base: 1, lg: 2 }}
+                                            >
+                                                <TextInput
+                                                    className="dark-input"
+                                                    withAsterisk
+                                                    label={t(
+                                                        "views.redeem.create_user.username"
+                                                    )}
+                                                    leftSection={
+                                                        <IconUser size={20} />
+                                                    }
+                                                    {...form.getInputProps(
+                                                        "user_creation.username"
+                                                    )}
+                                                    size="md"
+                                                />
+                                                <TextInput
+                                                    className="dark-input"
+                                                    label={t(
+                                                        "views.redeem.create_user.email"
+                                                    )}
+                                                    leftSection={
+                                                        <IconAt size={20} />
+                                                    }
+                                                    {...form.getInputProps(
+                                                        "user_creation.email"
+                                                    )}
+                                                    size="md"
+                                                />
+                                            </SimpleGrid>
+                                            <PasswordField
+                                                className="dark-input"
+                                                label={t(
+                                                    "views.redeem.create_user.password"
                                                 )}
-                                            </Text>
-                                        </Button>
-                                    </Group>
-                                </AccordionControl>
-                                <AccordionPanel>
-                                    <Stack gap="sm">
-                                        <SimpleGrid
-                                            spacing="sm"
-                                            verticalSpacing="sm"
-                                            cols={{ base: 1, lg: 2 }}
+                                                withAsterisk
+                                                size="md"
+                                                leftSection={
+                                                    <IconLock size={20} />
+                                                }
+                                                {...form.getInputProps(
+                                                    "user_creation.password"
+                                                )}
+                                            />
+                                            <PasswordField
+                                                className="dark-input"
+                                                label={t(
+                                                    "views.redeem.create_user.confirm_password"
+                                                )}
+                                                withAsterisk
+                                                size="md"
+                                                leftSection={
+                                                    <IconLock size={20} />
+                                                }
+                                                {...form.getInputProps(
+                                                    "user_creation.confirm_password"
+                                                )}
+                                            />
+                                        </Stack>
+                                    </AccordionPanel>
+                                </AccordionItem>
+                            )}
+                            {form.values.user_creation.mode === "login" && (
+                                <AccordionItem value="user">
+                                    <AccordionControl>
+                                        <Group
+                                            gap="md"
+                                            justify="space-between"
+                                            pr="md"
                                         >
+                                            <Group gap="md">
+                                                <Indicator
+                                                    disabled={
+                                                        form.values
+                                                            .user_creation
+                                                            .username_or_email
+                                                            .length > 0 &&
+                                                        form.values
+                                                            .user_creation
+                                                            .password.length > 0
+                                                    }
+                                                    color="red"
+                                                >
+                                                    <ThemeIcon
+                                                        size="xl"
+                                                        variant="light"
+                                                        color="gray"
+                                                    >
+                                                        <IconLogin2 />
+                                                    </ThemeIcon>
+                                                </Indicator>
+                                                <Text size="xl" fw="600">
+                                                    {t(
+                                                        "views.redeem.login.title"
+                                                    )}
+                                                </Text>
+                                            </Group>
+                                            <Button
+                                                size="md"
+                                                leftSection={
+                                                    <IconUserPlus size={24} />
+                                                }
+                                                justify="space-between"
+                                                variant="light"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    form.setFieldValue(
+                                                        "user_creation",
+                                                        {
+                                                            mode: "create",
+                                                            username: "",
+                                                            email: "",
+                                                            password: "",
+                                                            confirm_password:
+                                                                "",
+                                                        }
+                                                    );
+                                                }}
+                                            >
+                                                <Text
+                                                    fw={600}
+                                                    style={{
+                                                        transform:
+                                                            "translate(0, -2px)",
+                                                    }}
+                                                >
+                                                    {t(
+                                                        "views.redeem.create_user.switch_to"
+                                                    )}
+                                                </Text>
+                                            </Button>
+                                        </Group>
+                                    </AccordionControl>
+                                    <AccordionPanel>
+                                        <Stack gap="sm">
                                             <TextInput
                                                 className="dark-input"
                                                 withAsterisk
                                                 label={t(
-                                                    "views.redeem.create_user.username"
-                                                )}
-                                                leftSection={
-                                                    <IconUser size={20} />
-                                                }
-                                                {...form.getInputProps(
-                                                    "user_creation.username"
-                                                )}
-                                                size="md"
-                                            />
-                                            <TextInput
-                                                className="dark-input"
-                                                label={t(
-                                                    "views.redeem.create_user.email"
+                                                    "views.redeem.login.username_or_email"
                                                 )}
                                                 leftSection={
                                                     <IconAt size={20} />
                                                 }
                                                 {...form.getInputProps(
-                                                    "user_creation.email"
+                                                    "user_creation.username_or_email"
                                                 )}
                                                 size="md"
                                             />
-                                        </SimpleGrid>
-                                        <PasswordField
-                                            className="dark-input"
-                                            label={t(
-                                                "views.redeem.create_user.password"
-                                            )}
-                                            withAsterisk
-                                            size="md"
-                                            leftSection={<IconLock size={20} />}
-                                            {...form.getInputProps(
-                                                "user_creation.password"
-                                            )}
-                                        />
-                                        <PasswordField
-                                            className="dark-input"
-                                            label={t(
-                                                "views.redeem.create_user.confirm_password"
-                                            )}
-                                            withAsterisk
-                                            size="md"
-                                            leftSection={<IconLock size={20} />}
-                                            {...form.getInputProps(
-                                                "user_creation.confirm_password"
-                                            )}
-                                        />
-                                    </Stack>
-                                </AccordionPanel>
-                            </AccordionItem>
-                        )}
-                        {form.values.user_creation.mode === "login" && (
-                            <AccordionItem value="user">
-                                <AccordionControl>
-                                    <Group
-                                        gap="md"
-                                        justify="space-between"
-                                        pr="md"
-                                    >
-                                        <Group gap="md">
-                                            <Indicator
-                                                disabled={
-                                                    form.values.user_creation
-                                                        .username_or_email
-                                                        .length > 0 &&
-                                                    form.values.user_creation
-                                                        .password.length > 0
-                                                }
-                                                color="red"
-                                            >
-                                                <ThemeIcon
-                                                    size="xl"
-                                                    variant="light"
-                                                    color="gray"
-                                                >
-                                                    <IconLogin2 />
-                                                </ThemeIcon>
-                                            </Indicator>
-                                            <Text size="xl" fw="600">
-                                                {t("views.redeem.login.title")}
-                                            </Text>
-                                        </Group>
-                                        <Button
-                                            size="md"
-                                            leftSection={
-                                                <IconUserPlus size={24} />
-                                            }
-                                            justify="space-between"
-                                            variant="light"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                form.setFieldValue(
-                                                    "user_creation",
-                                                    {
-                                                        mode: "create",
-                                                        username: "",
-                                                        email: "",
-                                                        password: "",
-                                                        confirm_password: "",
-                                                    }
-                                                );
-                                            }}
-                                        >
-                                            <Text
-                                                fw={600}
-                                                style={{
-                                                    transform:
-                                                        "translate(0, -2px)",
-                                                }}
-                                            >
-                                                {t(
-                                                    "views.redeem.create_user.switch_to"
+                                            <PasswordField
+                                                className="dark-input"
+                                                label={t(
+                                                    "views.redeem.login.password"
                                                 )}
-                                            </Text>
-                                        </Button>
-                                    </Group>
-                                </AccordionControl>
-                                <AccordionPanel>
-                                    <Stack gap="sm">
-                                        <TextInput
-                                            className="dark-input"
-                                            withAsterisk
-                                            label={t(
-                                                "views.redeem.login.username_or_email"
-                                            )}
-                                            leftSection={<IconAt size={20} />}
-                                            {...form.getInputProps(
-                                                "user_creation.username_or_email"
-                                            )}
-                                            size="md"
-                                        />
-                                        <PasswordField
-                                            className="dark-input"
-                                            label={t(
-                                                "views.redeem.login.password"
-                                            )}
-                                            withAsterisk
-                                            size="md"
-                                            leftSection={<IconLock size={20} />}
-                                            {...form.getInputProps(
-                                                "user_creation.password"
-                                            )}
-                                        />
-                                    </Stack>
-                                </AccordionPanel>
-                            </AccordionItem>
-                        )}
-                        {redeeming.services.map((service) => (
-                            <ServiceItem
-                                key={service.id}
-                                service={service}
-                                form={form}
-                            />
-                        ))}
-                    </Accordion>
-                </ScrollAreaAutosize>
-                <Divider />
-                <Group p="sm" justify="end">
-                    <Button
-                        variant="light"
-                        color="red"
-                        leftSection={<IconX size={20} />}
-                        onClick={() => nav("/")}
-                    >
-                        {t("actions.cancel")}
-                    </Button>
-                    <Button
-                        variant="light"
-                        leftSection={<IconArrowRight size={20} />}
-                        disabled={!valid}
-                    >
-                        {t("actions.redeem")}
-                    </Button>
-                </Group>
-            </Paper>
-        </Stack>
+                                                withAsterisk
+                                                size="md"
+                                                leftSection={
+                                                    <IconLock size={20} />
+                                                }
+                                                {...form.getInputProps(
+                                                    "user_creation.password"
+                                                )}
+                                            />
+                                        </Stack>
+                                    </AccordionPanel>
+                                </AccordionItem>
+                            )}
+                            {redeeming.services.map((service) => (
+                                <ServiceItem
+                                    key={service.id}
+                                    service={service}
+                                    form={form}
+                                />
+                            ))}
+                        </Accordion>
+                    </ScrollAreaAutosize>
+                    <Divider />
+                    <Group p="sm" justify="end">
+                        <Button
+                            variant="light"
+                            color="red"
+                            leftSection={<IconX size={20} />}
+                            onClick={() => nav("/")}
+                        >
+                            {t("actions.cancel")}
+                        </Button>
+                        <Button
+                            variant="light"
+                            leftSection={<IconArrowRight size={20} />}
+                            disabled={!valid}
+                            onClick={() => {
+                                setLoading(true);
+                                api.redeem_invite(
+                                    redeeming.invite.code,
+                                    form.values,
+                                    true
+                                ).then((response) => {
+                                    console.log(response);
+                                    setLoading(false);
+                                });
+                            }}
+                        >
+                            {t("actions.redeem")}
+                        </Button>
+                    </Group>
+                </Paper>
+            </Stack>
+        </Box>
     );
 }

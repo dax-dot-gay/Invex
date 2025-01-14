@@ -1,3 +1,4 @@
+import { User } from "./auth";
 import { GrantResource } from "./plugin";
 import { Service } from "./service";
 
@@ -22,6 +23,17 @@ export type ResolvedExpiration =
           value: string;
       };
 
+export type GrantResult<T> =
+    | {
+          type: "success";
+          value: T;
+      }
+    | {
+          type: "error";
+          code: number;
+          reason: string;
+      };
+
 export type DbInvite = {
     _id: string;
     code: string;
@@ -32,7 +44,7 @@ export type DbInvite = {
 
 export type InviteGrant = {
     service: string;
-    resources: { [key: string]: GrantResource[] };
+    resources: GrantResult<{ [key: string]: GrantResult<GrantResource[]> }>;
 };
 
 export type InviteUsage = {
@@ -49,4 +61,9 @@ export type Invite = {
     services: Service[];
     usages: InviteUsage[];
     expires: ResolvedExpiration;
+};
+
+export type InviteRedemption = {
+    user: User;
+    usage: InviteUsage;
 };

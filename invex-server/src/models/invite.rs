@@ -1,12 +1,14 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use bevy_reflect::Reflect;
 use chrono::{ DateTime, Utc };
 use invex_macros::Document;
 use invex_sdk::GrantResource;
-use serde::{ Deserialize, Serialize };
+use serde::{ de::DeserializeOwned, Deserialize, Serialize };
 
 use crate::util::database::Id;
+
+use super::error::ApiError;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect)]
 #[serde(rename_all = "snake_case")]
@@ -50,9 +52,28 @@ impl Invite {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum GrantResult<T> {
+    Success {value: T},
+    Error {code: i32, reason: String}
+}
+
+impl<T: Serialize + DeserializeOwned + Clone + Debug> From<Result<T, ApiError>> for GrantResult<T> {
+    fn from(value: Result<T, ApiError>) -> Self {
+        match value {
+            Ok(v) => Self::Success { value: v },
+            Err(e) => {
+                let (reason, code) = e.contents();
+                Self::Error { code, reason }
+            }
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InviteGrant {
     pub service: Id,
-    pub resources: HashMap<String, Vec<GrantResource>>,
+    pub resources: GrantResult<HashMap<String, GrantResult<Vec<GrantResource>>>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect, Document)]

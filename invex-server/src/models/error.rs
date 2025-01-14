@@ -1,27 +1,21 @@
 use std::fmt::Display;
 
-use serde::{Deserialize, Serialize};
+use serde::{ Deserialize, Serialize };
 
 #[derive(Clone, Debug, Serialize, Deserialize, Responder)]
 #[response(content_type = "json")]
 pub enum ApiError {
-    #[response(status = 500)]
-    Internal(String),
+    #[response(status = 500)] Internal(String),
 
-    #[response(status = 400)]
-    BadRequest(String),
+    #[response(status = 400)] BadRequest(String),
 
-    #[response(status = 401)]
-    AuthenticationRequired(String),
+    #[response(status = 401)] AuthenticationRequired(String),
 
-    #[response(status = 405)]
-    MethodNotAllowed(String),
+    #[response(status = 405)] MethodNotAllowed(String),
 
-    #[response(status = 404)]
-    NotFound(String),
+    #[response(status = 404)] NotFound(String),
 
-    #[response(status = 403)]
-    Forbidden(String),
+    #[response(status = 403)] Forbidden(String),
 }
 
 impl Display for ApiError {
@@ -36,11 +30,12 @@ impl<T> From<Result<T, ApiError>> for ApiError {
     fn from(value: Result<T, ApiError>) -> Self {
         match value {
             Ok(_) => ApiError::Internal(String::from("Weird usage?")),
-            Err(e) => e
+            Err(e) => e,
         }
     }
 }
 
+#[allow(dead_code)]
 impl ApiError {
     pub fn internal(v: impl AsRef<str>) -> Self {
         Self::Internal(v.as_ref().to_string())
@@ -64,5 +59,16 @@ impl ApiError {
 
     pub fn forbidden(v: impl AsRef<str>) -> Self {
         Self::Forbidden(v.as_ref().to_string())
+    }
+
+    pub fn contents(&self) -> (String, i32) {
+        match self {
+            Self::Internal(s) => (s.clone(), 500),
+            Self::BadRequest(s) => (s.clone(), 500),
+            Self::AuthenticationRequired(s) => (s.clone(), 500),
+            Self::MethodNotAllowed(s) => (s.clone(), 500),
+            Self::NotFound(s) => (s.clone(), 500),
+            Self::Forbidden(s) => (s.clone(), 500),
+        }
     }
 }
