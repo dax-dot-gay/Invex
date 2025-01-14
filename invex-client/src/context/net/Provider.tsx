@@ -9,10 +9,6 @@ export function NetProvider({
 }: {
     children?: ReactNode | ReactNode[];
 }) {
-    const [secretKey, setSecretKey] = useLocalStorage<string>({
-        key: "secret-key",
-        defaultValue: "",
-    });
     const [token, setToken] = useState<string | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<{ code: number; reason?: any } | null>(
@@ -28,12 +24,8 @@ export function NetProvider({
         return axios.create({
             baseURL: `${window.location.origin}/api/`,
             timeout: 5000,
-            headers:
-                secretKey.length > 0
-                    ? { "X-Secret-Key": secretKey }
-                    : undefined,
         });
-    }, [secretKey]);
+    }, []);
 
     const refresh = useCallback(async () => {
         try {
@@ -50,11 +42,11 @@ export function NetProvider({
             setUser(null);
             setToken(null);
         }
-    }, [secretKey, token, user?.id, setToken, setUser, setError]);
+    }, [token, user?.id, setToken, setUser, setError]);
 
     useEffect(() => {
         refresh();
-    }, [secretKey]);
+    }, []);
 
     return (
         <NetContext.Provider
@@ -68,7 +60,6 @@ export function NetProvider({
                                   user,
                               },
                               axios: client,
-                              setSecretKey,
                               refresh,
                               customization: serverCustomization,
                           }
@@ -78,7 +69,6 @@ export function NetProvider({
                                   token,
                               },
                               axios: client,
-                              setSecretKey,
                               refresh,
                               customization: serverCustomization,
                           }

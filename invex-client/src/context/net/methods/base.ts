@@ -14,12 +14,6 @@ export class ApiBase {
         return this._id;
     }
 
-    public setSecretKey(value: string | null): void {
-        if (isReady(this.context)) {
-            this.context.setSecretKey(value ?? "");
-        }
-    }
-
     public async request<T, E = any>(
         url: string,
         config?: AxiosRequestConfig

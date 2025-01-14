@@ -21,7 +21,7 @@ use crate::{
         plugin::{ PluginRegistry, RegisteredPlugin },
         service::{ Service, ServiceGrant },
     },
-    util::{ crypto::SecretKey, database::{ Collections, Docs, Document, Id }, ApiResult },
+    util::{ database::{ Collections, Docs, Document, Id }, ApiResult },
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -262,8 +262,7 @@ pub struct InviteRedemptionModel {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InviteRedemptionResponse {
     pub usage: InviteUsage,
-    pub user: ClientUser,
-    pub secret_key: Option<SecretKey>
+    pub user: ClientUser
 }
 
 //#[post("/<code>/redeem", data = "<data>")]
@@ -271,6 +270,7 @@ async fn redeem_invite(
     invites: Docs<Invite>,
     usages: Docs<InviteUsage>,
     users: Docs<AuthUser>,
+    sessions: Docs<AuthSession>,
     session: &mut AuthSession,
     code: &str,
     data: Json<InviteRedemptionModel>,
@@ -296,6 +296,8 @@ async fn redeem_invite(
         Err(ApiError::not_found("Unknown invite code"))
     }?;
 
+    let data = data.into_inner();
+
     let user = match data.user_creation {
         InviteAuthenticator::Create { username, email, password, .. } => {
             if session.user_id.is_some() {
@@ -308,20 +310,34 @@ async fn redeem_invite(
 
             let new_user = AuthUser::new_user(username, email, password).or_else(|e| Err(ApiError::internal(format!("Failed to create user: {e:?}"))))?;
             users.save(new_user.clone()).await.or_else(|e| Err(ApiError::internal("Failed to save new user: {e:?}")))?;
-            if let Some(key) = new_user.verify_and_decrypt(password.clone()) {
-                
-            } else {
-                Err(ApiError::internal("Failed to decrypt user key with used password."))
-            }
+            session.user_id = Some(new_user.id.clone());
+            sessions.save(session.clone()).await.or_else(|e| Err(ApiError::internal("Failed to save session info: {e:?}")))?;
+            Ok(new_user)
         },
         InviteAuthenticator::Login { username_or_email, password } => {
             if session.user_id.is_some() {
                 return Err(ApiError::bad_request("Already logged in, cannot redeem as another user."));
             }
+
+            if let Some(user) = users.query_one(doc! {"$or": [{"username": username_or_email.clone()}, {"email": username_or_email.clone()}]}).await {
+                if user.verify(password.clone()) {
+                    session.user_id = Some(user.id.clone());
+                    sessions.save(session.clone()).await.or_else(|e| Err(ApiError::internal("Failed to save session info: {e:?}")))?;
+                    Ok(user)
+                } else {
+                    Err(ApiError::not_found("Unknown username or password"))
+                }
+            } else {
+                Err(ApiError::not_found("Unknown username or password"))
+            }
         },
         InviteAuthenticator::Inactive {  } => {
-            if let Some(user_id) = session.user_id {
-
+            if let Some(user_id) = &session.user_id {
+                if let Some(user) = users.get(user_id.to_string()).await {
+                    Ok(user)
+                } else {
+                    Err(ApiError::authentication_required("Must be authenticated to redeem without logging in."))
+                }
             } else {
                 Err(ApiError::authentication_required("Must be authenticated to redeem without logging in."))
             }

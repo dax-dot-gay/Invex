@@ -25,7 +25,6 @@ export type ReadyNetContext = {
     refresh: () => Promise<void>;
     axios: Axios;
     state: NetStateReady | NetStateAuthed;
-    setSecretKey: (key: string) => void;
     customization: ServerCustomization | null;
 };
 
