@@ -1,4 +1,4 @@
-import { ConnectionInfo, LoginResponse, User } from "../../../types/auth";
+import { ConnectionInfo, User } from "../../../types/auth";
 import { Response } from "../types";
 import { ApiMixinConstructor } from "./base";
 
@@ -12,16 +12,13 @@ export function AuthMixin<TBase extends ApiMixinConstructor>(base: TBase) {
             username: string,
             password: string
         ): Promise<User | null> {
-            const result = await this.request<LoginResponse>("/login", {
+            const result = await this.request<User>("/login", {
                 method: "post",
                 data: { email: username, password },
             });
             await this.refresh();
 
-            return result.resolve((data) => {
-                this.setSecretKey(data.client_key);
-                return data.user;
-            }, null);
+            return result.or_default(null);
         }
 
         public async logout(): Promise<Response<void>> {

@@ -17,8 +17,3 @@ export type ConnectionInfo = {
     user: User | null;
     customization: ServerCustomization;
 };
-
-export type LoginResponse = {
-    user: User;
-    client_key: string;
-};
