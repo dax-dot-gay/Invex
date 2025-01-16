@@ -5,7 +5,11 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.94"
+argon2 = { version = "0.5.3", features = ["simple"] }
+cryptoxide = "0.4.4"
 derive_builder = "0.20.2"
+getrandom = { version = "0.2.15", features = ["js"] }
+rand_core = { version = "0.6.4", features = ["alloc", "getrandom"] }
 serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"
 serde_repr = "0.1.19"

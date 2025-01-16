@@ -33,10 +33,10 @@ async fn add_plugin_file(
     if user.kind != UserType::Admin {
         return Err(ApiError::Forbidden("Must be an admin to upload plugins".to_string()));
     }
-    if let Ok(registered) = plugins.register_file(plugin.into_inner()).await {
-        Ok(Json(registered.into()))
-    } else {
-        Err(ApiError::Internal("Failed to upload plugin".to_string()))
+
+    match plugins.register_file(plugin.into_inner()).await {
+        Ok(registered) => Ok(Json(registered.into())),
+        Err(e) => Err(ApiError::internal(format!("Failed to register plugin: {e:?}")))
     }
 }
 

@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fmt::Debug};
 
+use cryptoxide::{digest::Digest, sha2::Sha512};
 use derive_builder::Builder;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
@@ -375,7 +376,7 @@ pub enum GrantResource {
         email: Option<String>,
 
         #[serde(default)]
-        password: Option<String>,
+        password: Option<HashedPassword>,
 
         #[serde(default = "Default::default")]
         metadata: Option<Value>,
@@ -546,3 +547,26 @@ impl PluginMetadataBuilder {
         Ok(())
     }
 }
+
+
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct HashedPassword(String);
+
+impl HashedPassword {
+    pub fn new<T: AsRef<str>>(password: T) -> Self {
+        Self(Self::hash(password.as_ref()))
+    }
+
+    fn hash(input: impl AsRef<str>) -> String {
+        let mut hasher = Sha512::new();
+        hasher.input_str(input.as_ref());
+        hasher.result_str()
+    }
+
+    pub fn verify<T: AsRef<str>>(&self, test: T) -> bool {
+        let check = Self::hash(test.as_ref());
+        check == self.0
+    }
+}
+

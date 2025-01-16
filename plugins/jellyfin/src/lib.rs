@@ -1,6 +1,6 @@
 use extism_pdk::*;
 use invex_sdk::{
-    params::{GrantActionParams, PluginFieldParams}, ExpectedType, FieldBuilder, FieldSelectOption, FieldType, GrantActionBuilder, GrantResource, PluginDefinedMethodContext, PluginMetadata, PluginMetadataBuilder
+    params::{GrantActionParams, PluginFieldParams}, ExpectedType, FieldBuilder, FieldSelectOption, FieldType, GrantActionBuilder, GrantResource, HashedPassword, PluginDefinedMethodContext, PluginMetadata, PluginMetadataBuilder
 };
 use models::{ CreateUserArguments, CreateUserConfig, JellyfinPluginConfig, LibraryReference, UserItem };
 use net::Connection;
@@ -163,8 +163,10 @@ pub fn grant_create_user(params: Json<GrantActionParams>) -> FnResult<Json<Vec<G
                     return Err(WithReturnCode(Error::msg("Desired username already exists"), 405));
                 }
 
+                let hashed_pw = HashedPassword::new(user_arguments.password.clone());
+
                 if dry_run {
-                    Ok(Json(vec![GrantResource::Account { id: String::from("dry_run"), user_id: None, username: Some(user_arguments.username.clone()), email: None, password: Some(user_arguments.password.clone()), metadata: None }]))
+                    Ok(Json(vec![GrantResource::Account { id: String::from("dry_run"), user_id: None, username: Some(user_arguments.username.clone()), email: None, password: Some(hashed_pw.clone()), metadata: None }]))
                 } else {
                     match connection.post("/Users/New", Some(json!({"Name": user_arguments.username.clone(), "Password": user_arguments.password.clone()}))) {
                         Ok(response) => {
@@ -174,7 +176,7 @@ pub fn grant_create_user(params: Json<GrantActionParams>) -> FnResult<Json<Vec<G
                                     "PasswordResetProviderId": created.policy.password_reset_provider_id.clone(),
                                     "EnabledFolders": service_config.libraries.clone()
                                 }))) {
-                                    Ok(_) => Ok(Json(vec![GrantResource::Account { id: created.id.clone(), user_id: Some(created.id.clone()), username: Some(created.name.clone()), email: None, password: Some(user_arguments.password.clone()), metadata: None }])),
+                                    Ok(_) => Ok(Json(vec![GrantResource::Account { id: created.id.clone(), user_id: Some(created.id.clone()), username: Some(created.name.clone()), email: None, password: Some(hashed_pw.clone()), metadata: None }])),
                                     Err(e) => Err(WithReturnCode(Error::msg(format!("Failed to add user to libraries: {e:?}")), 500))
                                 }
                             } else {
