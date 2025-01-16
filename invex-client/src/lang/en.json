@@ -180,6 +180,10 @@
         "title": "Log In",
         "username_or_email": "Username or Email",
         "password": "Password"
+      },
+      "status": {
+        "validating": "Validating...",
+        "valid": "Validated"
       }
     }
   },

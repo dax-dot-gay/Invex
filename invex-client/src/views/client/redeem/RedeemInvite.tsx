@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { ClientMixin, useApi } from "../../../context/net";
+import { ClientMixin, Response, useApi } from "../../../context/net";
 import { RedeemingInvite, RedeemingService } from "../../../types/client";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -7,6 +7,7 @@ import {
     AccordionControl,
     AccordionItem,
     AccordionPanel,
+    Badge,
     Box,
     Button,
     Divider,
@@ -43,6 +44,7 @@ import { PluginFieldForm } from "../../../components/pluginFields";
 import { DynamicAvatar } from "../../../components/icon";
 import { FieldValue } from "../../../types/plugin";
 import { isEmail } from "validator";
+import { InviteRedemption } from "../../../types/invite";
 
 type RedemptionForm = {
     user_creation:
@@ -220,6 +222,9 @@ export function RedeemInviteView() {
     const { error } = useNotifications();
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
+    const [redeemed, setRedeemed] = useState<Response<InviteRedemption> | null>(
+        null
+    );
 
     const mobile = useMobile();
     const form = useForm<RedemptionForm>({
@@ -419,6 +424,28 @@ export function RedeemInviteView() {
                                                         "views.redeem.create_user.title"
                                                     )}
                                                 </Text>
+                                                {redeemed && (
+                                                    <Badge
+                                                        size="md"
+                                                        style={{
+                                                            transform:
+                                                                "translate(0, 2px)",
+                                                        }}
+                                                        color={
+                                                            redeemed.success
+                                                                ? "green"
+                                                                : "red"
+                                                        }
+                                                    >
+                                                        {redeemed.resolve(
+                                                            t(
+                                                                "views.redeem.status.valid"
+                                                            ),
+                                                            (_, reason) =>
+                                                                reason
+                                                        )}
+                                                    </Badge>
+                                                )}
                                             </Group>
                                             <Button
                                                 size="md"
@@ -555,6 +582,28 @@ export function RedeemInviteView() {
                                                         "views.redeem.login.title"
                                                     )}
                                                 </Text>
+                                                {redeemed && (
+                                                    <Badge
+                                                        size="md"
+                                                        style={{
+                                                            transform:
+                                                                "translate(0, 2px)",
+                                                        }}
+                                                        color={
+                                                            redeemed.success
+                                                                ? "green"
+                                                                : "red"
+                                                        }
+                                                    >
+                                                        {redeemed.resolve(
+                                                            t(
+                                                                "views.redeem.status.valid"
+                                                            ),
+                                                            (_, reason) =>
+                                                                reason
+                                                        )}
+                                                    </Badge>
+                                                )}
                                             </Group>
                                             <Button
                                                 size="md"
@@ -636,7 +685,7 @@ export function RedeemInviteView() {
                         </Accordion>
                     </ScrollAreaAutosize>
                     <Divider />
-                    <Group p="sm" justify="end">
+                    <Group p="sm" justify="end" gap="sm">
                         <Button
                             variant="light"
                             color="red"
@@ -656,12 +705,14 @@ export function RedeemInviteView() {
                                     form.values,
                                     true
                                 ).then((response) => {
-                                    console.log(response);
+                                    setRedeemed(response);
                                     setLoading(false);
                                 });
                             }}
                         >
-                            {t("actions.redeem")}
+                            {!loading
+                                ? t("actions.redeem")
+                                : t("views.redeem.status.validating")}
                         </Button>
                     </Group>
                 </Paper>
