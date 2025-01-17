@@ -183,7 +183,9 @@
       },
       "status": {
         "validating": "Validating...",
-        "valid": "Validated"
+        "valid": "Validated",
+        "hasErrors": "Some inputs failed validation.",
+        "executing": "Executing..."
       }
     }
   },

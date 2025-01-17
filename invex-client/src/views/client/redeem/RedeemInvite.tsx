@@ -7,14 +7,13 @@ import {
     AccordionControl,
     AccordionItem,
     AccordionPanel,
-    Badge,
+    Alert,
     Box,
     Button,
     Divider,
     Group,
     Indicator,
     Loader,
-    LoadingOverlay,
     Paper,
     ScrollAreaAutosize,
     SimpleGrid,
@@ -29,6 +28,7 @@ import { useMobile } from "../../../util/hooks";
 import {
     IconArrowRight,
     IconAt,
+    IconCheck,
     IconLink,
     IconLock,
     IconLogin2,
@@ -75,10 +75,15 @@ type RedemptionForm = {
 function ServiceItem({
     service,
     form,
+    validation,
+    index,
 }: {
     service: RedeemingService;
     form: UseFormReturnType<RedemptionForm>;
+    validation: Response<InviteRedemption> | null;
+    index: number;
 }) {
+    const { t } = useTranslation();
     useEffect(() => {
         form.setFieldValue("services", (current) => ({
             ...current,
@@ -148,6 +153,71 @@ function ServiceItem({
                             </Text>
                         )}
                     </Stack>
+                    {validation?.resolve((data) => {
+                        if (data.usage.grants[index]) {
+                            switch (data.usage.grants[index].resources.type) {
+                                case "success":
+                                    if (
+                                        Object.values(
+                                            data.usage.grants[index].resources
+                                                .value
+                                        ).every((v) => v.type === "success")
+                                    ) {
+                                        return (
+                                            <Alert
+                                                color="green"
+                                                p="xs"
+                                                style={{ flexGrow: 1 }}
+                                            >
+                                                <Group gap="sm">
+                                                    <IconCheck />
+                                                    <Text fw={600}>
+                                                        {t(
+                                                            "views.redeem.status.valid"
+                                                        )}
+                                                    </Text>
+                                                </Group>
+                                            </Alert>
+                                        );
+                                    } else {
+                                        return (
+                                            <Alert
+                                                color="red"
+                                                p="xs"
+                                                style={{ flexGrow: 1 }}
+                                            >
+                                                <Group gap="sm">
+                                                    <IconX />
+                                                    <Text fw={600}>
+                                                        {t(
+                                                            "views.redeem.status.hasErrors"
+                                                        )}
+                                                    </Text>
+                                                </Group>
+                                            </Alert>
+                                        );
+                                    }
+                                case "error":
+                                    return (
+                                        <Alert
+                                            color="red"
+                                            p="xs"
+                                            style={{ flexGrow: 1 }}
+                                        >
+                                            <Group gap="sm">
+                                                <IconX />
+                                                <Text fw={600}>
+                                                    {
+                                                        data.usage.grants[index]
+                                                            .resources.reason
+                                                    }
+                                                </Text>
+                                            </Group>
+                                        </Alert>
+                                    );
+                            }
+                        }
+                    }, null) ?? <></>}
                 </Group>
             </AccordionControl>
             <AccordionPanel>
@@ -179,6 +249,52 @@ function ServiceItem({
                                             </Text>
                                         )}
                                     </Stack>
+                                    {validation &&
+                                    validation.success &&
+                                    validation.data &&
+                                    validation.data.usage.grants[index]
+                                        ?.resources.type === "success" &&
+                                    validation.data.usage.grants[index]
+                                        ?.resources.value[id] ? (
+                                        validation.data.usage.grants[index]
+                                            ?.resources.value[id].type ===
+                                        "success" ? (
+                                            <Alert
+                                                color="green"
+                                                p="xs"
+                                                style={{ flexGrow: 1 }}
+                                            >
+                                                <Group gap="sm">
+                                                    <IconCheck />
+                                                    <Text fw={600}>
+                                                        {t(
+                                                            "views.redeem.status.valid"
+                                                        )}
+                                                    </Text>
+                                                </Group>
+                                            </Alert>
+                                        ) : (
+                                            <Alert
+                                                color="red"
+                                                p="xs"
+                                                style={{ flexGrow: 1 }}
+                                            >
+                                                <Group gap="sm">
+                                                    <IconX />
+                                                    <Text fw={600}>
+                                                        {
+                                                            validation.data
+                                                                .usage.grants[
+                                                                index
+                                                            ]?.resources.value[
+                                                                id
+                                                            ].reason
+                                                        }
+                                                    </Text>
+                                                </Group>
+                                            </Alert>
+                                        )
+                                    ) : null}
                                 </Group>
                                 <Divider />
                                 <Box p="sm">
@@ -222,6 +338,7 @@ export function RedeemInviteView() {
     const { error } = useNotifications();
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
+    const [executing, setExecuting] = useState(false);
     const [redeemed, setRedeemed] = useState<Response<InviteRedemption> | null>(
         null
     );
@@ -338,7 +455,6 @@ export function RedeemInviteView() {
         </Stack>
     ) : (
         <Box pos="relative" h="100%">
-            <LoadingOverlay visible={loading} />
             <Stack className="invite-redeem-stack" p="sm" h="100%">
                 <Paper className="paper-light" p="sm">
                     <Group gap="sm" wrap="nowrap">
@@ -391,7 +507,10 @@ export function RedeemInviteView() {
                                             justify="space-between"
                                             pr="md"
                                         >
-                                            <Group gap="md">
+                                            <Group
+                                                gap="md"
+                                                style={{ flexGrow: 1 }}
+                                            >
                                                 <Indicator
                                                     disabled={
                                                         form.values
@@ -425,11 +544,11 @@ export function RedeemInviteView() {
                                                     )}
                                                 </Text>
                                                 {redeemed && (
-                                                    <Badge
-                                                        size="md"
+                                                    <Alert
+                                                        variant="light"
+                                                        p="xs"
                                                         style={{
-                                                            transform:
-                                                                "translate(0, 2px)",
+                                                            flexGrow: 1,
                                                         }}
                                                         color={
                                                             redeemed.success
@@ -437,14 +556,25 @@ export function RedeemInviteView() {
                                                                 : "red"
                                                         }
                                                     >
-                                                        {redeemed.resolve(
-                                                            t(
-                                                                "views.redeem.status.valid"
-                                                            ),
-                                                            (_, reason) =>
-                                                                reason
-                                                        )}
-                                                    </Badge>
+                                                        <Group gap="sm">
+                                                            {redeemed.success ? (
+                                                                <IconCheck />
+                                                            ) : (
+                                                                <IconX />
+                                                            )}
+                                                            <Text fw={600}>
+                                                                {redeemed.resolve(
+                                                                    t(
+                                                                        "views.redeem.status.valid"
+                                                                    ),
+                                                                    (
+                                                                        _,
+                                                                        reason
+                                                                    ) => reason
+                                                                )}
+                                                            </Text>
+                                                        </Group>
+                                                    </Alert>
                                                 )}
                                             </Group>
                                             <Button
@@ -556,7 +686,10 @@ export function RedeemInviteView() {
                                             justify="space-between"
                                             pr="md"
                                         >
-                                            <Group gap="md">
+                                            <Group
+                                                gap="md"
+                                                style={{ flexGrow: 1 }}
+                                            >
                                                 <Indicator
                                                     disabled={
                                                         form.values
@@ -583,11 +716,11 @@ export function RedeemInviteView() {
                                                     )}
                                                 </Text>
                                                 {redeemed && (
-                                                    <Badge
-                                                        size="md"
+                                                    <Alert
+                                                        variant="light"
+                                                        p="xs"
                                                         style={{
-                                                            transform:
-                                                                "translate(0, 2px)",
+                                                            flexGrow: 1,
                                                         }}
                                                         color={
                                                             redeemed.success
@@ -595,14 +728,25 @@ export function RedeemInviteView() {
                                                                 : "red"
                                                         }
                                                     >
-                                                        {redeemed.resolve(
-                                                            t(
-                                                                "views.redeem.status.valid"
-                                                            ),
-                                                            (_, reason) =>
-                                                                reason
-                                                        )}
-                                                    </Badge>
+                                                        <Group gap="sm">
+                                                            {redeemed.success ? (
+                                                                <IconCheck />
+                                                            ) : (
+                                                                <IconX />
+                                                            )}
+                                                            <Text fw={600}>
+                                                                {redeemed.resolve(
+                                                                    t(
+                                                                        "views.redeem.status.valid"
+                                                                    ),
+                                                                    (
+                                                                        _,
+                                                                        reason
+                                                                    ) => reason
+                                                                )}
+                                                            </Text>
+                                                        </Group>
+                                                    </Alert>
                                                 )}
                                             </Group>
                                             <Button
@@ -675,11 +819,13 @@ export function RedeemInviteView() {
                                     </AccordionPanel>
                                 </AccordionItem>
                             )}
-                            {redeeming.services.map((service) => (
+                            {redeeming.services.map((service, index) => (
                                 <ServiceItem
                                     key={service.id}
                                     service={service}
                                     form={form}
+                                    validation={redeemed}
+                                    index={index}
                                 />
                             ))}
                         </Accordion>
@@ -697,6 +843,7 @@ export function RedeemInviteView() {
                         <Button
                             variant="light"
                             leftSection={<IconArrowRight size={20} />}
+                            loading={loading || executing}
                             disabled={!valid}
                             onClick={() => {
                                 setLoading(true);
@@ -707,11 +854,53 @@ export function RedeemInviteView() {
                                 ).then((response) => {
                                     setRedeemed(response);
                                     setLoading(false);
+
+                                    response.and_then((resp) => {
+                                        if (
+                                            resp.usage.grants.every(
+                                                (grant) =>
+                                                    grant.resources.type ===
+                                                        "success" &&
+                                                    Object.values(
+                                                        grant.resources.value
+                                                    ).every(
+                                                        (resource) =>
+                                                            resource.type ===
+                                                            "success"
+                                                    )
+                                            )
+                                        ) {
+                                            setExecuting(true);
+                                            api.redeem_invite(
+                                                redeeming.invite.code,
+                                                form.values,
+                                                false
+                                            ).then((completed) => {
+                                                setRedeemed(null);
+                                                setExecuting(false);
+                                                completed
+                                                    .and_then((_) => {
+                                                        api.refresh();
+                                                        nav("/");
+                                                    })
+                                                    .or_else((_, reason) =>
+                                                        error(
+                                                            t(
+                                                                "errors.network.response",
+                                                                { reason }
+                                                            )
+                                                        )
+                                                    );
+                                            });
+                                        }
+                                    });
                                 });
                             }}
                         >
                             {!loading
-                                ? t("actions.redeem")
+                                ? executing
+                                    ? t("views.redeem.status.executing")
+                                    : t("actions.redeem")
                                 : t("views.redeem.status.validating")}
                         </Button>
                     </Group>
