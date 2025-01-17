@@ -21,6 +21,7 @@ pub enum PluginDefinedMethodContext {
     Plugin,
     Service,
     Invite,
+    Admin
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -267,6 +268,68 @@ impl FieldBuilder {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Builder)]
 #[builder(setter(into, strip_option))]
+pub struct AdminAction {
+    pub key: String,
+    pub method: String,
+    pub label: String,
+
+    #[serde(default)]
+    #[builder(default = "Vec::new()")]
+    pub arguments: Vec<PluginArgument>,
+
+    #[serde(default)]
+    #[builder(default = "None")]
+    pub description: Option<String>,
+
+    #[serde(default)]
+    #[builder(default = "None")]
+    pub icon: Option<String>,
+}
+
+impl AdminActionBuilder {
+    pub fn minimal<Key: AsRef<str>, Method: AsRef<str>, Label: AsRef<str>>(key: Key, method: Method, label: Label) -> Self {
+        Self {
+            key: Some(key.as_ref().to_string()),
+            method: Some(method.as_ref().to_string()),
+            label: Some(label.as_ref().to_string()),
+            arguments: None,
+            description: None,
+            icon: None
+        }
+    }
+
+    pub fn with_argument(&mut self, field: PluginArgument) -> &mut Self {
+        if self.arguments.is_none() {
+            self.arguments(Vec::new());
+        }
+
+        let mut args = self.arguments.clone().unwrap();
+        args.push(field);
+        args.dedup_by(|a, b| a.key.eq_ignore_ascii_case(&b.key));
+        self.arguments(args);
+        self
+    }
+
+    pub fn validate(&self) -> Result<(), String> {
+        for entry in self.arguments.clone().unwrap_or_default() {
+            if let FieldType::PluginDefined { context, method, .. } = entry.field {
+                if !matches!(context, PluginDefinedMethodContext::Admin) {
+                    return Err(format!("Plugin-defined method {method} used in incorrect context (must be in Admin context)"));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+impl AdminAction {
+    pub fn get_argument(&self, key: impl AsRef<str>) -> Option<PluginArgument> {
+        self.arguments.iter().find(|f| f.key == key.as_ref().to_string()).cloned()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+#[builder(setter(into, strip_option))]
 pub struct GrantAction {
     pub key: String,
     pub method: String,
@@ -291,6 +354,10 @@ pub struct GrantAction {
     #[serde(default)]
     #[builder(default = "None")]
     pub revoke_method: Option<String>,
+
+    #[serde(default)]
+    #[builder(default = "Vec::new()")]
+    pub admin_actions: Vec<AdminAction>
 }
 
 impl GrantAction {
@@ -300,6 +367,10 @@ impl GrantAction {
 
     pub fn get_argument(&self, key: impl AsRef<str>) -> Option<PluginArgument> {
         self.arguments.iter().find(|f| f.key == key.as_ref().to_string()).cloned()
+    }
+
+    pub fn get_admin_action(&self, key: impl AsRef<str>) -> Option<AdminAction> {
+        self.admin_actions.iter().find(|f| f.key == key.as_ref().to_string()).cloned()
     }
 }
 
@@ -313,7 +384,8 @@ impl GrantActionBuilder {
             arguments: None,
             description: None,
             icon: None,
-            revoke_method: None
+            revoke_method: None,
+            admin_actions: None
         }
     }
 
@@ -338,6 +410,18 @@ impl GrantActionBuilder {
         args.push(field);
         args.dedup_by(|a, b| a.key.eq_ignore_ascii_case(&b.key));
         self.options(args);
+        self
+    }
+
+    pub fn with_admin_action(&mut self, action: AdminAction) -> &mut Self {
+        if self.admin_actions.is_none() {
+            self.admin_actions(Vec::new());
+        }
+
+        let mut actions = self.admin_actions.clone().unwrap();
+        actions.push(action);
+        actions.dedup_by(|a, b| a.key.eq_ignore_ascii_case(&b.key));
+        self.admin_actions(actions);
         self
     }
 
