@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::{collections::HashMap, error::Error, fmt::Debug};
 
 use bevy_reflect::Reflect;
 use chrono::{ DateTime, Utc };
@@ -6,9 +6,9 @@ use invex_macros::Document;
 use invex_sdk::GrantResource;
 use serde::{ de::DeserializeOwned, Deserialize, Serialize };
 
-use crate::util::database::Id;
+use crate::util::database::{Collections, Id};
 
-use super::error::ApiError;
+use super::{error::ApiError, plugin::PluginRegistry};
 
 #[derive(Serialize, Deserialize, Clone, Debug, Reflect)]
 #[serde(rename_all = "snake_case")]
@@ -87,4 +87,45 @@ pub struct InviteUsage {
 
     #[reflect(ignore)]
     pub grants: Vec<InviteGrant>,
+}
+
+impl InviteUsage {
+    pub async fn hydrate(&self, collections: Collections, plugins: PluginRegistry) -> Result<HydratedUsage, Box<dyn Error>> {
+        
+    }
+}
+
+impl InviteGrant {
+    pub async fn hydrate(&self, collections: Collections, plugins: PluginRegistry) -> Result<HydratedGrant, Box<dyn Error>> {
+
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct HydratedResource {
+    pub id: String,
+    pub grant_id: String,
+    pub grant_label: String,
+    pub grant_description: Option<String>,
+    pub grant_icon: Option<String>,
+    pub plugin_id: String,
+    pub plugin_name: String,
+    pub plugin_icon: Option<String>,
+    pub resource: GrantResource
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct HydratedGrant {
+    pub id: String,
+    pub service_name: String,
+    pub service_icon: Option<String>,
+    pub service_description: Option<String>,
+    pub resources: GrantResult<HashMap<String, GrantResult<Vec<HydratedResource>>>>
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct HydratedUsage {
+    pub id: String,
+    pub code: String,
+    pub grants: Vec<HydratedGrant>
 }

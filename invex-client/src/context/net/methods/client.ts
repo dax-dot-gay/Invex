@@ -1,5 +1,5 @@
 import { RedeemingInvite } from "../../../types/client";
-import { InviteRedemption } from "../../../types/invite";
+import { InviteRedemption, InviteUsage } from "../../../types/invite";
 import { FieldValue } from "../../../types/plugin";
 import { Response } from "../types";
 import { ApiMixinConstructor } from "./base";
@@ -35,7 +35,9 @@ export function ClientMixin<TBase extends ApiMixinConstructor>(base: TBase) {
         public async get_invite_info(
             code: string
         ): Promise<Response<RedeemingInvite>> {
-            return await this.request<RedeemingInvite>(`/client/${code}/info`);
+            return await this.request<RedeemingInvite>(
+                `/client/redemption/${code}/info`
+            );
         }
 
         public async redeem_invite(
@@ -44,7 +46,7 @@ export function ClientMixin<TBase extends ApiMixinConstructor>(base: TBase) {
             dry_run?: boolean
         ): Promise<Response<InviteRedemption>> {
             return await this.request<InviteRedemption>(
-                `/client/${code}/redeem`,
+                `/client/redemption/${code}/redeem`,
                 {
                     method: "post",
                     params: { dry: dry_run ?? false },
@@ -72,6 +74,18 @@ export function ClientMixin<TBase extends ApiMixinConstructor>(base: TBase) {
                     },
                 }
             );
+        }
+
+        public async list_invite_usages(): Promise<InviteUsage[]> {
+            return (
+                await this.request<InviteUsage[]>("/client/invites")
+            ).or_default([]);
+        }
+
+        public async get_invite_usage(id: string): Promise<InviteUsage | null> {
+            return (
+                await this.request<InviteUsage>(`/client/invites/${id}`)
+            ).or_default(null);
         }
     };
 }

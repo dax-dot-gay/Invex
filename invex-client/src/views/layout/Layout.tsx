@@ -55,7 +55,10 @@ function UserActionButton() {
             case "user":
                 return (
                     <Group gap="xs">
-                        <Button leftSection={<IconMailCog size={20} />}>
+                        <Button
+                            leftSection={<IconMailCog size={20} />}
+                            onClick={() => nav("/invites")}
+                        >
                             {t("views.layout.action.user")}
                         </Button>
                         <ActionIcon

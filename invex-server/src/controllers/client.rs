@@ -203,7 +203,7 @@ impl RedeemingInvite {
     }
 }
 
-#[get("/<code>/info")]
+#[get("/redemption/<code>/info")]
 async fn get_invite_info(
     invites: Docs<Invite>,
     usages: Docs<InviteUsage>,
@@ -279,7 +279,7 @@ pub struct InviteRedemptionResponse {
     pub user: ClientUser,
 }
 
-#[post("/<code>/redeem?<dry>", data = "<data>")]
+#[post("/redemption/<code>/redeem?<dry>", data = "<data>")]
 async fn redeem_invite(
     invites: Docs<Invite>,
     usages: Docs<InviteUsage>,
@@ -467,6 +467,20 @@ async fn redeem_invite(
     }))
 }
 
+#[get("/invites")]
+async fn get_redeemed_invites(usages: Docs<InviteUsage>, user: AuthUser) -> ApiResult<Vec<InviteUsage>> {
+    Ok(Json(usages.query_many(doc! {"user": user.id()}).await.or(Err(ApiError::internal("Failed to query usages.")))?))
+}
+
+#[get("/invites/<id>")]
+async fn get_redeemed_invite_usage(usages: Docs<InviteUsage>, user: AuthUser, id: &str) -> ApiResult<InviteUsage> {
+    if let Some(usage) = usages.query_one(doc! {"user": user.id(), "_id": id}).await {
+        Ok(Json(usage))
+    } else {
+        Err(ApiError::not_found("Unknown usage ID"))
+    }
+}
+
 pub fn routes() -> Vec<Route> {
-    routes![get_invite_info, redeem_invite]
+    routes![get_invite_info, redeem_invite, get_redeemed_invites, get_redeemed_invite_usage]
 }
