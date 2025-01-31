@@ -1,5 +1,5 @@
-import { RedeemingInvite } from "../../../types/client";
-import { InviteRedemption, InviteUsage } from "../../../types/invite";
+import { ClientResource, RedeemingInvite } from "../../../types/client";
+import { InviteRedemption } from "../../../types/invite";
 import { FieldValue } from "../../../types/plugin";
 import { Response } from "../types";
 import { ApiMixinConstructor } from "./base";
@@ -76,16 +76,18 @@ export function ClientMixin<TBase extends ApiMixinConstructor>(base: TBase) {
             );
         }
 
-        public async list_invite_usages(): Promise<InviteUsage[]> {
+        public async list_resources(): Promise<ClientResource[]> {
             return (
-                await this.request<InviteUsage[]>("/client/invites")
+                await this.request<ClientResource[]>("/client/resources")
             ).or_default([]);
         }
 
-        public async get_invite_usage(id: string): Promise<InviteUsage | null> {
+        public async get_invite_usage_resources(
+            id: string
+        ): Promise<ClientResource[]> {
             return (
-                await this.request<InviteUsage>(`/client/invites/${id}`)
-            ).or_default(null);
+                await this.request<ClientResource[]>(`/client/resources/${id}`)
+            ).or_default([]);
         }
     };
 }

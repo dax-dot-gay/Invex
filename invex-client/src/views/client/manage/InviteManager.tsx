@@ -7,7 +7,7 @@ import {
     useApi,
     ClientMixin,
 } from "../../../context/net";
-import { InviteUsage } from "../../../types/invite";
+import { ClientResource } from "../../../types/client";
 
 export function InviteManager() {
     const nav = useNavigate();
@@ -22,14 +22,14 @@ export function InviteManager() {
         }
     }, [user?.id, user?.kind, accessible]);
 
-    const [usages, setUsages] = useState<InviteUsage[]>([]);
-    const refreshUsages = useCallback(async () => {
-        setUsages(await api.list_invite_usages());
-    }, [setUsages, api.id]);
+    const [resources, setResources] = useState<ClientResource[]>([]);
+    const refreshResources = useCallback(async () => {
+        setResources(await api.list_resources());
+    }, [setResources, api.id]);
 
     useEffect(() => {
-        refreshUsages();
-    }, []);
+        refreshResources();
+    }, [refreshResources]);
 
     return <></>;
 }

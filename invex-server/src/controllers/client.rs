@@ -15,11 +15,7 @@ use serde_json::Value;
 
 use crate::{
     models::{
-        auth::{ AuthSession, AuthUser, ClientUser },
-        error::ApiError,
-        invite::{ GrantResult, Invite, InviteGrant, InviteUsage, ResolvedExpiration },
-        plugin::{ PluginConfiguration, PluginRegistry, RegisteredPlugin },
-        service::{ Service, ServiceGrant },
+        auth::{ AuthSession, AuthUser, ClientUser }, client::ClientResource, error::ApiError, invite::{ GrantResult, Invite, InviteGrant, InviteUsage, ResolvedExpiration }, plugin::{ PluginConfiguration, PluginRegistry, RegisteredPlugin }, service::{ Service, ServiceGrant }
     },
     util::{ database::{ Collections, Docs, Document, Id }, ApiResult },
 };
@@ -467,20 +463,30 @@ async fn redeem_invite(
     }))
 }
 
-#[get("/invites")]
-async fn get_redeemed_invites(usages: Docs<InviteUsage>, user: AuthUser) -> ApiResult<Vec<InviteUsage>> {
-    Ok(Json(usages.query_many(doc! {"user": user.id()}).await.or(Err(ApiError::internal("Failed to query usages.")))?))
+#[get("/resources")]
+async fn get_resources(usages: Docs<InviteUsage>, user: AuthUser, plugins: PluginRegistry, collections: Collections) -> ApiResult<Vec<ClientResource>> {
+    let mut result: Vec<ClientResource> = Vec::new();
+    for invite_usage in usages.query_many(doc! {"user": user.id()}).await.or(Err(ApiError::internal("Failed to retrieve invite usages")))? {
+        if let Ok(parsed) = ClientResource::parse(invite_usage.clone(), &collections, &plugins).await {
+            result.extend(parsed);
+        }
+    }
+
+    Ok(Json(result))
 }
 
-#[get("/invites/<id>")]
-async fn get_redeemed_invite_usage(usages: Docs<InviteUsage>, user: AuthUser, id: &str) -> ApiResult<InviteUsage> {
-    if let Some(usage) = usages.query_one(doc! {"user": user.id(), "_id": id}).await {
-        Ok(Json(usage))
+#[get("/resources/<id>")]
+async fn get_resource_by_id(usages: Docs<InviteUsage>, user: AuthUser, plugins: PluginRegistry, collections: Collections, id: &str) -> ApiResult<Vec<ClientResource>> {
+    if let Some(usage) = usages.query_one(doc! {"_id": id.to_string(), "user": user.id()}).await {
+        match ClientResource::parse(usage, &collections, &plugins).await {
+            Ok(v) => Ok(Json(v)),
+            Err(e) => Err(ApiError::internal(format!("Failed to parse resources: {e:?}")))
+        }
     } else {
-        Err(ApiError::not_found("Unknown usage ID"))
+        Err(ApiError::not_found("Invite usage not found"))
     }
 }
 
 pub fn routes() -> Vec<Route> {
-    routes![get_invite_info, redeem_invite, get_redeemed_invites, get_redeemed_invite_usage]
+    routes![get_invite_info, redeem_invite, get_resources, get_resource_by_id]
 }
