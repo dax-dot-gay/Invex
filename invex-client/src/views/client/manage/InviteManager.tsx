@@ -8,6 +8,19 @@ import {
     ClientMixin,
 } from "../../../context/net";
 import { ClientResource } from "../../../types/client";
+import {
+    ActionIcon,
+    Box,
+    Group,
+    Paper,
+    ScrollArea,
+    Stack,
+    TextInput,
+} from "@mantine/core";
+import { useInputState } from "@mantine/hooks";
+import { IconLink, IconLinkPlus } from "@tabler/icons-react";
+import { isBase64, isURL } from "validator";
+import { randomBytes } from "../../../util/funcs";
 
 export function InviteManager() {
     const nav = useNavigate();
@@ -31,5 +44,39 @@ export function InviteManager() {
         refreshResources();
     }, [refreshResources]);
 
-    return <></>;
+    const [inviteLink, setInviteLink] = useInputState("");
+
+    return (
+        <Stack p="sm" gap="sm" h="100%" className="invite-manager">
+            <Group gap="sm" w="100%" className="new-invite" wrap="nowrap">
+                <TextInput
+                    className="link-input"
+                    classNames={{
+                        input: "component-input",
+                    }}
+                    value={inviteLink}
+                    onChange={setInviteLink}
+                    leftSection={<IconLink size={24} />}
+                    size="lg"
+                    ff="monospace"
+                    placeholder={`${location.origin}/inv/${randomBytes(8)}`}
+                />
+                <ActionIcon
+                    disabled={
+                        !(
+                            (isBase64(inviteLink, { urlSafe: true }) &&
+                                inviteLink.length >= 6) ||
+                            isURL(inviteLink)
+                        )
+                    }
+                    size={50}
+                >
+                    <IconLinkPlus />
+                </ActionIcon>
+            </Group>
+            <Paper className="resource-panel paper-light" p="sm">
+                <Stack gap="sm"></Stack>
+            </Paper>
+        </Stack>
+    );
 }

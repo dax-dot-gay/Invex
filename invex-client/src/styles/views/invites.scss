@@ -1,0 +1,18 @@
+.invite-manager {
+    box-sizing: border-box;
+    overflow: hidden;
+    .new-invite {
+        .link-input {
+            flex-grow: 1;
+
+            .component-input {
+                font-family: var(--mantine-font-family-monospace);
+            }
+        }
+    }
+
+    .resource-panel {
+        flex-grow: 1;
+        max-height: calc(100% - 50px - var(--mantine-spacing-sm));
+    }
+}
