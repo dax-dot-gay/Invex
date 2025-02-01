@@ -157,6 +157,8 @@ struct InviteCreationModel {
     #[serde(default)]
     pub expires: Option<Expiration>,
     pub services: Vec<Id>,
+    #[serde(default)]
+    pub alias: Option<String>
 }
 
 #[post("/", data = "<model>")]
@@ -189,6 +191,7 @@ async fn create_invite(
             created_by: user.id.clone(),
             expires: model.expires.clone(),
             services: model.services.clone(),
+            alias: model.alias.clone()
         };
 
         if let Ok(_) = invites.save(invite.clone()).await {

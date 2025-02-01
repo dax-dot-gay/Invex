@@ -50,6 +50,7 @@ export function ClientMixin<TBase extends ApiMixinConstructor>(base: TBase) {
                 {
                     method: "post",
                     params: { dry: dry_run ?? false },
+                    timeout: 0,
                     data: {
                         user_creation: data.user_creation,
                         services: Object.entries(data.services).reduce(

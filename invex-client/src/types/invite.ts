@@ -40,6 +40,7 @@ export type DbInvite = {
     created_by: string;
     expires: Expiration | null;
     services: string[];
+    alias: string | null;
 };
 
 export type InviteGrant = {

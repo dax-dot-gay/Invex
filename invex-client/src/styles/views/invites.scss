@@ -16,3 +16,16 @@
         max-height: calc(100% - 50px - var(--mantine-spacing-sm));
     }
 }
+
+.filter-dropdown.mantine-Popover-dropdown {
+    padding: 8px;
+    background-color: var(--mantine-color-default) !important;
+
+    .mantine-Checkbox-input {
+        background-color: var(--mantine-color-default-hover);
+    }
+
+    .mantine-Combobox-option:hover {
+        background-color: var(--mantine-color-default-hover);
+    }
+}

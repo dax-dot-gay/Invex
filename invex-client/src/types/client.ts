@@ -30,6 +30,7 @@ export type RedeemingInvite = {
 export type ClientResourceInvite = {
     usage: string;
     code: string;
+    alias: string | null;
 };
 
 export type ClientResourceService = {

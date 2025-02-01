@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::util::database::Collections;
 
 use super::{
-    invite::{GrantResult, InviteUsage},
+    invite::{GrantResult, Invite, InviteUsage},
     plugin::PluginRegistry,
     service::{Service, ServiceGrant},
 };
@@ -15,6 +15,7 @@ use super::{
 pub struct ClientResourceInvite {
     pub usage: String,
     pub code: String,
+    pub alias: Option<String>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -97,9 +98,11 @@ impl ClientResource {
         collections: &Collections,
         plugins: &PluginRegistry,
     ) -> Result<Vec<ClientResource>, Error> {
+        let invite_record = collections.get::<Invite>().get(usage.invite_id.to_string()).await.ok_or(Error::msg("Unable to locate referenced invite"))?;
         let invite = ClientResourceInvite {
             usage: usage.id.to_string(),
             code: usage.invite_code.clone(),
+            alias: invite_record.alias.clone()
         };
         let service_ids: Vec<String> = usage.grants.iter().map(|g| g.service.to_string()).collect();
         let services = collections

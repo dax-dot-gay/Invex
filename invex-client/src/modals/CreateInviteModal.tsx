@@ -26,6 +26,7 @@ import {
     IconCircleCheckFilled,
     IconClipboardCheck,
     IconClipboardCopy,
+    IconLabelFilled,
     IconLink,
     IconLinkPlus,
     IconServer,
@@ -52,11 +53,13 @@ export function CreateInviteModal({
         code: string;
         services: string[];
         expiration: Expiration | null;
+        alias: string;
     }>({
         initialValues: {
             code: randomBytes(8),
             services: [],
             expiration: null,
+            alias: "",
         },
         validate: {
             code: (code) =>
@@ -133,7 +136,8 @@ export function CreateInviteModal({
                 api.create_invite(
                     values.code,
                     values.services,
-                    values.expiration
+                    values.expiration,
+                    values.alias
                 ).then((response) =>
                     response
                         .and_then((invite) => {
@@ -156,6 +160,12 @@ export function CreateInviteModal({
                     label={t("modals.createInvite.fields.code.label")}
                     description={t("modals.createInvite.fields.code.desc")}
                     {...form.getInputProps("code")}
+                    withAsterisk
+                />
+                <TextInput
+                    leftSection={<IconLabelFilled size={20} />}
+                    label={t("modals.createInvite.fields.alias.label")}
+                    {...form.getInputProps("alias")}
                 />
                 <Fieldset
                     bg="#00000000"
@@ -313,6 +323,7 @@ export function CreateInviteModal({
                     </Group>
                 </Fieldset>
                 <MultiSelect
+                    withAsterisk
                     data={Object.values(services).map((s) => ({
                         value: s._id,
                         label: s.name,

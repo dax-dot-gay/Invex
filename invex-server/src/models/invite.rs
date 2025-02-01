@@ -31,6 +31,9 @@ pub struct Invite {
     pub id: Id,
     pub code: String,
     pub created_by: Id,
+
+    #[serde(default)]
+    pub alias: Option<String>,
     pub expires: Option<Expiration>,
     pub services: Vec<Id>,
 }

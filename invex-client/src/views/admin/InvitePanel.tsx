@@ -134,6 +134,11 @@ export function InvitePanel() {
                             },
                         },
                         {
+                            accessor: "invite.alias",
+                            width: "25%",
+                            title: t("views.admin.invites.table.alias"),
+                        },
+                        {
                             accessor: "usages.length",
                             title: t("views.admin.invites.table.usages"),
                         },
@@ -197,7 +202,7 @@ export function InvitePanel() {
                             },
                         },
                         {
-                            width: "75%",
+                            width: "50%",
                             accessor: "services",
                             title: t("views.admin.invites.table.services"),
                             render(record) {

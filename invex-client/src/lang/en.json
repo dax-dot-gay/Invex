@@ -24,171 +24,194 @@
     }
   },
   "views": {
-      "layout": {
-          "desc": "Invitation Index",
+    "layout": {
+      "desc": "Invitation Index",
+      "action": {
+        "login": "Log In",
+        "admin": "Administration",
+        "user": "Invites"
+      }
+    },
+    "home": {
+      "defaultTitle": "Invex",
+      "input": "Enter Invite"
+    },
+    "admin": {
+      "users": {
+        "title": "Users",
+        "admins": {
+          "title": "Administrators",
+          "add": "New Administrator"
+        },
+        "noEmail": "No Email",
+        "users": {
+          "title": "Members",
+          "add": "New Member",
+          "table": {
+            "username": "Username",
+            "email": "Email",
+            "actions": "Actions"
+          }
+        }
+      },
+      "invites": {
+        "title": "Invites",
+        "header": "Manage Invites",
+        "create": "Create Invite",
+        "table": {
+          "code": "Invite Code",
+          "usages": "# Uses",
+          "expires": "Expiration",
+          "expirationTypes": {
+            "never": "Never expires",
+            "uses": "Expires after {{max}} uses ({{remaining}} remaining)",
+            "datetime": "Expires at: {{datetime}}"
+          },
+          "services": "Granted Services",
+          "alias": "Invite Alias"
+        }
+      },
+      "services": {
+        "title": "Services",
+        "header": "All Services",
+        "add": "New Service",
+        "addTitle": "New Service",
+        "noService": "No Service Selected",
+        "config": {
+          "addGrant": "Add Plugin Grant",
+          "addAttachment": "Add Attachment",
+          "addMessage": "Add Message",
+          "noGrants": "No Service Grants Created",
+          "grants": {
+            "attachment": {
+              "title": "Attachment",
+              "displayName": "Display Name",
+              "helpText": "Help Text / Description"
+            },
+            "message": {
+              "title": "Message",
+              "fields": {
+                "title": "Message Title",
+                "subtitle": "Message Subtitle"
+              },
+              "uploadFailed": "Failed to upload image."
+            },
+            "grant": {
+              "title": "Plugin Grant",
+              "field": {
+                "url": "Attached URL",
+                "help": "Help Text"
+              },
+              "errorStatus": {
+                "plugin": "Unable to load plugin:",
+                "config": "Unable to load settings profile:",
+                "grant": "Unable to load validated grant"
+              },
+              "status": {
+                "plugin": "Plugin",
+                "config": "Profile",
+                "grant": "Grant"
+              },
+              "config": "Grant Configuration",
+              "unknownGrant": "Unknown grant key",
+              "test": {
+                "title": "Test Service",
+                "dry_run": "Dry Run",
+                "full": "Full Test",
+                "success": "Test executed successfully!",
+                "error": "Test execution failed: {{reason}}"
+              }
+            }
+          }
+        }
+      },
+      "plugins": {
+        "title": "Plugins",
+        "header": "Manage Plugins",
+        "upload": "Add/Upload Plugin",
+        "noDesc": "No Description.",
+        "noAuthor": "Unknown Author",
+        "capability": {
+          "grant": "Grant Access",
+          "revoke": "Revoke Access",
           "action": {
-              "login": "Log In",
-              "admin": "Administration",
-              "user": "Invites"
+            "count": "{{actionCount}} Actions",
+            "countNone": "No Actions"
           }
-      },
-      "home": {
-          "defaultTitle": "Invex",
-          "input": "Enter Invite"
-      },
-      "admin": {
-          "users": {
-              "title": "Users",
-              "admins": {
-                  "title": "Administrators",
-                  "add": "New Administrator"
-              },
-              "noEmail": "No Email",
-              "users": {
-                  "title": "Members",
-                  "add": "New Member",
-                  "table": {
-                      "username": "Username",
-                      "email": "Email",
-                      "actions": "Actions"
-                  }
-              }
+        },
+        "feedback": {
+          "uploadSuccess": "Plugin {{name}} uploaded & activated!",
+          "uploadError": "Upload error: {{reason}}"
+        },
+        "item": {
+          "delete": "Uninstall",
+          "update": "Update",
+          "origin": {
+            "web": "Downloaded from the internet",
+            "upload": "Uploaded by administrator"
           },
-          "invites": {
-              "title": "Invites",
-              "header": "Manage Invites",
-              "create": "Create Invite",
-              "table": {
-                  "code": "Invite Code",
-                  "usages": "# Uses",
-                  "expires": "Expiration",
-                  "expirationTypes": {
-                      "never": "Never expires",
-                      "uses": "Expires after {{max}} uses ({{remaining}} remaining)",
-                      "datetime": "Expires at: {{datetime}}"
-                  },
-                  "services": "Granted Services"
-              }
+          "state": {
+            "on": "Enabled",
+            "off": "Disabled"
           },
-          "services": {
-              "title": "Services",
-              "header": "All Services",
-              "add": "New Service",
-              "addTitle": "New Service",
-              "noService": "No Service Selected",
-              "config": {
-                  "addGrant": "Add Plugin Grant",
-                  "addAttachment": "Add Attachment",
-                  "addMessage": "Add Message",
-                  "noGrants": "No Service Grants Created",
-                  "grants": {
-                      "attachment": {
-                          "title": "Attachment",
-                          "displayName": "Display Name",
-                          "helpText": "Help Text / Description"
-                      },
-                      "message": {
-                          "title": "Message",
-                          "fields": {
-                              "title": "Message Title",
-                              "subtitle": "Message Subtitle"
-                          },
-                          "uploadFailed": "Failed to upload image."
-                      },
-                      "grant": {
-                          "title": "Plugin Grant",
-                          "field": {
-                              "url": "Attached URL",
-                              "help": "Help Text"
-                          },
-                          "errorStatus": {
-                              "plugin": "Unable to load plugin:",
-                              "config": "Unable to load settings profile:",
-                              "grant": "Unable to load validated grant"
-                          },
-                          "status": {
-                              "plugin": "Plugin",
-                              "config": "Profile",
-                              "grant": "Grant"
-                          },
-                          "config": "Grant Configuration",
-                          "unknownGrant": "Unknown grant key",
-                          "test": {
-                              "title": "Test Service",
-                              "dry_run": "Dry Run",
-                              "full": "Full Test",
-                              "success": "Test executed successfully!",
-                              "error": "Test execution failed: {{reason}}"
-                          }
-                      }
-                  }
-              }
-          },
-          "plugins": {
-              "title": "Plugins",
-              "header": "Manage Plugins",
-              "upload": "Add/Upload Plugin",
-              "noDesc": "No Description.",
-              "noAuthor": "Unknown Author",
-              "capability": {
-                  "grant": "Grant Access",
-                  "revoke": "Revoke Access",
-                  "action": {
-                      "count": "{{actionCount}} Actions",
-                      "countNone": "No Actions"
-                  }
-              },
-              "feedback": {
-                  "uploadSuccess": "Plugin {{name}} uploaded & activated!",
-                  "uploadError": "Upload error: {{reason}}"
-              },
-              "item": {
-                  "delete": "Uninstall",
-                  "update": "Update",
-                  "origin": {
-                      "web": "Downloaded from the internet",
-                      "upload": "Uploaded by administrator"
-                  },
-                  "state": {
-                      "on": "Enabled",
-                      "off": "Disabled"
-                  },
-                  "profiles": "Settings Profiles",
-                  "status": {
-                      "invalidProfiles": "{{profileCount}} profiles are invalid",
-                      "noProfiles": "No settings profiles"
-                  }
-              },
-              "noUrl": "Source not provided",
-              "update": {
-                  "success": "Updated successfully!",
-                  "error": "Failed to update: {{reason}}"
-              }
-          }
-      },
-      "redeem": {
-          "create_user": {
-              "title": "Create Account",
-              "username": "Username",
-              "email": "Email",
-              "password": "Password",
-              "confirm_password": "Confirm Password",
-              "switch_to": "Create User Instead"
-          },
-          "login": {
-              "switch_to": "Log In Instead",
-              "title": "Log In",
-              "username_or_email": "Username or Email",
-              "password": "Password"
-          },
+          "profiles": "Settings Profiles",
           "status": {
-              "validating": "Validating...",
-              "valid": "Validated",
-              "hasErrors": "Some inputs failed validation.",
-              "executing": "Executing..."
+            "invalidProfiles": "{{profileCount}} profiles are invalid",
+            "noProfiles": "No settings profiles"
           }
+        },
+        "noUrl": "Source not provided",
+        "update": {
+          "success": "Updated successfully!",
+          "error": "Failed to update: {{reason}}"
+        }
+      }
+    },
+    "redeem": {
+      "create_user": {
+        "title": "Create Account",
+        "username": "Username",
+        "email": "Email",
+        "password": "Password",
+        "confirm_password": "Confirm Password",
+        "switch_to": "Create User Instead"
       },
-      "invites": {}
+      "login": {
+        "switch_to": "Log In Instead",
+        "title": "Log In",
+        "username_or_email": "Username or Email",
+        "password": "Password"
+      },
+      "status": {
+        "validating": "Validating...",
+        "valid": "Validated",
+        "hasErrors": "Some inputs failed validation.",
+        "executing": "Executing..."
+      }
+    },
+    "invites": {
+      "filter": {
+        "grant": {
+          "attachment": "Attachment",
+          "message": "Message",
+          "plugin": "Plugin"
+        },
+        "resource": {
+          "account": "Account",
+          "file": "File",
+          "url": "URL",
+          "generic": "Generic",
+          "action": "Action"
+        },
+        "placeholder": "Filter results...",
+        "group": {
+          "invites": "Invitations",
+          "services": "Services",
+          "grants": "Grant Types",
+          "resources": "Provided Resources"
+        }
+      }
+    }
   },
   "modals": {
     "login": {
@@ -318,7 +341,10 @@
           },
           "neverExpires": "Never Expires"
         },
-        "services": "Select services to grant"
+        "services": "Select services to grant",
+        "alias": {
+          "label": "Invite Alias"
+        }
       },
       "errors": {
         "codeTooShort": "Invite code must be at least 6 characters long",

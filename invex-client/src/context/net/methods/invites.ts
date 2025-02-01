@@ -27,7 +27,8 @@ export function InviteMixin<TBase extends ApiMixinConstructor>(base: TBase) {
         public async create_invite(
             code: string,
             services: string[],
-            expiration?: Expiration | null
+            expiration?: Expiration | null,
+            alias?: string | null
         ): Promise<Response<Invite>> {
             return await this.request<Invite>("/invites", {
                 method: "post",
@@ -35,6 +36,7 @@ export function InviteMixin<TBase extends ApiMixinConstructor>(base: TBase) {
                     code,
                     services,
                     expires: expiration ?? null,
+                    alias: alias && alias.length > 0 ? alias : null,
                 },
             });
         }
