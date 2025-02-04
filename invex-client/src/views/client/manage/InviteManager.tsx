@@ -11,7 +11,6 @@ import { ClientResource } from "../../../types/client";
 import {
     ActionIcon,
     Badge,
-    Box,
     Checkbox,
     CloseButton,
     Combobox,
@@ -20,7 +19,6 @@ import {
     Paper,
     PillGroup,
     PillsInput,
-    ScrollArea,
     Stack,
     TextInput,
     useCombobox,
@@ -41,6 +39,7 @@ import { isBase64, isURL } from "validator";
 import { randomBytes } from "../../../util/funcs";
 import { isEqual } from "lodash";
 import { DynamicAvatar } from "../../../components/icon";
+import { HydratedInvite } from "./types";
 
 type FilterType = (
     | {
@@ -80,8 +79,43 @@ function ResourceFilter({
     const { t } = useTranslation();
 
     useEffect(() => {
-        console.log(filters);
-    }, [filters, onFilter]);
+        if (filters.length > 0) {
+            let result = resources;
+
+            for (const filter of filters) {
+                switch (filter.type) {
+                    case "invite":
+                        result = result.filter(
+                            (res) => res.invite.code === filter.code
+                        );
+                        break;
+                    case "service":
+                        result = result.filter(
+                            (res) => res.service.id === filter.id
+                        );
+                        break;
+                    case "grant":
+                        result = result.filter(
+                            (res) => res.grant.type === filter.subtype
+                        );
+                        break;
+                    case "resource":
+                        result = result.filter(
+                            (res) =>
+                                res.grant.type === "plugin" &&
+                                res.grant.result.type === "success" &&
+                                res.grant.result.resources.find(
+                                    (v) => v.type === filter.subtype
+                                ) !== undefined
+                        );
+                        break;
+                }
+            }
+            onFilter(result);
+        } else {
+            onFilter(resources);
+        }
+    }, [filters, onFilter, resources]);
 
     useEffect(() => {
         if (!isEqual(resources, staticResources)) {
@@ -397,6 +431,38 @@ export function InviteManager() {
     }, [refreshResources]);
 
     const [inviteLink, setInviteLink] = useInputState("");
+    const [filteredResources, setFilteredResources] = useState<
+        ClientResource[]
+    >([]);
+    const hydrated = useMemo(() => {
+        let result: { [key: string]: HydratedInvite } = {};
+        for (const res of filteredResources) {
+            if (!Object.keys(result).includes(res.invite.code)) {
+                result[res.invite.code] = {
+                    ...res.invite,
+                    services: {},
+                };
+            }
+
+            if (
+                !Object.keys(result[res.invite.code].services).includes(
+                    res.service.id
+                )
+            ) {
+                result[res.invite.code].services[res.service.id] = {
+                    ...res.service,
+                    grants: {},
+                };
+            }
+
+            result[res.invite.code].services[res.service.id].grants[
+                res.grant.id
+            ] = res.grant;
+        }
+        return result;
+    }, [filteredResources]);
+
+    console.log(hydrated);
 
     return (
         <Stack p="sm" gap="sm" h="100%" className="invite-manager">
@@ -430,7 +496,7 @@ export function InviteManager() {
                 <Stack gap="sm">
                     <ResourceFilter
                         resources={resources}
-                        onFilter={console.log}
+                        onFilter={setFilteredResources}
                     />
                 </Stack>
             </Paper>
