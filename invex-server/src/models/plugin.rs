@@ -12,7 +12,7 @@ use extism::{
     PTR,
 };
 use invex_macros::Document;
-use invex_sdk::{ GrantAction, PluginArgument, PluginMetadata };
+use invex_sdk::{ GrantAction, PluginArgument, PluginFileData, PluginMetadata, ExtResult };
 use reqwest::header::HeaderValue;
 use rocket::{
     futures::{ AsyncWriteExt, TryStreamExt },
@@ -222,14 +222,7 @@ impl<'r> FromRequest<'r> for PluginRegistry {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PluginFileData {
-    pub data: Vec<u8>,
-    pub filename: Option<String>,
-    pub content_type: String,
-}
-
-host_fn!(fs_load(user_data: Fs; id: String) -> InResult<Json<PluginFileData>> {
+host_fn!(fs_load(user_data: Fs; id: String) -> ExtResult<Json<PluginFileData>> {
     tokio::runtime::Builder::new_multi_thread().enable_all().build()?.block_on(async move {
         let fs = user_data.get()?;
         let fs = fs.lock().unwrap();
@@ -245,7 +238,7 @@ host_fn!(fs_load(user_data: Fs; id: String) -> InResult<Json<PluginFileData>> {
     })
 });
 
-host_fn!(fs_store(user_data: Fs; data: Json<PluginFileData>) -> InResult<String> {
+host_fn!(fs_store(user_data: Fs; data: Json<PluginFileData>) -> ExtResult<String> {
     tokio::runtime::Builder::new_multi_thread().enable_all().build()?.block_on(async move {
         let fs = user_data.get()?;
         let fs = fs.lock().unwrap();

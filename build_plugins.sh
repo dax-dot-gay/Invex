@@ -1,5 +1,6 @@
 #!/bin/bash
 for folder in ./plugins/*; do
+    echo $folder
     cd $folder
     cargo build
     cd ../..

@@ -2,6 +2,7 @@ use std::{collections::HashMap, fmt::Debug};
 
 use cryptoxide::{digest::Digest, sha2::Sha512};
 use derive_builder::Builder;
+use extism::{FromBytes, ToBytes};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 
@@ -651,6 +652,65 @@ impl HashedPassword {
     pub fn verify<T: AsRef<str>>(&self, test: T) -> bool {
         let check = Self::hash(test.as_ref());
         check == self.0
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PluginFileData {
+    pub data: Vec<u8>,
+    pub filename: Option<String>,
+    pub content_type: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ExtError(String);
+
+impl<T: ToString> From<T> for ExtError {
+    fn from(value: T) -> Self {
+        Self(value.to_string())
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub enum ExtResult<T> {
+    Ok(T),
+    Err(ExtError)
+}
+
+impl<T> From<Result<T, ExtError>> for ExtResult<T> {
+    fn from(value: Result<T, ExtError>) -> Self {
+        match value {
+            Ok(v) => ExtResult::Ok(v),
+            Err(e) => ExtResult::Err(e)
+        }
+    }
+}
+
+impl<T> Into<Result<T, ExtError>> for ExtResult<T> {
+    fn into(self) -> Result<T, ExtError> {
+        match self {
+            Self::Ok(v) => Ok(v),
+            Self::Err(e) => Err(e)
+        }
+    }
+}
+
+impl<'a, T: ToBytes<'a> + Serialize + DeserializeOwned> ToBytes<'a> for ExtResult<T> {
+    type Bytes = String;
+    fn to_bytes(&self) -> Result<Self::Bytes, anyhow::Error> {
+        match serde_json::to_string(self) {
+            Ok(r) => Ok(r),
+            Err(e) => Err(anyhow::Error::msg(e.to_string()))
+        }
+    }
+}
+
+impl<'a, T: FromBytes<'a> + Serialize + DeserializeOwned> FromBytes<'a> for ExtResult<T> {
+    fn from_bytes(data: &'a [u8]) -> Result<Self, anyhow::Error> {
+        match serde_json::from_slice(data) {
+            Ok(v) => Ok(v),
+            Err(e) => Err(anyhow::Error::msg(e.to_string()))
+        }
     }
 }
 

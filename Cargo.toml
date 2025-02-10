@@ -3,5 +3,6 @@ resolver = "2"
 members = [
     "./invex-server",
     "./invex-sdk",
-    "./plugins/jellyfin"
+    "./plugins/jellyfin",
+    "./plugins/test"
 ]
