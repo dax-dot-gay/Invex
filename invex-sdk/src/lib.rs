@@ -2,7 +2,7 @@ use std::{collections::HashMap, fmt::Debug};
 
 use cryptoxide::{digest::Digest, sha2::Sha512};
 use derive_builder::Builder;
-use extism::{FromBytes, ToBytes};
+use extism_pdk::{FromBytes, ToBytes};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::Value;
 
