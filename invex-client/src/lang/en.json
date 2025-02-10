@@ -210,7 +210,21 @@
           "grants": "Grant Types",
           "resources": "Provided Resources"
         }
-      }
+      },
+      "item": {
+        "unnamedInvite": "Unnamed Invite",
+        "serviceCount_one": "{{count}} service",
+        "serviceCount_other": "{{count}} services",
+        "serviceCount": "{{count}} Services",
+        "grant": {
+          "unnamedAttachment": "Unnamed File",
+          "error": {
+            "service": "Service Error: {{code}}",
+            "grant": "Grant Error: {{code}}"
+          }
+        }
+      },
+      "noResults": "No Results"
     }
   },
   "modals": {

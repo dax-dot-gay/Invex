@@ -9,8 +9,10 @@ import {
 } from "../../../context/net";
 import { ClientResource } from "../../../types/client";
 import {
+    Accordion,
     ActionIcon,
     Badge,
+    Center,
     Checkbox,
     CloseButton,
     Combobox,
@@ -19,8 +21,11 @@ import {
     Paper,
     PillGroup,
     PillsInput,
+    ScrollAreaAutosize,
     Stack,
+    Text,
     TextInput,
+    ThemeIcon,
     useCombobox,
 } from "@mantine/core";
 import { useInputState, useListState } from "@mantine/hooks";
@@ -31,6 +36,7 @@ import {
     IconFilter,
     IconLink,
     IconLinkPlus,
+    IconMailX,
     IconScript,
     IconServer,
     IconUser,
@@ -40,6 +46,7 @@ import { randomBytes } from "../../../util/funcs";
 import { isEqual } from "lodash";
 import { DynamicAvatar } from "../../../components/icon";
 import { HydratedInvite } from "./types";
+import { InviteItem } from "./InviteItems";
 
 type FilterType = (
     | {
@@ -462,8 +469,6 @@ export function InviteManager() {
         return result;
     }, [filteredResources]);
 
-    console.log(hydrated);
-
     return (
         <Stack p="sm" gap="sm" h="100%" className="invite-manager">
             <Group gap="sm" w="100%" className="new-invite" wrap="nowrap">
@@ -493,11 +498,54 @@ export function InviteManager() {
                 </ActionIcon>
             </Group>
             <Paper className="resource-panel paper-light" p="sm">
-                <Stack gap="sm">
+                <Stack gap="sm" h="100%" style={{ overflowY: "hidden" }}>
                     <ResourceFilter
                         resources={resources}
                         onFilter={setFilteredResources}
                     />
+                    {Object.values(hydrated).length > 0 ? (
+                        <ScrollAreaAutosize mah="calc(100% - 48px)">
+                            <Accordion
+                                className="invite-item-list"
+                                variant="filled"
+                            >
+                                <Stack gap="sm">
+                                    {Object.values(hydrated).map((inv) => (
+                                        <InviteItem
+                                            key={inv.code}
+                                            invite={inv}
+                                        />
+                                    ))}
+                                </Stack>
+                            </Accordion>
+                        </ScrollAreaAutosize>
+                    ) : (
+                        <Center
+                            style={{
+                                flexGrow: 1,
+                            }}
+                        >
+                            <Badge
+                                size="xl"
+                                color="gray"
+                                variant="light"
+                                pl={1}
+                            >
+                                <Group gap="sm">
+                                    <ThemeIcon
+                                        color="gray"
+                                        variant="light"
+                                        radius="xl"
+                                    >
+                                        <IconMailX size={20} />
+                                    </ThemeIcon>
+                                    <Text tt="capitalize" ff="monospace">
+                                        {t("views.invites.noResults")}
+                                    </Text>
+                                </Group>
+                            </Badge>
+                        </Center>
+                    )}
                 </Stack>
             </Paper>
         </Stack>
