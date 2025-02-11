@@ -92,18 +92,33 @@ function ResourceFilter({
             for (const filter of filters) {
                 switch (filter.type) {
                     case "invite":
-                        result = result.filter(
-                            (res) => res.invite.code === filter.code
+                        result = result.filter((res) =>
+                            filters
+                                .map((v) =>
+                                    v.type === "invite" ? v.code : null
+                                )
+                                .filter((v) => v !== null)
+                                .includes(res.invite.code)
                         );
                         break;
                     case "service":
-                        result = result.filter(
-                            (res) => res.service.id === filter.id
+                        result = result.filter((res) =>
+                            filters
+                                .map((v) =>
+                                    v.type === "service" ? v.id : null
+                                )
+                                .filter((v) => v !== null)
+                                .includes(res.service.id)
                         );
                         break;
                     case "grant":
-                        result = result.filter(
-                            (res) => res.grant.type === filter.subtype
+                        result = result.filter((res) =>
+                            filters
+                                .map((v) =>
+                                    v.type === "grant" ? v.subtype : null
+                                )
+                                .filter((v) => v !== null)
+                                .includes(res.grant.type as any)
                         );
                         break;
                     case "resource":
