@@ -30,6 +30,7 @@
     "js-base64": "^3.7.7",
     "lodash": "^4.17.21",
     "mantine-datatable": "^7.14.5",
+    "mime-types": "^2.1.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^15.1.1",
@@ -44,6 +45,7 @@
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@types/lodash": "^4.17.13",
+    "@types/mime-types": "^2.1.4",
     "@types/node": "^22.9.3",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",

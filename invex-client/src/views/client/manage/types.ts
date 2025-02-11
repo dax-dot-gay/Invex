@@ -15,3 +15,19 @@ export type HydratedInvite = {
     alias: string | null;
     services: { [key: string]: HydratedService };
 };
+
+export type GrantItemProps = {
+    invite: HydratedInvite;
+    service: HydratedService;
+    id: string;
+    grant: ClientResourceGrant;
+};
+
+type CGIProps<T extends ClientResourceGrant["type"]> = Omit<
+    GrantItemProps,
+    "grant"
+> & { grant: Extract<ClientResourceGrant, { type: T }> };
+
+export type AttachmentGIProps = CGIProps<"attachment">;
+export type MessageGIProps = CGIProps<"message">;
+export type PluginGIProps = CGIProps<"plugin">;

@@ -221,6 +221,13 @@
           "error": {
             "service": "Service Error: {{code}}",
             "grant": "Grant Error: {{code}}"
+          },
+          "attachment": {
+            "loading": "Loading attachment...",
+            "ogFileName": "Original Filename",
+            "mime": "Content Type",
+            "id": "File ID",
+            "displayName": "Display Name"
           }
         }
       },

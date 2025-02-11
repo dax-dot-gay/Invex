@@ -13,13 +13,13 @@ import { DynamicAvatar } from "../../../components/icon";
 import {
     darken,
     Divider,
-    getGradient,
     Group,
     Paper,
     Stack,
     Text,
     useMantineTheme,
 } from "@mantine/core";
+import { AttachmentItem } from "./render/AttachmentItem";
 
 const ICON_SIZE = 20;
 
@@ -127,6 +127,14 @@ export function GrantView({
                 {doRender && (
                     <>
                         <Divider />
+                        {grant.type === "attachment" && (
+                            <AttachmentItem
+                                invite={invite}
+                                service={service}
+                                id={id}
+                                grant={grant}
+                            />
+                        )}
                     </>
                 )}
             </Stack>
