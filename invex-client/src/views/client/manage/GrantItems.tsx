@@ -20,6 +20,7 @@ import {
     useMantineTheme,
 } from "@mantine/core";
 import { AttachmentItem } from "./render/AttachmentItem";
+import { MessageItem } from "./render/MessageItem";
 
 const ICON_SIZE = 20;
 
@@ -129,6 +130,14 @@ export function GrantView({
                         <Divider />
                         {grant.type === "attachment" && (
                             <AttachmentItem
+                                invite={invite}
+                                service={service}
+                                id={id}
+                                grant={grant}
+                            />
+                        )}
+                        {grant.type === "message" && (
+                            <MessageItem
                                 invite={invite}
                                 service={service}
                                 id={id}
