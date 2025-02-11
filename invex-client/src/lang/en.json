@@ -228,6 +228,23 @@
             "mime": "Content Type",
             "id": "File ID",
             "displayName": "Display Name"
+          },
+          "plugin": {
+            "account": {
+              "label": "User Account"
+            },
+            "file": {
+              "label": "Downloadable File"
+            },
+            "url": {
+              "label": "Accessible Link"
+            },
+            "generic": {
+              "label": "Plugin-Defined Data"
+            },
+            "action": {
+              "label": "Executable Action"
+            }
           }
         }
       },

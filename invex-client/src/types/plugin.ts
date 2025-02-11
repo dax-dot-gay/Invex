@@ -196,6 +196,7 @@ export type GrantResource_File = {
 
 export type GrantResource_Url = {
     type: "url";
+    id: string;
     url: string;
     alias: string | null;
     label: string | null;

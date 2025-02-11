@@ -21,6 +21,7 @@ import {
 } from "@mantine/core";
 import { AttachmentItem } from "./render/AttachmentItem";
 import { MessageItem } from "./render/MessageItem";
+import { PluginItem } from "./render/PluginItem";
 
 const ICON_SIZE = 20;
 
@@ -144,6 +145,15 @@ export function GrantView({
                                 grant={grant}
                             />
                         )}
+                        {grant.type === "plugin" &&
+                            grant.result.type === "success" && (
+                                <PluginItem
+                                    invite={invite}
+                                    service={service}
+                                    id={id}
+                                    grant={grant}
+                                />
+                            )}
                     </>
                 )}
             </Stack>
