@@ -2,16 +2,11 @@ use anyhow::Error;
 use bevy_reflect::Reflect;
 use bson::doc;
 use extism::{
-    convert::Json,
-    host_fn,
-    Manifest,
-    Plugin as ExtismPlugin,
-    PluginBuilder,
-    UserData,
-    Wasm,
-    PTR,
+    convert::Json, host_fn, Function, Manifest, Plugin as ExtismPlugin, PluginBuilder, UserData, Wasm, PTR
 };
 use invex_macros::Document;
+
+#[allow(unused_imports)]
 use invex_sdk::{ GrantAction, PluginArgument, PluginFileData, PluginMetadata, ExtResult };
 use reqwest::header::HeaderValue;
 use rocket::{
@@ -222,7 +217,7 @@ impl<'r> FromRequest<'r> for PluginRegistry {
     }
 }
 
-host_fn!(fs_load(user_data: Fs; id: String) -> ExtResult<Json<PluginFileData>> {
+host_fn!(fs_load(user_data: Fs; id: String) -> Json<PluginFileData> {
     tokio::runtime::Builder::new_multi_thread().enable_all().build()?.block_on(async move {
         let fs = user_data.get()?;
         let fs = fs.lock().unwrap();
@@ -238,7 +233,7 @@ host_fn!(fs_load(user_data: Fs; id: String) -> ExtResult<Json<PluginFileData>> {
     })
 });
 
-host_fn!(fs_store(user_data: Fs; data: Json<PluginFileData>) -> ExtResult<String> {
+host_fn!(fs_store(user_data: Fs; data: Json<PluginFileData>) -> String {
     tokio::runtime::Builder::new_multi_thread().enable_all().build()?.block_on(async move {
         let fs = user_data.get()?;
         let fs = fs.lock().unwrap();
@@ -369,7 +364,10 @@ impl PluginRegistry {
         buffer.read_to_end(&mut data).await?;
         let wasm = Wasm::data(data);
         let manifest = Manifest::new([wasm]);
-        let mut plugin = ExtismPlugin::new(&manifest, [], true)?;
+        let mut plugin = ExtismPlugin::new(&manifest, [
+            Function::new("fs_store", [PTR], [PTR], UserData::new(self.fs.clone()), fs_store),
+            Function::new("fs_load", [PTR], [PTR], UserData::new(self.fs.clone()), fs_load)
+        ], true)?;
         let metadata = plugin.call::<(), Json<PluginMetadata>>("metadata", ())?.into_inner();
         Ok(PluginInfo {
             id: metadata.id.clone(),
@@ -384,7 +382,10 @@ impl PluginRegistry {
         let content = req.bytes().await?;
         let wasm = Wasm::data(content);
         let manifest = Manifest::new([wasm]);
-        let mut plugin = ExtismPlugin::new(&manifest, [], true)?;
+        let mut plugin = ExtismPlugin::new(&manifest, [
+            Function::new("fs_store", [PTR], [PTR], UserData::new(self.fs.clone()), fs_store),
+            Function::new("fs_load", [PTR], [PTR], UserData::new(self.fs.clone()), fs_load)
+        ], true)?;
         let metadata = plugin.call::<(), Json<PluginMetadata>>("metadata", ())?.into_inner();
         Ok(PluginInfo {
             id: metadata.id.clone(),
