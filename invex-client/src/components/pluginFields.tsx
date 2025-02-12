@@ -69,7 +69,7 @@ function PluginDefinedField(props: {
                         field_key: props.field.key,
                         invite_id: props.selector?.invite ?? "",
                         service_id: props.selector?.service ?? "",
-                        grant_id: props.selector?.service ?? "",
+                        grant_id: props.selector?.grant ?? "",
                     }
                 ).then((r) => setResult(r.or_default(null)));
                 break;
