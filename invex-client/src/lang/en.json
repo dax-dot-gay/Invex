@@ -6,7 +6,9 @@
       "saving": "Saving...",
       "valid": "Valid",
       "invalid": "Invalid",
-      "done": "Done"
+      "done": "Done",
+      "locked": "locked",
+      "unlocked": "unlocked"
     },
     "notif": {
       "success": "Success!",
@@ -231,10 +233,17 @@
           },
           "plugin": {
             "account": {
-              "label": "User Account"
+              "label": "User Account",
+              "id": "Account ID",
+              "username": "Username",
+              "email": "Email",
+              "password": "Has Password"
             },
             "file": {
-              "label": "Downloadable File"
+              "label": "Downloadable File",
+              "filename": "Filename",
+              "contentType": "Content Type",
+              "fileId": "File ID"
             },
             "url": {
               "label": "Accessible Link"
@@ -244,7 +253,8 @@
             },
             "action": {
               "label": "Executable Action"
-            }
+            },
+            "unset": "Not Provided"
           }
         }
       },

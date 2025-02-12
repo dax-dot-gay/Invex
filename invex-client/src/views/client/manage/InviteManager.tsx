@@ -31,7 +31,6 @@ import {
 import { useInputState, useListState } from "@mantine/hooks";
 import {
     IconArticleFilled,
-    IconCube,
     IconFile,
     IconFilter,
     IconLink,
@@ -66,7 +65,7 @@ type FilterType = (
       }
     | {
           type: "resource";
-          subtype: "account" | "file" | "url" | "generic" | "action";
+          subtype: "account" | "file" | "url" | "action";
       }
 ) & { key: string };
 
@@ -183,13 +182,11 @@ function ResourceFilter({
                     subtype: v,
                     key: `grant.${v}`,
                 })) as any),
-                ...(["account", "file", "url", "generic", "action"].map(
-                    (v) => ({
-                        type: "resource",
-                        subtype: v,
-                        key: `resource.${v}`,
-                    })
-                ) as any),
+                ...(["account", "file", "url", "action"].map((v) => ({
+                    type: "resource",
+                    subtype: v,
+                    key: `resource.${v}`,
+                })) as any),
             ]);
         }
     }, [setProvidedFilters, resources, staticResources]);
@@ -254,9 +251,6 @@ function ResourceFilter({
                                 )}
                                 {item.subtype === "url" && (
                                     <IconLink size={20} />
-                                )}
-                                {item.subtype === "generic" && (
-                                    <IconCube size={20} />
                                 )}
                                 {item.subtype === "action" && (
                                     <IconScript size={20} />
@@ -323,9 +317,6 @@ function ResourceFilter({
                             )}
                             {item.subtype === "file" && <IconFile size={16} />}
                             {item.subtype === "url" && <IconLink size={16} />}
-                            {item.subtype === "generic" && (
-                                <IconCube size={16} />
-                            )}
                             {item.subtype === "action" && (
                                 <IconScript size={16} />
                             )}
