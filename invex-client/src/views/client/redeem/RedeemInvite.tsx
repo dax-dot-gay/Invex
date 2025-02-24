@@ -17,6 +17,7 @@ import {
     Paper,
     ScrollAreaAutosize,
     SimpleGrid,
+    Space,
     Stack,
     Text,
     TextInput,
@@ -62,6 +63,9 @@ type RedemptionForm = {
           }
         | {
               mode: "inactive";
+          }
+        | {
+              mode: "generate";
           };
     services: {
         [service: string]: {
@@ -357,6 +361,9 @@ export function RedeemInviteView() {
                 case "inactive":
                     result.user_creation = null;
                     break;
+                case "generate":
+                    result.user_creation = null;
+                    break;
                 case "create":
                     result["user_creation.username"] =
                         values.user_creation.username.length > 0
@@ -435,11 +442,7 @@ export function RedeemInviteView() {
             form.values.user_creation.mode === "inactive"
         ) {
             form.setFieldValue("user_creation", {
-                mode: "create",
-                username: "",
-                email: "",
-                password: "",
-                confirm_password: "",
+                mode: "generate",
             });
         }
     }, [
@@ -677,6 +680,80 @@ export function RedeemInviteView() {
                                         </Stack>
                                     </AccordionPanel>
                                 </AccordionItem>
+                            )}
+                            {form.values.user_creation.mode === "generate" && (
+                                <>
+                                    <Paper
+                                        p="sm"
+                                        bg="var(--mantine-color-default)"
+                                    >
+                                        <Group gap="sm" justify="space-between">
+                                            <Stack gap={0}>
+                                                <Text size="lg">
+                                                    {t(
+                                                        "views.redeem.anonymous.title"
+                                                    )}
+                                                </Text>
+                                                <Text c="dimmed" size="xs">
+                                                    {t(
+                                                        "views.redeem.anonymous.optional"
+                                                    )}
+                                                </Text>
+                                            </Stack>
+                                            <Group gap="sm" wrap="nowrap">
+                                                <Button
+                                                    leftSection={
+                                                        <IconUserPlus
+                                                            size={20}
+                                                        />
+                                                    }
+                                                    variant="light"
+                                                    size="md"
+                                                    onClick={() => {
+                                                        form.setFieldValue(
+                                                            "user_creation",
+                                                            {
+                                                                mode: "create",
+                                                                username: "",
+                                                                email: "",
+                                                                password: "",
+                                                                confirm_password:
+                                                                    "",
+                                                            }
+                                                        );
+                                                    }}
+                                                >
+                                                    {t(
+                                                        "views.redeem.anonymous.create"
+                                                    )}
+                                                </Button>
+                                                <Button
+                                                    leftSection={
+                                                        <IconLogin2 size={20} />
+                                                    }
+                                                    variant="light"
+                                                    size="md"
+                                                    onClick={() => {
+                                                        form.setFieldValue(
+                                                            "user_creation",
+                                                            {
+                                                                mode: "login",
+                                                                username_or_email:
+                                                                    "",
+                                                                password: "",
+                                                            }
+                                                        );
+                                                    }}
+                                                >
+                                                    {t(
+                                                        "views.redeem.anonymous.login"
+                                                    )}
+                                                </Button>
+                                            </Group>
+                                        </Group>
+                                    </Paper>
+                                    <Space h="sm" />
+                                </>
                             )}
                             {form.values.user_creation.mode === "login" && (
                                 <AccordionItem value="user">

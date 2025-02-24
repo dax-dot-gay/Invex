@@ -12,6 +12,7 @@ use rocket::{
 };
 use serde::{ Deserialize, Serialize };
 use serde_json::Value;
+use uuid::Uuid;
 
 use crate::{
     models::{
@@ -89,7 +90,7 @@ pub struct RedeemingGrant {
     pub description: Option<String>,
     pub icon: Option<String>,
     pub arguments: Vec<PluginArgument>,
-    pub revocable: bool,
+    //pub revocable: bool,
     pub url: Option<String>,
     pub help: Option<String>,
 }
@@ -111,7 +112,7 @@ impl RedeemingGrant {
                     description: grant.description.clone(),
                     icon: grant.icon.clone(),
                     arguments: grant.arguments.clone(),
-                    revocable: grant.revoke_method.is_some(),
+                    //revocable: grant.revoke_method.is_some(),
                     url,
                     help,
                 })
@@ -207,7 +208,7 @@ async fn get_invite_info(
     plugins: PluginRegistry,
     code: &str
 ) -> ApiResult<RedeemingInvite> {
-    if let Some(invite) = invites.query_one(doc! { "code": code }).await {
+    if let Some(invite) = invites.query_one(doc! { "code": code, "disabled": false }).await {
         if let Ok(inv_usages) = usages.query_many(doc! { "invite_id": invite.id() }).await {
             let expired = match invite.expires() {
                 ResolvedExpiration::Never => false,
@@ -247,6 +248,7 @@ pub enum InviteAuthenticator {
         password: String,
     },
     Inactive {},
+    Generate {}
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -290,7 +292,7 @@ async fn redeem_invite(
     plugins: PluginRegistry,
     dry: bool
 ) -> ApiResult<InviteRedemptionResponse> {
-    let redeem = (if let Some(invite) = invites.query_one(doc! { "code": code }).await {
+    let redeem = (if let Some(invite) = invites.query_one(doc! { "code": code, "disabled": false }).await {
         if let Ok(inv_usages) = usages.query_many(doc! { "invite_id": invite.id() }).await {
             let expired = match invite.expires() {
                 ResolvedExpiration::Never => false,
@@ -388,6 +390,28 @@ async fn redeem_invite(
                     )
                 )
             }
+        }
+        InviteAuthenticator::Generate {  } => {
+            if session.user_id.is_some() {
+                return Err(
+                    ApiError::bad_request("Already logged in, cannot redeem as another user.")
+                );
+            }
+
+            let new_user = AuthUser::new_user(format!("eph-{}", Uuid::new_v4().to_string().split_at(8).0), None, Uuid::new_v4().to_string()).or_else(|e|
+                Err(ApiError::internal(format!("Failed to create user: {e:?}")))
+            )?;
+            if !dry {
+                users
+                    .save(new_user.clone()).await
+                    .or_else(|e| Err(ApiError::internal(format!("Failed to save new user: {e:?}"))))?;
+                session.user_id = Some(new_user.id.clone());
+                sessions
+                    .save(session.clone()).await
+                    .or_else(|e| Err(ApiError::internal(format!("Failed to save session info: {e:?}"))))?;
+            }
+           
+            Ok(new_user)
         }
     })?;
 

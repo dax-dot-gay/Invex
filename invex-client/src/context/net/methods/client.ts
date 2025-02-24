@@ -20,6 +20,9 @@ type RedemptionForm = {
           }
         | {
               mode: "inactive";
+          }
+        | {
+              mode: "generate";
           };
     services: {
         [service: string]: {

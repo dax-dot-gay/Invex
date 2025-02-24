@@ -7,15 +7,20 @@ import {
     Paper,
     Stack,
     Text,
+    ThemeIcon,
     Title,
+    Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import {
     IconCalendar,
+    IconCircleCheckFilled,
+    IconCircleXFilled,
     IconClipboardCheck,
     IconClipboardCopy,
     IconLink,
     IconLinkPlus,
+    IconMinus,
     IconServer,
     IconTrashFilled,
     IconUsers,
@@ -34,7 +39,7 @@ import { useRefreshCallback } from "../../context/refresh";
 export function InvitePanel() {
     const { t } = useTranslation();
     const api = useApi(InviteMixin);
-    const [pageSize, setPageSize] = useState(25);
+    const [pageSize, _] = useState(25);
     const [pageNumber, setPageNumber] = useState(0);
     const [total, setTotal] = useState(0);
     const [invites, setInvites] = useState<Invite[]>([]);
@@ -90,6 +95,30 @@ export function InvitePanel() {
                     style={{ flexGrow: 1 }}
                     columns={[
                         {
+                            accessor: "disabled",
+                            title: t("views.admin.invites.table.enabled"),
+                            textAlign: "center",
+                            render(record) {
+                                return record.disabled ? (
+                                    <ThemeIcon
+                                        color="red"
+                                        radius="xl"
+                                        size="lg"
+                                    >
+                                        <IconCircleXFilled />
+                                    </ThemeIcon>
+                                ) : (
+                                    <ThemeIcon
+                                        color="green"
+                                        radius="xl"
+                                        size="lg"
+                                    >
+                                        <IconCircleCheckFilled />
+                                    </ThemeIcon>
+                                );
+                            },
+                        },
+                        {
                             accessor: "invite.code",
                             title: t("views.admin.invites.table.code"),
                             render(record) {
@@ -135,7 +164,6 @@ export function InvitePanel() {
                         },
                         {
                             accessor: "invite.alias",
-                            width: "25%",
                             title: t("views.admin.invites.table.alias"),
                         },
                         {
@@ -144,7 +172,6 @@ export function InvitePanel() {
                         },
                         {
                             accessor: "expires",
-                            width: "25%",
                             title: t("views.admin.invites.table.expires"),
                             render(record) {
                                 switch (record.expires.type) {
@@ -202,9 +229,9 @@ export function InvitePanel() {
                             },
                         },
                         {
-                            width: "50%",
                             accessor: "services",
                             title: t("views.admin.invites.table.services"),
+                            width: "50%",
                             render(record) {
                                 return (
                                     <Group gap="xs">
@@ -241,19 +268,48 @@ export function InvitePanel() {
                             render(record) {
                                 return (
                                     <Group gap="sm" justify="center">
-                                        <ActionIcon
-                                            radius="xl"
-                                            size="md"
-                                            variant="light"
-                                            color="red"
-                                            onClick={() => {
-                                                api.delete_invite(
-                                                    record.id
-                                                ).then(refresh);
-                                            }}
+                                        {!record.disabled && (
+                                            <Tooltip
+                                                label={t(
+                                                    "views.admin.invites.table.disable"
+                                                )}
+                                                color="dark"
+                                            >
+                                                <ActionIcon
+                                                    radius="xl"
+                                                    size="md"
+                                                    variant="light"
+                                                    color="gray"
+                                                    onClick={() => {
+                                                        api.disable_invite(
+                                                            record.id
+                                                        ).then(refresh);
+                                                    }}
+                                                >
+                                                    <IconMinus size={16} />
+                                                </ActionIcon>
+                                            </Tooltip>
+                                        )}
+                                        <Tooltip
+                                            label={t(
+                                                "views.admin.invites.table.delete"
+                                            )}
+                                            color="dark"
                                         >
-                                            <IconTrashFilled size={16} />
-                                        </ActionIcon>
+                                            <ActionIcon
+                                                radius="xl"
+                                                size="md"
+                                                variant="light"
+                                                color="red"
+                                                onClick={() => {
+                                                    api.delete_invite(
+                                                        record.id
+                                                    ).then(refresh);
+                                                }}
+                                            >
+                                                <IconTrashFilled size={16} />
+                                            </ActionIcon>
+                                        </Tooltip>
                                     </Group>
                                 );
                             },

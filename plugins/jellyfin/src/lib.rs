@@ -95,7 +95,6 @@ pub fn metadata() -> FnResult<Json<PluginMetadata>> {
                                 .icon("icon:IconLockFilled")
                                 .build()?
                         )
-                        .revoke_method("revoke_create_user")
                         .build()?
                 )
                 .build()?

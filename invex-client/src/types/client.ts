@@ -8,7 +8,7 @@ export type RedeemingGrant = {
     description: string | null;
     icon: string | null;
     arguments: PluginField[];
-    revocable: boolean;
+    //revocable: boolean;
     url: string | null;
     help: string | null;
 };

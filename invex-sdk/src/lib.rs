@@ -267,7 +267,7 @@ impl FieldBuilder {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
+/*#[derive(Serialize, Deserialize, Clone, Debug, Builder)]
 #[builder(setter(into, strip_option))]
 pub struct AdminAction {
     pub key: String,
@@ -327,7 +327,7 @@ impl AdminAction {
     pub fn get_argument(&self, key: impl AsRef<str>) -> Option<PluginArgument> {
         self.arguments.iter().find(|f| f.key == key.as_ref().to_string()).cloned()
     }
-}
+}*/
 
 #[derive(Serialize, Deserialize, Clone, Debug, Builder)]
 #[builder(setter(into, strip_option))]
@@ -352,13 +352,13 @@ pub struct GrantAction {
     #[builder(default = "None")]
     pub icon: Option<String>,
 
-    #[serde(default)]
+    /*#[serde(default)]
     #[builder(default = "None")]
-    pub revoke_method: Option<String>,
+    pub revoke_method: Option<String>,*/
 
-    #[serde(default)]
+    /*#[serde(default)]
     #[builder(default = "Vec::new()")]
-    pub admin_actions: Vec<AdminAction>
+    pub admin_actions: Vec<AdminAction>*/
 }
 
 impl GrantAction {
@@ -370,9 +370,9 @@ impl GrantAction {
         self.arguments.iter().find(|f| f.key == key.as_ref().to_string()).cloned()
     }
 
-    pub fn get_admin_action(&self, key: impl AsRef<str>) -> Option<AdminAction> {
+    /*pub fn get_admin_action(&self, key: impl AsRef<str>) -> Option<AdminAction> {
         self.admin_actions.iter().find(|f| f.key == key.as_ref().to_string()).cloned()
-    }
+    }*/
 }
 
 impl GrantActionBuilder {
@@ -385,8 +385,8 @@ impl GrantActionBuilder {
             arguments: None,
             description: None,
             icon: None,
-            revoke_method: None,
-            admin_actions: None
+            //revoke_method: None,
+            //admin_actions: None
         }
     }
 
@@ -414,7 +414,7 @@ impl GrantActionBuilder {
         self
     }
 
-    pub fn with_admin_action(&mut self, action: AdminAction) -> &mut Self {
+    /*pub fn with_admin_action(&mut self, action: AdminAction) -> &mut Self {
         if self.admin_actions.is_none() {
             self.admin_actions(Vec::new());
         }
@@ -424,7 +424,7 @@ impl GrantActionBuilder {
         actions.dedup_by(|a, b| a.key.eq_ignore_ascii_case(&b.key));
         self.admin_actions(actions);
         self
-    }
+    }*/
 
     pub fn validate(&self) -> Result<(), String> {
         for entry in self.options.clone().unwrap_or_default() {
@@ -500,7 +500,7 @@ pub enum GrantResource {
         #[serde(default = "Default::default")]
         metadata: Option<Value>,
     },
-    Action {
+    /*Action {
         id: String,
 
         #[serde(default = "Default::default")]
@@ -517,7 +517,7 @@ pub enum GrantResource {
 
         #[serde(default)]
         icon: Option<String>,
-    },
+    },*/
 }
 
 impl GrantResource {
@@ -527,7 +527,7 @@ impl GrantResource {
             Self::File { id, .. } => id,
             Self::Url { id, .. } => id,
             Self::Generic { id, .. } => id,
-            Self::Action { id, .. } => id,
+            //Self::Action { id, .. } => id,
         }
         .clone()
     }
@@ -538,7 +538,7 @@ impl GrantResource {
             Self::File { metadata, .. } => metadata,
             Self::Url { metadata, .. } => metadata,
             Self::Generic { metadata, .. } => metadata,
-            Self::Action { metadata, .. } => metadata,
+            //Self::Action { metadata, .. } => metadata,
         };
         if let Some(data) = serialized {
             if let Ok(meta) = serde_json::from_value::<Meta>(data.clone()) {

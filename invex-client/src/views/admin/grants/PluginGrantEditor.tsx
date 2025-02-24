@@ -3,7 +3,6 @@ import {
     AccordionControl,
     AccordionItem,
     AccordionPanel,
-    ActionIcon,
     Badge,
     Button,
     Center,
@@ -18,7 +17,6 @@ import {
     Textarea,
     TextInput,
     ThemeIcon,
-    Tooltip,
 } from "@mantine/core";
 import { Service, ServiceGrant } from "../../../types/service";
 import { useDebouncedValue, useInputState } from "@mantine/hooks";
@@ -84,7 +82,7 @@ function PluginGrantTester({
     const { t } = useTranslation();
     const jsonArgs = JSON.stringify(action?.arguments ?? {});
     const api = useApi(ServiceMixin);
-    const [testResult, setTestResult] = useState<GrantResource[] | null>(null);
+    const [_, setTestResult] = useState<GrantResource[] | null>(null);
     const [loading, setLoading] = useState(false);
     const { error, success } = useNotifications();
 
