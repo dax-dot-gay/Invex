@@ -41,6 +41,7 @@ export type DbInvite = {
     expires: Expiration | null;
     services: string[];
     alias: string | null;
+    disabled: boolean;
 };
 
 export type InviteGrant = {
@@ -62,6 +63,7 @@ export type Invite = {
     services: Service[];
     usages: InviteUsage[];
     expires: ResolvedExpiration;
+    disabled: boolean;
 };
 
 export type InviteRedemption = {

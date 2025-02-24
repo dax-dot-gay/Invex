@@ -34,8 +34,15 @@ pub struct Invite {
 
     #[serde(default)]
     pub alias: Option<String>,
+
+    #[serde(default)]
     pub expires: Option<Expiration>,
+
+    #[serde(default)]
     pub services: Vec<Id>,
+
+    #[serde(default)]
+    pub disabled: bool
 }
 
 impl Invite {

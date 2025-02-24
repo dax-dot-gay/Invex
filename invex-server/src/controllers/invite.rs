@@ -17,6 +17,7 @@ struct InviteInfo {
     pub id: String,
     pub invite: Invite,
     pub expires: ResolvedExpiration,
+    pub disabled: bool,
     pub services: Vec<Service>,
     pub usages: Vec<InviteUsage>,
 }
@@ -47,6 +48,7 @@ impl InviteInfo {
                 })
                 .collect(),
             expires: invite.expires(),
+            disabled: invite.disabled
         })
     }
 }
@@ -108,6 +110,7 @@ async fn list_invites(
                             })
                             .collect(),
                         expires: invite.expires(),
+                        disabled: invite.disabled
                     })
                     .collect::<Vec<InviteInfo>>();
                 Ok(
@@ -191,7 +194,8 @@ async fn create_invite(
             created_by: user.id.clone(),
             expires: model.expires.clone(),
             services: model.services.clone(),
-            alias: model.alias.clone()
+            alias: model.alias.clone(),
+            disabled: false
         };
 
         if let Ok(_) = invites.save(invite.clone()).await {
@@ -202,6 +206,7 @@ async fn create_invite(
                     services: service_refs.clone(),
                     usages: Vec::new(),
                     expires: invite.expires(),
+                    disabled: false
                 })
             )
         } else {
@@ -220,7 +225,7 @@ async fn delete_invite(
     usages: Docs<InviteUsage>
 ) -> ApiResult<()> {
     if user.kind != UserType::Admin {
-        return Err(ApiError::Forbidden("Must be an admin to delete/revoke invites".to_string()));
+        return Err(ApiError::Forbidden("Must be an admin to delete/disable invites".to_string()));
     }
 
     if let Some(_) = invites.get(id).await {
@@ -235,6 +240,28 @@ async fn delete_invite(
     }
 }
 
+#[post("/<id>/disable")]
+async fn disable_invite(
+    user: AuthUser,
+    invites: Docs<Invite>,
+    id: &str
+) -> ApiResult<()> {
+    if user.kind != UserType::Admin {
+        return Err(ApiError::Forbidden("Must be an admin to delete/disable invites".to_string()));
+    }
+
+    if let Some(mut inv) = invites.get(id).await {
+        inv.disabled = true;
+        if let Ok(_) = invites.save(inv).await {
+            Ok(Json(()))
+        } else {
+            Err(ApiError::Internal("Failed to disable invite".to_string()))
+        }
+    } else {
+        Err(ApiError::NotFound("Requested invite not found".to_string()))
+    }
+}
+
 pub fn routes() -> Vec<Route> {
-    return routes![list_invites, get_invite, create_invite, delete_invite];
+    return routes![list_invites, get_invite, create_invite, delete_invite, disable_invite];
 }

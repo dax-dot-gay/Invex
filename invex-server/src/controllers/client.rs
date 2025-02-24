@@ -207,7 +207,7 @@ async fn get_invite_info(
     plugins: PluginRegistry,
     code: &str
 ) -> ApiResult<RedeemingInvite> {
-    if let Some(invite) = invites.query_one(doc! { "code": code }).await {
+    if let Some(invite) = invites.query_one(doc! { "code": code, "disabled": false }).await {
         if let Ok(inv_usages) = usages.query_many(doc! { "invite_id": invite.id() }).await {
             let expired = match invite.expires() {
                 ResolvedExpiration::Never => false,
@@ -290,7 +290,7 @@ async fn redeem_invite(
     plugins: PluginRegistry,
     dry: bool
 ) -> ApiResult<InviteRedemptionResponse> {
-    let redeem = (if let Some(invite) = invites.query_one(doc! { "code": code }).await {
+    let redeem = (if let Some(invite) = invites.query_one(doc! { "code": code, "disabled": false }).await {
         if let Ok(inv_usages) = usages.query_many(doc! { "invite_id": invite.id() }).await {
             let expired = match invite.expires() {
                 ResolvedExpiration::Never => false,

@@ -44,5 +44,11 @@ export function InviteMixin<TBase extends ApiMixinConstructor>(base: TBase) {
         public async delete_invite(id: string): Promise<void> {
             await this.request<void>(`/invites/${id}`, { method: "delete" });
         }
+
+        public async disable_invite(id: string): Promise<void> {
+            await this.request<void>(`/invites/${id}/disable`, {
+                method: "post",
+            });
+        }
     };
 }

@@ -70,7 +70,10 @@
             "datetime": "Expires at: {{datetime}}"
           },
           "services": "Granted Services",
-          "alias": "Invite Alias"
+          "alias": "Invite Alias",
+          "disable": "Disable Invite",
+          "delete": "Delete Invite",
+          "enabled": "Enabled"
         }
       },
       "services": {
