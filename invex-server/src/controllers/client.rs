@@ -89,7 +89,7 @@ pub struct RedeemingGrant {
     pub description: Option<String>,
     pub icon: Option<String>,
     pub arguments: Vec<PluginArgument>,
-    pub revocable: bool,
+    //pub revocable: bool,
     pub url: Option<String>,
     pub help: Option<String>,
 }
@@ -111,7 +111,7 @@ impl RedeemingGrant {
                     description: grant.description.clone(),
                     icon: grant.icon.clone(),
                     arguments: grant.arguments.clone(),
-                    revocable: grant.revoke_method.is_some(),
+                    //revocable: grant.revoke_method.is_some(),
                     url,
                     help,
                 })

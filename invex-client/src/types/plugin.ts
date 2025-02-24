@@ -210,7 +210,7 @@ export type GrantResource_Generic = {
     metadata: any | null;
 };
 
-export type GrantResource_Action = {
+/*export type GrantResource_Action = {
     type: "action";
     id: string;
     metadata: any | null;
@@ -219,12 +219,12 @@ export type GrantResource_Action = {
     arguments: PluginField[];
     description: string | null;
     icon: string | null;
-};
+};*/
 
 export type GrantResource =
     | GrantResource_Account
     | GrantResource_File
     | GrantResource_Url
-    | GrantResource_Generic
-    | GrantResource_Action;
+    | GrantResource_Generic;
+    //| GrantResource_Action;
     

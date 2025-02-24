@@ -16,7 +16,6 @@ import { PluginGIProps } from "../types";
 import { ReactNode, useEffect, useState } from "react";
 import {
     GrantResource_Account,
-    GrantResource_Action,
     GrantResource_File,
     GrantResource_Url,
 } from "../../../../types/plugin";
@@ -32,7 +31,6 @@ import {
     IconId,
     IconLink,
     IconLock,
-    IconScript,
     IconUser,
 } from "@tabler/icons-react";
 import { FilesMixin, useApi } from "../../../../context/net";
@@ -143,7 +141,6 @@ function AccountResource({
 
 function FileResource({
     resource,
-    ...props
 }: { resource: GrantResource_File } & PluginGIProps) {
     const api = useApi(FilesMixin);
     const [metadata, setMetadata] = useState<FileInfo | null>(null);
@@ -265,7 +262,6 @@ function FileResource({
 
 function URLResource({
     resource,
-    ...props
 }: { resource: GrantResource_Url } & PluginGIProps) {
     const { t } = useTranslation();
     return (
@@ -318,19 +314,6 @@ function URLResource({
     );
 }
 
-function ActionResource({
-    resource,
-    ...props
-}: { resource: GrantResource_Action } & PluginGIProps) {
-    const { t } = useTranslation();
-    return (
-        <Resource
-            icon={<IconScript />}
-            label={t("views.invites.item.grant.plugin.action.label")}
-        ></Resource>
-    );
-}
-
 export function PluginItem(props: PluginGIProps) {
     const result = props.grant.result as Extract<
         ClientResourcePluginGrant,
@@ -344,14 +327,6 @@ export function PluginItem(props: PluginGIProps) {
                     case "account":
                         return (
                             <AccountResource
-                                resource={resource}
-                                {...props}
-                                key={resource.id}
-                            />
-                        );
-                    case "action":
-                        return (
-                            <ActionResource
                                 resource={resource}
                                 {...props}
                                 key={resource.id}
