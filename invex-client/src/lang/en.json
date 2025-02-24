@@ -192,6 +192,12 @@
         "valid": "Validated",
         "hasErrors": "Some inputs failed validation.",
         "executing": "Executing..."
+      },
+      "anonymous": {
+        "title": "User Account Creation",
+        "optional": "Optionally create a user/login to the invite service",
+        "create": "Create Account",
+        "login": "Login"
       }
     },
     "invites": {

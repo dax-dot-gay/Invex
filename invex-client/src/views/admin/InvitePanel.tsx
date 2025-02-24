@@ -39,7 +39,7 @@ import { useRefreshCallback } from "../../context/refresh";
 export function InvitePanel() {
     const { t } = useTranslation();
     const api = useApi(InviteMixin);
-    const [pageSize, setPageSize] = useState(25);
+    const [pageSize, _] = useState(25);
     const [pageNumber, setPageNumber] = useState(0);
     const [total, setTotal] = useState(0);
     const [invites, setInvites] = useState<Invite[]>([]);

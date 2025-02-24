@@ -65,7 +65,7 @@ type FilterType = (
       }
     | {
           type: "resource";
-          subtype: "account" | "file" | "url" | "action";
+          subtype: "account" | "file" | "url";
       }
 ) & { key: string };
 
@@ -182,7 +182,7 @@ function ResourceFilter({
                     subtype: v,
                     key: `grant.${v}`,
                 })) as any),
-                ...(["account", "file", "url", "action"].map((v) => ({
+                ...(["account", "file", "url"].map((v) => ({
                     type: "resource",
                     subtype: v,
                     key: `resource.${v}`,
@@ -252,9 +252,6 @@ function ResourceFilter({
                                 {item.subtype === "url" && (
                                     <IconLink size={20} />
                                 )}
-                                {item.subtype === "action" && (
-                                    <IconScript size={20} />
-                                )}
                                 <span>
                                     {t(
                                         `views.invites.filter.resource.${item.subtype}`
@@ -317,9 +314,6 @@ function ResourceFilter({
                             )}
                             {item.subtype === "file" && <IconFile size={16} />}
                             {item.subtype === "url" && <IconLink size={16} />}
-                            {item.subtype === "action" && (
-                                <IconScript size={16} />
-                            )}
                             <span>
                                 {t(
                                     `views.invites.filter.resource.${item.subtype}`
@@ -498,6 +492,16 @@ export function InviteManager() {
                             isURL(inviteLink)
                         )
                     }
+                    onClick={() => {
+                        if (isURL(inviteLink)) {
+                            window.open(inviteLink, "_self");
+                        } else {
+                            window.open(
+                                `${location.origin}/inv/${inviteLink}`,
+                                "_self"
+                            );
+                        }
+                    }}
                     size={50}
                 >
                     <IconLinkPlus />

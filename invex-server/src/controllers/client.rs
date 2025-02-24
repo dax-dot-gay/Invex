@@ -12,6 +12,7 @@ use rocket::{
 };
 use serde::{ Deserialize, Serialize };
 use serde_json::Value;
+use uuid::Uuid;
 
 use crate::{
     models::{
@@ -247,6 +248,7 @@ pub enum InviteAuthenticator {
         password: String,
     },
     Inactive {},
+    Generate {}
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -388,6 +390,28 @@ async fn redeem_invite(
                     )
                 )
             }
+        }
+        InviteAuthenticator::Generate {  } => {
+            if session.user_id.is_some() {
+                return Err(
+                    ApiError::bad_request("Already logged in, cannot redeem as another user.")
+                );
+            }
+
+            let new_user = AuthUser::new_user(format!("eph-{}", Uuid::new_v4().to_string().split_at(8).0), None, Uuid::new_v4().to_string()).or_else(|e|
+                Err(ApiError::internal(format!("Failed to create user: {e:?}")))
+            )?;
+            if !dry {
+                users
+                    .save(new_user.clone()).await
+                    .or_else(|e| Err(ApiError::internal(format!("Failed to save new user: {e:?}"))))?;
+                session.user_id = Some(new_user.id.clone());
+                sessions
+                    .save(session.clone()).await
+                    .or_else(|e| Err(ApiError::internal(format!("Failed to save session info: {e:?}"))))?;
+            }
+           
+            Ok(new_user)
         }
     })?;
 
